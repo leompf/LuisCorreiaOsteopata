@@ -1,0 +1,117 @@
+﻿@model LuisCorreiaOsteopata.WEB.Models.SignUpViewModel;
+
+@{
+    ViewData["Title"] = "SignUp";
+    Layout = "~/Views/Shared/_Layout2.cshtml";
+}
+
+@section MainMenu
+{
+    <li>
+        <a asp-controller="Home" asp-action="Index">Home</a>
+    </li>
+}
+
+
+<!--Page Header Start-->
+<section class="page-header">
+    <div class="page-header__bg" style="background-image: url(~/assets/images/backgrounds/page-header-bg.jpg);">
+    </div>
+    <div class="container">
+        <div class="page-header__inner">
+            <h3>Sign Up Page</h3>
+            <div class="thm-breadcrumb__inner">
+                <ul class="thm-breadcrumb list-unstyled">
+                    <li><a asp-controller="Home" asp-action="Index">Home</a></li>
+                    <li><span class="icon-arrow-left"></span></li>
+                    <li>Sign Up Page</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+<!--Page Header End-->
+<!--Start Sign Up One-->
+<section class="sign-up-one">
+    <div class="container">
+        <div class="sign-up-one__form">
+            <div class="inner-title text-center">
+                <h2>Sign Up</h2>
+            </div>
+            <form method="post">
+                <div asp-validation-summary="ModelOnly"></div>
+                <div class="row">
+                    <div class="col-xl-6">
+                        <div class="form-group">
+                            <div class="input-box">
+                                <span asp-validation-for="FirstName"></span>
+                                <input asp-for="FirstName" type="text" placeholder="Primeiro nome..." />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-6">
+                        <div class="form-group">
+                            <div class="input-box">
+                                <span asp-validation-for="LastName"></span>
+                                <input asp-for="LastName" type="text" placeholder="Último nome..." />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-12">
+                        <div class="form-group">
+                            <div class="input-box">
+                                <span asp-validation-for="Email"></span>
+                                <input asp-for="Email" type="email" placeholder="Email..." />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-12">
+                        <div class="form-group">
+                            <div class="input-box">
+                                <span asp-validation-for="Password"></span>
+                                <input asp-for="Password" type="password" placeholder="Password..." />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="input-box">
+                                <span asp-validation-for="Confirm"></span>
+                                <input asp-for="Confirm" type="password" placeholder="Confirmar password..." />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-12">
+                        <div class="form-group">
+                            <button class="thm-btn" type="submit" data-loading-text="Please wait...">
+                                Sign Up
+                                <span class="icon-right-arrow"></span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="google-facebook">
+                    <a href="https://www.google.com/">
+                        <div class="icon">
+                            <img src="~/assets/images/icon/icon-google-2.png" alt="Google">
+                        </div>
+                        Continue with Google
+                    </a>
+                    <a href="https://www.facebook.com/">
+                        <div class="icon">
+                            <img src="~/assets/images/icon/icon-facebook.png" alt="Google">
+                        </div>
+                        Continue with Facebook
+                    </a>
+                </div>
+                <div class="create-account text-center">
+                    <p>Already have an account? <a href="login.html">Login Here</a></p>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
+<!--End Sign Up One-->
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
