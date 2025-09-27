@@ -1,4 +1,5 @@
-﻿using LuisCorreiaOsteopata.Library.Data.Entities;
+﻿using LuisCorreiaOsteopata.Library.Data;
+using LuisCorreiaOsteopata.Library.Data.Entities;
 using Microsoft.AspNetCore.Identity;
 
 namespace LuisCorreiaOsteopata.Library.Helpers;
@@ -9,7 +10,9 @@ public class UserHelper : IUserHelper
     private readonly SignInManager<User> _signInManager;
     private readonly RoleManager<IdentityRole> _roleManager;
 
-    public UserHelper(UserManager<User> userManager, SignInManager<User> signInManager, RoleManager<IdentityRole> roleManager)
+    public UserHelper(UserManager<User> userManager, 
+        SignInManager<User> signInManager, 
+        RoleManager<IdentityRole> roleManager)
     {
         _userManager = userManager;
         _signInManager = signInManager;
@@ -39,6 +42,24 @@ public class UserHelper : IUserHelper
         }
     }
 
+    public async Task<Patient> CreatePatientAsync(User user, string roleName)
+    {
+        var isInrole = await _userManager.IsInRoleAsync(user,  roleName);   
+        if (!isInrole)
+        {
+            return null;
+        }
+
+        var patient = new Patient
+        {
+            FirstName = user.FirstName,
+            LastName = user.LastName,
+            User = user,
+        };
+
+        return patient;
+    }
+
     public async Task<User> GetUserByEmailAsync(string email)
     {
         return await _userManager.FindByEmailAsync(email);
@@ -55,9 +76,13 @@ public class UserHelper : IUserHelper
         return await _userManager.IsInRoleAsync(user, rolename);
     }
 
-    public Task<SignInResult> LoginAsync()
+    public async Task<SignInResult> LoginAsync(string username, string password, bool rememberMe)
     {
-        throw new NotImplementedException();
+        return await _signInManager.PasswordSignInAsync(
+            username,
+            password,
+            rememberMe,
+            false);
     }
 
     public async Task LogoutAsync()

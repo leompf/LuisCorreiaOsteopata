@@ -1,0 +1,86 @@
+﻿@model LuisCorreiaOsteopata.WEB.Models.LoginViewModel;
+
+@{
+    ViewData["Title"] = "Login";
+    Layout = "~/Views/Shared/_Layout2.cshtml";
+}
+
+<!--Page Header Start-->
+<section class="page-header">
+    <div class="page-header__bg" style="background-image: url(assets/images/backgrounds/page-header-bg.jpg);">
+    </div>
+    <div class="container">
+        <div class="page-header__inner">
+            <h3>Login Page</h3>
+            <div class="thm-breadcrumb__inner">
+                <ul class="thm-breadcrumb list-unstyled">
+                    <li><a asp-controller="Home" asp-action="Index">Home</a></li>
+                    <li><span class="icon-arrow-left"></span></li>
+                    <li>Login Page</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+<!--Page Header End-->
+<!--Start Login One-->
+<section class="login-one">
+    <div class="container">
+        <div class="login-one__form">
+            <div class="inner-title text-center">
+                <h2>Login Here</h2>
+            </div>
+            <form method="post">
+                <div asp-validation-summary="ModelOnly"></div>
+                <div class="row">
+                    <div class="col-xl-12">
+                        <div class="form-group">
+                            <div class="input-box">
+                                <span asp-validation-for="Username"></span>
+                                <input asp-for="Username" type="email" placeholder="Email..." />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-12">
+                        <div class="form-group">
+                            <div class="input-box">
+                                <span asp-validation-for="Password"></span>
+                                <input asp-for="Password" type="password" placeholder="Password..." />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-12">
+                        <div class="form-group">
+                            <button class="thm-btn" type="submit" data-loading-text="Please wait...">
+                                Login
+                                Here<span class="icon-right-arrow"></span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="remember-forget">
+                        <div class="checked-box1">
+                            <input type="checkbox" asp-for="RememberMe" />
+                            <label asp-for="RememberMe" >
+                                <span asp-validation-for="RememberMe" ></span>
+                                Remember me
+                            </label>
+                        </div>
+                        <div class="forget">
+                            <a href="#">Forget password?</a>
+                        </div>
+                    </div>
+
+                    <div class="create-account text-center">
+                        <p>Ainda não tens conta? <a asp-action="SignUp">Regista-te</a></p>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
+<!--End Login One-->
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

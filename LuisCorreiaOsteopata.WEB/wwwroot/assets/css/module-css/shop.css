@@ -3307,6 +3307,7 @@ Product Description
 }
 
 .login-one__form form input[type="text"],
+.login-one__form form input[type="password"],
 .login-one__form form input[type="email"] {
     position: relative;
     display: block;

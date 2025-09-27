@@ -35,6 +35,8 @@ namespace LuisCorreiaOsteopata.WEB
             builder.Services.AddTransient<SeedDB>();
             builder.Services.AddScoped<IUserHelper, UserHelper>();
 
+            builder.Services.AddScoped<IPatientRepository, PatientRepository>();
+
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.

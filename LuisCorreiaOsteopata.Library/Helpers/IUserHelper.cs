@@ -13,7 +13,7 @@ public interface IUserHelper
 
     Task<IdentityResult> UpdateUserAsync(User user);
 
-    Task<SignInResult> LoginAsync();
+    Task<SignInResult> LoginAsync(string username, string password, bool rememberMe);
 
     Task LogoutAsync();
 
