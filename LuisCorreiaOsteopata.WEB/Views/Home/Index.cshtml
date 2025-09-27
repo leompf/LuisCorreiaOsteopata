@@ -9,13 +9,13 @@
         <a href="#home">Home </a>
     </li>
     <li class="scrollToLink">
-        <a href="#about">About</a>
+        <a href="#about">Sobre</a>
     </li>
     <li class="scrollToLink">
         <a href="#blog">Blog</a>
     </li>
     <li class="scrollToLink">
-        <a href="#contact">Contact</a>
+        <a href="#contact">Contacto</a>
     </li>
 }
 
@@ -24,22 +24,22 @@
         <div class="row">
             <div class="col-xl-6">
                 <div class="banner-one__left sec-title-animation animation-style2">
-                    <p class="banner-one__sub-title">Health Care</p>
+                    <p class="banner-one__sub-title">Saúde</p>
                     <h2 class="banner-one__title title-animation">
-                        Exceptional Health Treatment <span>Always Find There</span>
+                        Tratamento físico excecional<br /> <span>Não sintas mais dor</span>
                     </h2>
                     <p class="banner-one__text">
-                        Health care is a vital aspect of maintaining overall well-being,
-                        <br> encompassing a range of services from preventive
+                        O bem-estar é um aspeto fundamental da tua saúde.
+                        <br> Se sentes dor, está na hora de mudar.
                     </p>
                     <div class="banner-one__call">
                         <div class="banner-one__call-icon">
                             <i class="icon-call"></i>
                         </div>
                         <div class="banner-one__call-content">
-                            <p class="banner-one__call-sub-title">Phone Number</p>
+                            <p class="banner-one__call-sub-title">Nº Telemóvel</p>
                             <h5 class="banner-one__call-number">
-                                <a href="tel:0123456789101">012 345 678 9101</a>
+                                <a href="tel:">+351 932 281 422</a>
                             </h5>
                         </div>
                     </div>
@@ -68,11 +68,10 @@
         <div class="feature-one__inner">
             <div class="section-title text-center sec-title-animation animation-style1">
                 <h6 class="section-title__tagline">
-                    <span class="icon-broken-bone"></span>Our Feature
+                    <span class="icon-broken-bone"></span>Propósito
                 </h6>
                 <h3 class="section-title__title title-animation">
-                    Your Wellness, Our Priority<br>
-                    Empowering Healthier
+                    O Teu Bem-Estar, A Nossa Prioridade
                 </h3>
             </div>
             <ul class="feature-one__feature-list list-unstyled">
@@ -154,28 +153,28 @@
                      data-wow-duration="2500ms">
                     <div class="section-title text-left sec-title-animation animation-style2">
                         <h6 class="section-title__tagline">
-                            <span class="icon-broken-bone"></span>About Us
+                            <span class="icon-broken-bone"></span>Sobre
                         </h6>
                         <h3 class="section-title__title title-animation">
-                            Health care maintenance or improvement
+                            Melhoria do teu bem-estar
                         </h3>
                     </div>
                     <p class="about-one__text">
-                        Health care is a vital aspect of maintaining overall well-being,
-                        encompassing a range of services from preventive care to treatment
+                        O bem-estar geral é um aspeto vital da tua saúde.<br />
+                        Nós ajudamos-te a prevenir e/ou tratar lesões.
                     </p>
                     <ul class="about-one__points-box list-unstyled">
                         <li>
                             <div class="icon">
                                 <span class="icon-left-arrows"></span>
                             </div>
-                            <p>Where Health Matters Most</p>
+                            <p>Onde o bem-estar reina.</p>
                         </li>
                         <li>
                             <div class="icon">
                                 <span class="icon-left-arrows"></span>
                             </div>
-                            <p>Caring for You, Always</p>
+                            <p>Vive sem dor.</p>
                         </li>
                     </ul>
                 </div>
@@ -184,23 +183,19 @@
                 </div>
                 <div class="about-one__working-hour wow slideInRight" data-wow-delay="100ms"
                      data-wow-duration="2500ms">
-                    <h3 class="about-one__working-hour-title">Working Hours</h3>
+                    <h3 class="about-one__working-hour-title">Horário de Funcionamento</h3>
                     <ul class="about-one__working-hour-list list-unstyled">
                         <li>
-                            <span>Saturday-Sunday</span>
-                            <p>9 Am To 5 Pm</p>
+                            <span>Segunda-Sexta</span>
+                            <p>09h00 às 19h00</p>
                         </li>
                         <li>
-                            <span>Monday-Tuesday</span>
-                            <p>1 Pm To 7 Pm</p>
+                            <span>Sábado</span>
+                            <p>09h00 às 13h00</p>
                         </li>
                         <li>
-                            <span>Wednesday-Thusday</span>
-                            <p>2 Am To 6 Pm</p>
-                        </li>
-                        <li>
-                            <span>Friday</span>
-                            <p>Off Day</p>
+                            <span>Domingo</span>
+                            <p>Encerrado</p>
                         </li>
                     </ul>
                 </div>
@@ -427,60 +422,63 @@
 </section>
 <!--Blog One End-->
 <!--Contact One Start-->
-<section class="contact-one" id="contact">
-    <div class="container">
-        <div class="contact-one__inner">
-            <div class="row">
-                <div class="col-xl-5">
-                    <div class="contact-one__left">
-                        <div class="contact-one__img">
-                            <img src="assets/images/resources/contact-one-img-1.jpg" alt="">
+@if (User.Identity.IsAuthenticated)
+{
+    <section class="contact-one" id="contact">
+        <div class="container">
+            <div class="contact-one__inner">
+                <div class="row">
+                    <div class="col-xl-5">
+                        <div class="contact-one__left">
+                            <div class="contact-one__img">
+                                <img src="assets/images/resources/contact-one-img-1.jpg" alt="">
+                            </div>
                         </div>
                     </div>
-                </div>
-                <div class="col-xl-7">
-                    <div class="contact-one__right">
-                        <h3 class="contact-one__title">Appiontment Now</h3>
-                        <form class="contact-form-validated contact-one__form" action="assets/inc/sendemail.php"
-                              method="post" novalidate="novalidate">
-                            <div class="row">
-                                <div class="col-xl-6 col-lg-6 col-md-6">
-                                    <div class="contact-one__input-box">
-                                        <input type="text" name="name" placeholder="Your Name" required="">
+                    <div class="col-xl-7">
+                        <div class="contact-one__right">
+                            <h3 class="contact-one__title">Appiontment Now</h3>
+                            <form class="contact-form-validated contact-one__form" action="assets/inc/sendemail.php"
+                                  method="post" novalidate="novalidate">
+                                <div class="row">
+                                    <div class="col-xl-6 col-lg-6 col-md-6">
+                                        <div class="contact-one__input-box">
+                                            <input type="text" name="name" placeholder="Your Name" required="">
+                                        </div>
+                                    </div>
+                                    <div class="col-xl-6 col-lg-6 col-md-6">
+                                        <div class="contact-one__input-box">
+                                            <input type="email" name="Email" placeholder="Your Email" required="">
+                                        </div>
+                                    </div>
+                                    <div class="col-xl-6 col-lg-6 col-md-6">
+                                        <div class="contact-one__input-box">
+                                            <input type="text" name="number" placeholder="Your Number" required="">
+                                        </div>
+                                    </div>
+                                    <div class="col-xl-6 col-lg-6 col-md-6">
+                                        <div class="contact-one__input-box">
+                                            <input type="text" placeholder="mm/dd/yyy" name="date" id="datepicker">
+                                        </div>
+                                    </div>
+                                    <div class="col-xl-12">
+                                        <div class="contact-one__input-box text-message-box">
+                                            <textarea name="message" placeholder="Message here.."></textarea>
+                                        </div>
+                                        <div class="contact-one__btn-box">
+                                            <button type="submit" class="thm-btn">
+                                                Appointment Now<span class="icon-plus"></span>
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
-                                <div class="col-xl-6 col-lg-6 col-md-6">
-                                    <div class="contact-one__input-box">
-                                        <input type="email" name="Email" placeholder="Your Email" required="">
-                                    </div>
-                                </div>
-                                <div class="col-xl-6 col-lg-6 col-md-6">
-                                    <div class="contact-one__input-box">
-                                        <input type="text" name="number" placeholder="Your Number" required="">
-                                    </div>
-                                </div>
-                                <div class="col-xl-6 col-lg-6 col-md-6">
-                                    <div class="contact-one__input-box">
-                                        <input type="text" placeholder="mm/dd/yyy" name="date" id="datepicker">
-                                    </div>
-                                </div>
-                                <div class="col-xl-12">
-                                    <div class="contact-one__input-box text-message-box">
-                                        <textarea name="message" placeholder="Message here.."></textarea>
-                                    </div>
-                                    <div class="contact-one__btn-box">
-                                        <button type="submit" class="thm-btn">
-                                            Appointment Now<span class="icon-plus"></span>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </form>
-                        <div class="result"></div>
+                            </form>
+                            <div class="result"></div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-</section>
+    </section>
+}
 <!--Contact One End-->

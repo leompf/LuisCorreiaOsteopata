@@ -19,12 +19,12 @@
     </div>
     <div class="container">
         <div class="page-header__inner">
-            <h3>Sign Up Page</h3>
+            <h3>Sign Up</h3>
             <div class="thm-breadcrumb__inner">
                 <ul class="thm-breadcrumb list-unstyled">
                     <li><a asp-controller="Home" asp-action="Index">Home</a></li>
                     <li><span class="icon-arrow-left"></span></li>
-                    <li>Sign Up Page</li>
+                    <li>Sign Up</li>
                 </ul>
             </div>
         </div>
@@ -88,22 +88,16 @@
                         </div>
                     </div>
                 </div>
-                <div class="google-facebook">
+                <div class="google-facebook justify-content-center">
                     <a href="https://www.google.com/">
                         <div class="icon">
                             <img src="~/assets/images/icon/icon-google-2.png" alt="Google">
                         </div>
-                        Continue with Google
-                    </a>
-                    <a href="https://www.facebook.com/">
-                        <div class="icon">
-                            <img src="~/assets/images/icon/icon-facebook.png" alt="Google">
-                        </div>
-                        Continue with Facebook
+                        Continuar com Google
                     </a>
                 </div>
                 <div class="create-account text-center">
-                    <p>Already have an account? <a href="login.html">Login Here</a></p>
+                    <p>Já tens conta? <a asp-action="Login" >Faz login</a></p>
                 </div>
             </form>
         </div>
