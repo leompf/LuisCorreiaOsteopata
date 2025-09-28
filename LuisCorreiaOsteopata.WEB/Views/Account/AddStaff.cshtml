@@ -1,48 +1,52 @@
-﻿@model LuisCorreiaOsteopata.WEB.Models.SignUpViewModel;
+﻿@model LuisCorreiaOsteopata.WEB.Models.AddNewStaffViewModel
 
 @{
-    ViewData["Title"] = "Registar";
+    ViewData["Title"] = "Criar Colaborador";
     Layout = "~/Views/Shared/_Layout2.cshtml";
 }
 
 @section MainMenu
 {
-    <li>
-        <a asp-controller="Home" asp-action="Index">Home</a>
+    <li class="scrollToLink">
+        <a asp-controller="Account" asp-action="Index">Home </a>
     </li>
     <li>
-        <a asp-controller="Account" asp-action="Login">Login</a>
+        <a href="#blog">Blog</a>
+    </li>
+    <li class="dropdown">
+        <a><i class="fas fa-user"></i></a>
+        <ul>
+            <li><a asp-action="Profile">Perfil</a></li>
+            <li><a asp-action="Logout">Logout</a></li>
+        </ul>
     </li>
 }
 
-
-<!--Page Header Start-->
 <section class="page-header">
     <div class="page-header__bg" style="background-image: url(~/assets/images/backgrounds/page-header-bg.jpg);">
     </div>
     <div class="container">
         <div class="page-header__inner">
-            <h3>Registar</h3>
+            <h3>Criar Colaborador</h3>
             <div class="thm-breadcrumb__inner">
                 <ul class="thm-breadcrumb list-unstyled">
-                    <li><a asp-controller="Home" asp-action="Index">Home</a></li>
+                    <li><a asp-action="Index">Home</a></li>
                     <li><span class="icon-arrow-left"></span></li>
-                    <li>Registar</li>
+                    <li>Criar Colaborador</li>
                 </ul>
             </div>
         </div>
     </div>
 </section>
-<!--Page Header End-->
+
 <!--Start Sign Up One-->
 <section class="sign-up-one">
     <div class="container">
         <div class="sign-up-one__form">
             <div class="inner-title text-center">
-                <h2>Registar</h2>
+                <h2>Criar Colaborador</h2>
             </div>
             <form method="post">
-                <div asp-validation-summary="ModelOnly"></div>
                 <div class="row">
                     <div class="col-xl-6">
                         <div class="form-group">
@@ -64,7 +68,7 @@
                         <div class="form-group">
                             <div class="input-box">
                                 <span asp-validation-for="Email"></span>
-                                <input asp-for="Email" type="email" placeholder="Email..." />
+                                <input asp-for="Email" type="email" placeholder="Email de colaborador..." />
                             </div>
                         </div>
                     </div>
@@ -76,46 +80,37 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-xl-12">
+                    <div class="col-xl-6">
                         <div class="form-group">
                             <div class="input-box">
-                                <span asp-validation-for="Password"></span>
-                                <input asp-for="Password" type="password" placeholder="Password..." />
+                                <span asp-validation-for="Nif"></span>
+                                <input asp-for="Nif" type="text" placeholder="Nif..." />
                             </div>
                         </div>
+                    </div>
+                    <div class="col-xl-6">
                         <div class="form-group">
-                            <div class="input-box">
-                                <span asp-validation-for="Confirm"></span>
-                                <input asp-for="Confirm" type="password" placeholder="Confirmar password..." />
+                            <div class="select-box">
+                                <span asp-validation-for="Role"></span>
+                                <input asp-for="Role" type="hidden" readonly value="Colaborador" />
                             </div>
                         </div>
                     </div>
                     <div class="col-xl-12">
                         <div class="form-group">
                             <button class="thm-btn" type="submit" data-loading-text="Por favor aguarda...">
-                                Registar
+                                Criar
                                 <span class="icon-right-arrow"></span>
                             </button>
                         </div>
                     </div>
-                </div>
-                <div class="google-facebook justify-content-center">
-                    <a href="https://www.google.com/">
-                        <div class="icon">
-                            <img src="~/assets/images/icon/icon-google-2.png" alt="Google">
-                        </div>
-                        Continuar com Google
-                    </a>
-                </div>
-                <div class="create-account text-center">
-                    <p>Já tens conta? <a asp-action="Login">Faz login</a></p>
+                    <div asp-validation-summary="ModelOnly"></div>
                 </div>
             </form>
         </div>
     </div>
-</section>
+</section>>
 
-<!--End Sign Up One-->
 @section Scripts {
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
@@ -144,3 +139,4 @@
         </script>
     }
 }
+

@@ -22,4 +22,6 @@ public interface IUserHelper
     Task AddUserToRoleAsync(User user, string rolename);
 
     Task<bool> IsUserInRoleAsync(User user, string rolename);
+
+    string GenerateRandomPassword(PasswordOptions options = null);
 }

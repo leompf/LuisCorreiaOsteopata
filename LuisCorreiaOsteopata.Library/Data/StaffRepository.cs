@@ -3,20 +3,19 @@ using Microsoft.AspNetCore.Identity;
 
 namespace LuisCorreiaOsteopata.Library.Data;
 
-public class PatientRepository : GenericRepository<Patient>, IPatientRepository
+public class StaffRepository : GenericRepository<Staff>, IStaffRepository
 {
     private readonly DataContext _context;
     private readonly UserManager<User> _userManager;
 
-    public PatientRepository(DataContext context,
+    public StaffRepository(DataContext context, 
         UserManager<User> userManager) : base(context)
     {
         _context = context;
         _userManager = userManager;
     }
 
-
-    public async Task<Patient> CreatePatientAsync(User user, string roleName)
+    public async Task<Staff> CreatStaffAsync(User user, string roleName)
     {
         var isInrole = await _userManager.IsInRoleAsync(user, roleName);
         if (!isInrole)
@@ -24,7 +23,7 @@ public class PatientRepository : GenericRepository<Patient>, IPatientRepository
             return null;
         }
 
-        var patient = new Patient
+        var staff = new Staff
         {
             FirstName = user.FirstName,
             LastName = user.LastName,
@@ -34,6 +33,6 @@ public class PatientRepository : GenericRepository<Patient>, IPatientRepository
             Phone = user.PhoneNumber,
         };
 
-        return patient;
+        return staff;
     }
 }
