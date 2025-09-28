@@ -1,8 +1,9 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.AspNetCore.Mvc.Rendering;
+using System.ComponentModel.DataAnnotations;
 
 namespace LuisCorreiaOsteopata.WEB.Models;
 
-public class SignUpViewModel
+public class AddNewStaffViewModel
 {
     [Required(ErrorMessage = "*Campo obrigatório")]
     [Display(Name = "First Name")]
@@ -26,11 +27,10 @@ public class SignUpViewModel
 
 
     [Required(ErrorMessage = "*Campo obrigatório")]
-    [MinLength(6)]
-    public string Password { get; set; }
+    [StringLength(9)]
+    public string Nif { get; set; }
 
 
     [Required(ErrorMessage = "*Campo obrigatório")]
-    [Compare("Password", ErrorMessage = "*A palavra-passe não coincide")]
-    public string Confirm { get; set; }
+    public string Role { get; set; } = "Colaborador";
 }

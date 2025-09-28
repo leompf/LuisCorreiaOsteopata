@@ -1,0 +1,91 @@
+﻿@using LuisCorreiaOsteopata.Library.Data.Entities
+@using Microsoft.AspNetCore.Identity
+@inject UserManager<User> _userManager
+
+@{
+    var loggedUser = await _userManager.GetUserAsync(User);
+}
+
+@{
+    ViewData["Title"] = "Home";
+    Layout = "~/Views/Shared/_Layout2.cshtml";
+}
+
+@section MainMenu
+{
+    <li class="scrollToLink">
+        <a href="#home">Home </a>
+    </li>
+    <li>
+        <a href="#blog">Blog</a>
+    </li>
+    @if (await _userManager.IsInRoleAsync(loggedUser, "Administrador"))
+    {
+        <li class="dropdown">
+            <a><i style="margin-right: 5px;" class="fas fa-users-cog fa-fw"></i>Gestão de Utilizadores</a>
+            <ul>
+                <li><a asp-action="AddStaff">Criar Colaborador</a></li>
+                <li><a asp-action="Logout">Ver Utilizadores</a></li>
+            </ul>
+        </li>
+    }
+    <li class="dropdown">
+        <a><i style="margin-right: 5px;" class="fas fa-user"></i>Área Pessoal</a>
+        <ul>
+            <li><a asp-action="Profile">Perfil</a></li>
+            <li><a asp-action="Logout">Logout</a></li>
+        </ul>
+    </li>
+}
+
+<section class="service-details" id="home">
+    <div class="container">
+        <div class="row">
+            <div class="service-details__content">
+                <h3 class="service-details__title-1">
+                    Bem-vindo,
+                    @if (await _userManager.IsInRoleAsync(loggedUser, "Administrador"))
+                    {
+                        @:Administrador
+                    }
+                    else
+                    {
+                        @loggedUser.FirstName
+                    }
+                </h3>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="container">
+    <div class="row">
+        <div class="col-xl-10 col-lg-7">
+            <div class="view-appointment__left">
+                <h3 class="view-appointment__title">Vê as tuas consultas</h3>
+                <div id="calendar"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+          var calendarEl = document.getElementById('calendar');
+          var calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'dayGridMonth',
+            locale: 'pt',
+            eventClick: function(info) {
+        alert('Event: ' + info.event.title);
+        alert('Coordinates: ' + info.jsEvent.pageX + ',' + info.jsEvent.pageY);
+        alert('View: ' + info.view.type);
+              }
+          });
+          calendar.render();
+        });
+    </script>
+}

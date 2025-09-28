@@ -3125,6 +3125,7 @@ Product Description
 }
 
 .sign-up-one__form form input[type="text"],
+.sign-up-one__form form input[type="tel"],
 .sign-up-one__form form input[type="email"],
 .sign-up-one__form form input[type="password"]{
     position: relative;

@@ -602,8 +602,34 @@
     padding: 90px 0 120px;
 }
 
+/*==============================================
+   View Appointement
+===============================================*/
 
+.view-appointment {
+    position: relative;
+    display: block;
+    padding: 120px 0 120px;
+    z-index: 1;
+    margin-top: -20px;
+}
 
+.view-appointment__left {
+    position: relative;
+    display: block;
+    background-color: var(--careon-white);
+    box-shadow: 4px 4px 20px -1px rgba(0, 0, 0, 0.08);
+    border-radius: var(--careon-bdr-radius);
+    padding: 58px 40px 60px;
+}
+
+.view-appointment__title {
+    font-size: 40px;
+    font-weight: 700;
+    line-height: 58px;
+    margin-bottom: 0;
+    margin-top: -35px;
+}
 
 
 /*==============================================

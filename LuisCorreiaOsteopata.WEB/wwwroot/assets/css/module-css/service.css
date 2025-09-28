@@ -616,6 +616,8 @@
     display: block;
     padding: 120px 0 113px;
     z-index: 1;
+    margin-bottom: -80px;
+    margin-top: 20px
 }
 
 .service-details__left {

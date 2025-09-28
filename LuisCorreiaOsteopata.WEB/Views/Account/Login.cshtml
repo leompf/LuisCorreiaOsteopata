@@ -5,18 +5,25 @@
     Layout = "~/Views/Shared/_Layout2.cshtml";
 }
 
+@section MainMenu
+{
+    <li>
+        <a asp-controller="Home" asp-action="Index">Home</a>
+    </li>
+}
+
 <!--Page Header Start-->
 <section class="page-header">
     <div class="page-header__bg" style="background-image: url(assets/images/backgrounds/page-header-bg.jpg);">
     </div>
     <div class="container">
         <div class="page-header__inner">
-            <h3>Login Page</h3>
+            <h3>Login</h3>
             <div class="thm-breadcrumb__inner">
                 <ul class="thm-breadcrumb list-unstyled">
                     <li><a asp-controller="Home" asp-action="Index">Home</a></li>
                     <li><span class="icon-arrow-left"></span></li>
-                    <li>Login Page</li>
+                    <li>Login</li>
                 </ul>
             </div>
         </div>
@@ -28,7 +35,7 @@
     <div class="container">
         <div class="login-one__form">
             <div class="inner-title text-center">
-                <h2>Login Here</h2>
+                <h2>Login</h2>
             </div>
             <form method="post">
                 <div asp-validation-summary="ModelOnly"></div>
@@ -51,22 +58,22 @@
                     </div>
                     <div class="col-xl-12">
                         <div class="form-group">
-                            <button class="thm-btn" type="submit" data-loading-text="Please wait...">
+                            <button class="thm-btn" type="submit" data-loading-text="Por favor aguarda...">
                                 Login
-                                Here<span class="icon-right-arrow"></span>
+                                <span class="icon-right-arrow"></span>
                             </button>
                         </div>
                     </div>
                     <div class="remember-forget">
                         <div class="checked-box1">
                             <input type="checkbox" asp-for="RememberMe" />
-                            <label asp-for="RememberMe" >
-                                <span asp-validation-for="RememberMe" ></span>
-                                Remember me
+                            <label asp-for="RememberMe">
+                                <span asp-validation-for="RememberMe"></span>
+                                Lembrar-me
                             </label>
                         </div>
                         <div class="forget">
-                            <a href="#">Forget password?</a>
+                            <a href="#">Esqueceste-te da password?</a>
                         </div>
                     </div>
 

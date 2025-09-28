@@ -36,6 +36,7 @@
     <link rel="stylesheet" href="~/assets/css/jquery-ui.css" />
     <link rel="stylesheet" href="~/assets/css/aos.css" />
     <link rel="stylesheet" href="~/assets/css/timePicker.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@25.11.1/build/css/intlTelInput.css">
 
 
     <link rel="stylesheet" href="~/assets/css/module-css/slider.css" />
@@ -79,7 +80,14 @@
                             <div class="main-menu__wrapper-inner">
                                 <div class="main-menu__left">
                                     <div class="main-menu__logo">
-                                        <a asp-controller="Home" asp-action="Index"><img src="~/assets/images/resources/logo-1.png" alt=""></a>
+                                        @if (!User.Identity.IsAuthenticated)
+                                        {
+                                            <a asp-controller="Home" asp-action="Index"><img src="~/assets/images/resources/logo-1.png" alt=""></a>
+                                        }
+                                        else
+                                        {
+                                            <a asp-controller="Account" asp-action="Index"><img src="~/assets/images/resources/logo-1.png" alt=""></a>
+                                        }  
                                     </div>
                                 </div>
                                 <div class="main-menu__main-menu-box">
@@ -87,26 +95,19 @@
                                     <ul class="main-menu__list one-page-scroll-menu">
                                         @if (IsSectionDefined("MainMenu"))
                                         {
-                                            @RenderSection("MainMenu", required: false)
-                                            ;
+                                            @RenderSection("MainMenu", required: false)                                           
                                         }
                                         @if (!User.Identity.IsAuthenticated && !"SignUp".Equals(ViewContext.RouteData.Values["Action"].ToString()))
                                         {
                                             <li>
-                                                <a asp-controller="Account" asp-action="SignUp">Sign Up</a>
-                                            </li>
-                                        }
-                                        @if (User.Identity.IsAuthenticated)
-                                        {
-                                            <li>
-                                                <a asp-controller="Account" asp-action="Logout">Sign Out</a>
+                                                <a asp-controller="Account" asp-action="SignUp">Registar</a>
                                             </li>
                                         }
                                     </ul>
                                 </div>
                                 <div class="main-menu__right">
                                     <div class="main-menu__thm-btn">
-                                        <a href="appoinment.html" class="thm-btn">
+                                        <a asp-controller="Bookings" asp-action="Index"  class="thm-btn">
                                             Marcar consulta <span class="icon-plus"></span>
                                         </a>
                                     </div>
@@ -157,14 +158,14 @@
                         <div class="row">
                             <div class="col-xl-4 col-lg-6 col-md-6 wow fadeInUp" data-wow-delay="100ms">
                                 <div class="footer-widget__contact-info">
-                                    <h4 class="footer-widget__title">Contacto</h4>
+                                    <h4 class="footer-widget__title" id="contact">Contacto</h4>
                                     <ul class="footer-widget__contact-list list-unstyled">
                                         <li>
                                             <div class="footer-widget__contact-icon">
                                                 <span class="icon-pin"></span>
                                             </div>
                                             <div class="footer-widget__contact-content">
-                                                <span>Address</span>
+                                                <span>Morada</span>
                                                 <p class="footer-widget__contact-text">Rua Camilo Castelo Branco, 2625-215 Póvoa de Santa Iria</p>
                                             </div>
                                         </li>
@@ -173,7 +174,7 @@
                                                 <span class="icon-call"></span>
                                             </div>
                                             <div class="footer-widget__contact-content">
-                                                <span>Phone Number</span>
+                                                <span>Nº Telemóvel</span>
                                                 <p class="footer-widget__contact-text">
                                                     <a href="tel:0123456789101">
                                                         +351 932 281 422
@@ -188,7 +189,7 @@
                                             <div class="footer-widget__contact-content">
                                                 <span>Email</span>
                                                 <p class="footer-widget__contact-text">
-                                                    <a href="mailto:abcd@gmail.com">abcd@gmail.com</a>
+                                                    <a href="mailto:Luiscorreia7e@gmail.com">Luiscorreia7e@gmail.com</a>
                                                 </p>
                                             </div>
                                         </li>
@@ -337,7 +338,7 @@
 
     <a href="#" data-target="html" class="scroll-to-target scroll-to-top">
         <span class="scroll-to-top__wrapper"><span class="scroll-to-top__inner"></span></span>
-        <span class="scroll-to-top__text"> Go Back Top</span>
+        <span class="scroll-to-top__text"> Voltar Ao Topo</span>
     </a>
 
     <script src="~/assets/js/jquery-3.6.0.min.js"></script>
@@ -362,6 +363,8 @@
     <script src="~/assets/js/gsap/SplitText.js"></script>
     <script src="~/assets/js/aos.js"></script>
     <script src="~/assets/js/timePicker.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@25.11.1/build/js/intlTelInputWithUtils.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.19/index.global.min.js"></script>
     @await RenderSectionAsync("Scripts", required: false)
 
     <!-- template js -->
