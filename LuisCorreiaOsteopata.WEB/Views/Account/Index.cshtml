@@ -63,9 +63,7 @@
         <div class="col-xl-10 col-lg-7">
             <div class="view-appointment__left">
                 <h3 class="view-appointment__title">Vê as tuas consultas</h3>
-                <ejs-schedule id="schedule"
-                              currentView="Month">
-                </ejs-schedule>
+                <div id="calendar"></div>
             </div>
         </div>
     </div>
@@ -74,6 +72,20 @@
 @section Scripts {
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
-        <script src="https://cdn.syncfusion.com/ej2/31.1.17/dist/ej2.min.js"></script>
     }
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+          var calendarEl = document.getElementById('calendar');
+          var calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'dayGridMonth',
+            locale: 'pt',
+            eventClick: function(info) {
+        alert('Event: ' + info.event.title);
+        alert('Coordinates: ' + info.jsEvent.pageX + ',' + info.jsEvent.pageY);
+        alert('View: ' + info.view.type);
+              }
+          });
+          calendar.render();
+        });
+    </script>
 }
