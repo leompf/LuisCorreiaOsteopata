@@ -10,8 +10,6 @@ public class DataContext : IdentityDbContext<User>
 
     public DbSet<Staff> Staff {  get; set; }
 
-    public DbSet<Appointment> Appointments { get; set; }
-
     public DataContext(DbContextOptions<DataContext> options) : base(options)
     {
     }

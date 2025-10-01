@@ -5,7 +5,6 @@ using LuisCorreiaOsteopata.WEB.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using System.Threading.Tasks;
 
 namespace LuisCorreiaOsteopata.WEB.Controllers
 {
@@ -14,25 +13,20 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
         private readonly IUserHelper _userHelper;
         private readonly IPatientRepository _patientRepository;
         private readonly IStaffRepository _staffRepository;
-        private readonly UserManager<User> _userManager;
 
         public AccountController(IUserHelper userHelper,
             IPatientRepository patientRepository,
-            IStaffRepository staffRepository,
-            UserManager<User> userManager)
+            IStaffRepository staffRepository)
         {
             _userHelper = userHelper;
             _patientRepository = patientRepository;
             _staffRepository = staffRepository;
-            _userManager = userManager;
         }
 
-        public async Task<IActionResult> Index()
+        public IActionResult Index()
         {
             if (User.Identity.IsAuthenticated)
             {
-                var user = await _userManager.GetUserAsync(User);
-
                 return View();
             }
 

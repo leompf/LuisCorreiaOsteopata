@@ -22,42 +22,6 @@ namespace LuisCorreiaOsteopata.Library.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("LuisCorreiaOsteopata.Library.Data.Entities.Appointment", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("AppointmentDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("EndTime")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Notes")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<int>("PatientId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("StaffId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("StartTime")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("PatientId");
-
-                    b.HasIndex("StaffId");
-
-                    b.ToTable("Appointments");
-                });
-
             modelBuilder.Entity("LuisCorreiaOsteopata.Library.Data.Entities.Patient", b =>
                 {
                     b.Property<int>("Id")
@@ -350,25 +314,6 @@ namespace LuisCorreiaOsteopata.Library.Migrations
                     b.HasKey("UserId", "LoginProvider", "Name");
 
                     b.ToTable("AspNetUserTokens", (string)null);
-                });
-
-            modelBuilder.Entity("LuisCorreiaOsteopata.Library.Data.Entities.Appointment", b =>
-                {
-                    b.HasOne("LuisCorreiaOsteopata.Library.Data.Entities.Patient", "Patient")
-                        .WithMany()
-                        .HasForeignKey("PatientId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("LuisCorreiaOsteopata.Library.Data.Entities.Staff", "Staff")
-                        .WithMany()
-                        .HasForeignKey("StaffId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Patient");
-
-                    b.Navigation("Staff");
                 });
 
             modelBuilder.Entity("LuisCorreiaOsteopata.Library.Data.Entities.Patient", b =>
