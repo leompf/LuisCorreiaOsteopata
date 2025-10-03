@@ -35,12 +35,13 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
 
                 var appointments = await _appointmentRepository.GetAppointmentsByUserAsync(user);
 
+
                 var events = appointments.Select(a => new
                 {
                     id = a.Id,
                     title = $"Consulta com {a.Staff.FullName}",
-                    start = a.StartTime.ToString("s"),  // ISO 8601
-                    end = a.EndTime.ToString("s"),      // ISO 8601
+                    start = a.StartTime.ToString("s"),  
+                    end = a.EndTime.ToString("s"),      
                     allDay = false
                 }).ToList();
 

@@ -1,4 +1,5 @@
 ﻿using LuisCorreiaOsteopata.Library.Data;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace LuisCorreiaOsteopata.WEB.Controllers.API;
@@ -14,12 +15,14 @@ public class AppointmentsController : Controller
         _appointmentRepository = appointmentRepository;
     }
 
+    [Authorize(Roles = "Administrador")]
     [HttpGet]
-    public async Task<IActionResult> GetAppointments()
+    public IActionResult GetAllAppointments()
     {
-        var appointments = await _appointmentRepository.GetSchedulledAppointmentsAsync();
+        var appointments = _appointmentRepository.GetSchedulledAppointmentsAsync();
         return Ok(appointments);
     }
+
 
     [HttpGet("AvailableTimeSlots")]
     public IActionResult GetAvailableTimeSlots([FromQuery] DateTime date)
