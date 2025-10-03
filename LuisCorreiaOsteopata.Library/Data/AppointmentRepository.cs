@@ -36,7 +36,6 @@ public class AppointmentRepository : GenericRepository<Appointment>, IAppointmen
 
     public IEnumerable<SelectListItem> GetAvailableTimeSlotsCombo(DateTime date)
     {
-        // Get booked slots synchronously
         var booked = _context.Appointments
             .Where(a => a.AppointmentDate.Date == date.Date)
             .Select(a => TimeOnly.FromDateTime(a.StartTime))
@@ -57,7 +56,7 @@ public class AppointmentRepository : GenericRepository<Appointment>, IAppointmen
         }
         else
         {
-            return new List<SelectListItem>(); // Sunday no slots
+            return new List<SelectListItem>(); 
         }
 
         var slotDuration = TimeSpan.FromMinutes(60);
@@ -68,7 +67,6 @@ public class AppointmentRepository : GenericRepository<Appointment>, IAppointmen
                 slots.Add(t);
         }
 
-        // Convert to SelectListItem
         return slots.Select(t => new SelectListItem
         {
             Text = t.ToString("HH:mm"),
@@ -82,10 +80,17 @@ public class AppointmentRepository : GenericRepository<Appointment>, IAppointmen
         return appointments.Select(a => new AppointmentDto
         {
             Id = a.Id,
-            Subject = "Booked",
+            PatientId = a.Patient.Id,
+            StaffId = a.Staff.Id,
+            StaffName = a.Staff.FullName,
+            CreatedDate = a.CreatedDate,
+            AppointmentStatus = a.AppointmentStatus,
+            AppointmentDate = a.AppointmentDate,           
             StartTime = a.StartTime,
             EndTime = a.EndTime,
-            StaffId = a.Staff.Id
+            PatientNotes = a.PatientNotes,
+            StaffNotes = a.StaffNotes,
+            IsPaid = a.IsPaid,
         }).ToList();
     }
 }
