@@ -1,8 +1,11 @@
+using Ganss.Xss;
 using LuisCorreiaOsteopata.WEB.Data;
 using LuisCorreiaOsteopata.WEB.Data.Entities;
 using LuisCorreiaOsteopata.WEB.Helpers;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
+using WebPWrecover.Services;
 
 namespace LuisCorreiaOsteopata.WEB;
 
@@ -25,7 +28,8 @@ public class Program
             cfg.Password.RequireNonAlphanumeric = false;
             cfg.Password.RequiredLength = 6;
         })
-          .AddEntityFrameworkStores<DataContext>();
+          .AddEntityFrameworkStores<DataContext>()
+          .AddDefaultTokenProviders();
 
         builder.Services.AddDbContext<DataContext>(cfg =>
         {
@@ -33,12 +37,16 @@ public class Program
         });
 
         builder.Services.AddTransient<SeedDB>();
+        builder.Services.AddTransient<IEmailSender, EmailSender>();
         builder.Services.AddScoped<IUserHelper, UserHelper>();
         builder.Services.AddScoped<IConverterHelper, ConverterHelper>();
+        builder.Services.AddScoped<HtmlSanitizer>();
 
         builder.Services.AddScoped<IPatientRepository, PatientRepository>();
         builder.Services.AddScoped<IStaffRepository, StaffRepository>();
         builder.Services.AddScoped<IAppointmentRepository, AppointmentRepository>();
+
+        builder.Services.Configure<AuthMessageSenderOptions>(builder.Configuration);
 
         var app = builder.Build();
 

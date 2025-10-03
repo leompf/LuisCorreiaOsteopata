@@ -4,6 +4,7 @@
     ViewData["Title"] = "Marcar Consulta";
     Layout = "~/Views/Shared/_Layout2.cshtml";
 }
+<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
 
 <section class="page-header">
     <div class="page-header__bg" style="background-image: url(assets/images/backgrounds/page-header-bg.jpg);">
@@ -50,10 +51,10 @@
                             </div>
                             <div class="col-xl-12">
                                 <div class="appoinment-page__input-box text-message-box">
-                                    <span asp-validation-for="Notes"></span>
-                                    <textarea asp-for="Notes" placeholder="Razão da consulta..."></textarea>
+                                    <div id="quill-editor"></div>
+                                    <input type="hidden" asp-for="Notes" id="Notes" />
                                 </div>
-                                <div class="appoinment-page__btn-box">
+                                <div class="appoinment-page__btn-box" style="margin-top: 70px">
                                     <button type="submit" class="thm-btn">
                                         Marcar<span class="icon-plus"></span>
                                     </button>
@@ -94,27 +95,48 @@
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
+    <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
     <script>
+        $(document).ready(function () 
+        {
+            // --- Quill Editor Setup ---
+            var quill = new Quill('#quill-editor', 
+            {
+                theme: 'snow',
+                placeholder: 'Razão da consulta...',
+                modules: {
+                    toolbar: [['bold', 'italic', 'underline'], [{ 'list': 'ordered' }, { 'list': 'bullet' }]]
+                }
+            });
+
+            // Sync Quill content into hidden input before form submit
+            $('form').on('submit', function () 
+            {
+                $('#Notes').val(quill.root.innerHTML);
+            });
+
+
+            // --- Appointment Date Change Handler ---
             $('#AppointmentDate').on('change', function () {
-            const selectedDate = $(this).val();
-            if (!selectedDate) return;
+                const selectedDate = $(this).val();
+                if (!selectedDate) return;
 
-            $.getJSON('api/Appointments/AvailableTimeSlots', { date: selectedDate })
-                .done(function (data) {
-                    const $timeSlots = $('#timeSlots');
-                    $timeSlots.empty();
+                $.getJSON('api/Appointments/AvailableTimeSlots', { date: selectedDate })
+                    .done(function (data) {
+                        const $timeSlots = $('#timeSlots');
+                        $timeSlots.empty();
 
-                    if (data.length === 0) {
-                        $timeSlots.append($('<option>', { value: '', text: 'Sem horários disponíveis' }));
-                    } else {
-                        $.each(data, function (i, slot) {
-                            $timeSlots.append($('<option>', { value: slot.value, text: slot.text }));
-                        });
-                        $timeSlots.val(data[0].value);
-                    }
-
-                    $timeSlots.niceSelect('update');
-                });
+                        if (data.length === 0) {
+                            $timeSlots.append($('<option>', { value: '', text: 'Sem horários disponíveis' }));
+                        } else {
+                            $.each(data, function (i, slot) {
+                                $timeSlots.append($('<option>', { value: slot.value, text: slot.text }));
+                            });
+                            $timeSlots.val(data[0].value);
+                        }
+                        $timeSlots.niceSelect('update');
+                    });
+            });
         });
     </script>
 }

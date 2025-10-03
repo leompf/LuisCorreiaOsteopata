@@ -33,6 +33,7 @@ public class SeedDB
                 LastName = "Fraqueiro",
                 Email = "lmfraqueiro@gmail.com",
                 UserName = "lmfraqueiro@gmail.com",
+                EmailConfirmed = true
             };
 
             var result = await _userHelper.AddUserAsync(user, "123456");

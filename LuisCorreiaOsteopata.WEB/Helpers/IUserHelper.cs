@@ -9,9 +9,17 @@ public interface IUserHelper
 
     Task<User> GetUserByNifAsync(string nif);
 
+    Task<User> GetUserByIdAsync(string id);
+
     Task<User> GetCurrentUserAsync();
 
     Task<IdentityResult> AddUserAsync(User user, string password);
+
+    Task<string> GenerateEmailConfirmationTokenAsync(User user);
+
+    Task<IdentityResult> ConfirmEmailAsync(User user, string token);
+
+    Task<bool> IsEmailConfirmedAsync(User user);
 
     Task<IdentityResult> UpdateUserAsync(User user);
 
@@ -24,6 +32,8 @@ public interface IUserHelper
     Task AddUserToRoleAsync(User user, string rolename);
 
     Task<bool> IsUserInRoleAsync(User user, string rolename);
+
+    Task<string> GetUserRoleAsync(User user);
 
     string GenerateRandomPassword(PasswordOptions options = null);
 }
