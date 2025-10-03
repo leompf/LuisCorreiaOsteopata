@@ -18,6 +18,10 @@ public class Staff : IEntity
     public string LastName {  get; set; }
 
 
+    [Display(Name = "Full Name")]
+    public string FullName => $"{FirstName} {LastName}";
+
+
     [Required]
     public string Email { get; set; }
 

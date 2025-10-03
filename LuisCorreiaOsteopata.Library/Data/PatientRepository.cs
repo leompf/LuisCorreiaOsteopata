@@ -1,25 +1,28 @@
 ﻿using LuisCorreiaOsteopata.Library.Data.Entities;
+using LuisCorreiaOsteopata.Library.Helpers;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 
 namespace LuisCorreiaOsteopata.Library.Data;
 
 public class PatientRepository : GenericRepository<Patient>, IPatientRepository
 {
     private readonly DataContext _context;
-    private readonly UserManager<User> _userManager;
+    private readonly IUserHelper _userHelper;
 
     public PatientRepository(DataContext context,
-        UserManager<User> userManager) : base(context)
+        IUserHelper userHelper) : base(context)
     {
         _context = context;
-        _userManager = userManager;
+        _userHelper = userHelper;
     }
 
 
     public async Task<Patient> CreatePatientAsync(User user, string roleName)
     {
-        var isInrole = await _userManager.IsInRoleAsync(user, roleName);
-        if (!isInrole)
+        var isInRole = await _userHelper.IsUserInRoleAsync(user, roleName);
+        
+        if (!isInRole)
         {
             return null;
         }
@@ -35,5 +38,17 @@ public class PatientRepository : GenericRepository<Patient>, IPatientRepository
         };
 
         return patient;
+    }
+
+    public async Task<Patient?> GetPatientByUserEmailAsync(string email)
+    {
+        var user = await _userHelper.GetUserByEmailAsync(email);
+        if (user == null)
+        {
+            return null;
+        }
+
+        return await _context.Patients
+            .FirstOrDefaultAsync(p => p.User.Id == user.Id);
     }
 }

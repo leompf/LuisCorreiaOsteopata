@@ -36,8 +36,8 @@
     <link rel="stylesheet" href="~/assets/css/jquery-ui.css" />
     <link rel="stylesheet" href="~/assets/css/aos.css" />
     <link rel="stylesheet" href="~/assets/css/timePicker.css" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@25.11.1/build/css/intlTelInput.css">
-    <link rel="stylesheet" href="https://cdn.syncfusion.com/ej2/31.1.17/fluent.css"
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@25.11.1/build/css/intlTelInput.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.css" />
 
 
     <link rel="stylesheet" href="~/assets/css/module-css/slider.css" />
@@ -98,7 +98,7 @@
                                         {
                                             @RenderSection("MainMenu", required: false)                                           
                                         }
-                                        @if (!User.Identity.IsAuthenticated && !"SignUp".Equals(ViewContext.RouteData.Values["Action"].ToString()))
+                                        @if (!User?.Identity.IsAuthenticated == true && !"SignUp".Equals(ViewContext.RouteData.Values["Action"]?.ToString()))
                                         {
                                             <li>
                                                 <a asp-controller="Account" asp-action="SignUp">Registar</a>
@@ -108,7 +108,7 @@
                                 </div>
                                 <div class="main-menu__right">
                                     <div class="main-menu__thm-btn">
-                                        <a asp-controller="Bookings" asp-action="Index"  class="thm-btn">
+                                        <a asp-controller="Appointment" asp-action="Index" class="thm-btn">
                                             Marcar consulta <span class="icon-plus"></span>
                                         </a>
                                     </div>
@@ -365,10 +365,8 @@
     <script src="~/assets/js/aos.js"></script>
     <script src="~/assets/js/timePicker.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@25.11.1/build/js/intlTelInputWithUtils.js"></script>
-    
 
     @await RenderSectionAsync("Scripts", required: false)
-    <ejs-scripts></ejs-scripts>
 
     <!-- template js -->
     <script src="~/assets/js/script.js"></script>

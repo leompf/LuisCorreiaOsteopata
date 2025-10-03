@@ -1,0 +1,53 @@
+﻿@model LuisCorreiaOsteopata.WEB.Models.AppointmentViewModel
+
+@{
+    ViewData["Title"] = "Details";
+    Layout = "~/Views/Shared/_Layout2.cshtml";
+}
+
+<section class="page-header">
+    <div class="page-header__bg" style="background-image: url(assets/images/backgrounds/page-header-bg.jpg);">
+    </div>
+    <div class="container">
+        <div class="page-header__inner">
+            <h3>Detalhes da Consulta</h3>
+            <div class="thm-breadcrumb__inner">
+                <ul class="thm-breadcrumb list-unstyled">
+                    <li><a asp-controller="Account" asp-action="Index">Home</a></li>
+                    <li><span class="icon-arrow-left"></span></li>
+                    <li>Detalhes Consulta</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="appoinment-page">
+    <div class="container">
+        <div class="row">
+            <div class="col-xl-8 col-lg-7">
+                <div class="appoinment-page__left">
+                    <h3 class="appoinment-page__title">Detalhes da Consulta</h3>
+                    <div class="row">
+                        <div class="col-xl-12 col-md-6">
+                            <label><strong>Data da Consulta:</strong> @Model.AppointmentDate.ToShortDateString()</label>
+                        </div>
+
+                        <div class="col-xl-3 col-md-6" style="margin-right: -35px">
+                            <label><strong>Hora de início:</strong> @Model.StartTime.ToShortTimeString()</label>
+                        </div>
+
+                        <div class="col-xl-3 col-md-6">
+                            <label><strong>Termina às:</strong> @Model.EndTime.ToShortTimeString()</label>
+                        </div>
+
+                        <div class="col-xl-3 col-md-6">
+                            <label><strong>Profissional</strong> @Model.StaffId</label>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

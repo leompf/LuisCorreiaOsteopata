@@ -8,17 +8,19 @@ public class Appointment : IEntity
 
 
     [Required]
+    public int PatientId { get; set; }
     public Patient Patient { get; set; }
 
 
     [Required]
+    public int StaffId { get; set; }
     public Staff Staff { get; set; }
 
 
     [Required]
     [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy}", ApplyFormatInEditMode = false)]
     [Display(Name = "Created Date")]
-    public DateTime CreatedDate => DateTime.Now;
+    public DateTime CreatedDate { get; set; }
 
 
     [Required]
@@ -42,20 +44,18 @@ public class Appointment : IEntity
     public DateTime EndTime { get; set; }
 
 
-    [MaxLength(500)]
-    public string? Notes { get; set; }
+    [MaxLength(1000)]
+    public string? PatientNotes { get; set; }
+
+
+    public string? StaffNotes { get; set; }
 
 
     [Required]
-    public AppointmentStatus Status => AppointmentStatus.Booked;
+    public string AppointmentStatus {  get; set; }
 
-    //TODO: Corrigir o delete em cascata porque a base de dados não está a ser criada
+
+    [Required]
+    public bool IsPaid { get; set; }
 }
 
-
-public enum AppointmentStatus
-{
-    Booked,
-    Completed,
-    Cancelled
-}
