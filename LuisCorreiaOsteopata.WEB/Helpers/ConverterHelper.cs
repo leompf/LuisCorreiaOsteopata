@@ -1,10 +1,18 @@
 ﻿using LuisCorreiaOsteopata.WEB.Data.Entities;
 using LuisCorreiaOsteopata.WEB.Models;
 
+using Ganss.Xss;
+
 namespace LuisCorreiaOsteopata.WEB.Helpers;
 
 public class ConverterHelper : IConverterHelper
 {
+    private readonly HtmlSanitizer _sanitizer;
+
+    public ConverterHelper(HtmlSanitizer sanitizer)
+    {
+        _sanitizer = sanitizer;
+    }
     public AppointmentViewModel ToAppointmentViewModel(Appointment appointment)
     {
         return new AppointmentViewModel
@@ -19,8 +27,8 @@ public class ConverterHelper : IConverterHelper
             StartTime = appointment.StartTime,
             EndTime = appointment.EndTime,
             AppointmentStatus = appointment.AppointmentStatus,
-            PatientNotes = appointment.PatientNotes,
-            StaffNotes = appointment.StaffNotes,
+            PatientNotes = _sanitizer.Sanitize(appointment.PatientNotes),
+            StaffNotes = _sanitizer.Sanitize(appointment.StaffNotes),
             IsPaid = appointment.IsPaid
         };
     }

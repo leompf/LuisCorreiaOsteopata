@@ -45,6 +45,11 @@ public class UserHelper : IUserHelper
         }
     }
 
+    public async Task<IdentityResult> ConfirmEmailAsync(User user, string token)
+    {
+        return await _userManager.ConfirmEmailAsync(user, token);
+    }
+
     public async Task<Patient> CreatePatientAsync(User user, string roleName)
     {
         var isInrole = await _userManager.IsInRoleAsync(user, roleName);
@@ -61,6 +66,11 @@ public class UserHelper : IUserHelper
         };
 
         return patient;
+    }
+
+    public async Task<string> GenerateEmailConfirmationTokenAsync(User user)
+    {
+        return await _userManager.GenerateEmailConfirmationTokenAsync(user);
     }
 
     public string GenerateRandomPassword(PasswordOptions options = null)
@@ -129,10 +139,26 @@ public class UserHelper : IUserHelper
         return await _userManager.FindByEmailAsync(email);
     }
 
+    public async Task<User> GetUserByIdAsync(string id)
+    {
+        return await _userManager.FindByIdAsync(id);
+    }
+
     public async Task<User> GetUserByNifAsync(string nif)
     {
         var user = _userManager.Users.FirstOrDefault(u => u.Nif == nif);
         return user;
+    }
+
+    public async Task<string> GetUserRoleAsync(User user)
+    {
+        var role = await _userManager.GetRolesAsync(user);
+        return role.FirstOrDefault();
+    }
+
+    public async Task<bool> IsEmailConfirmedAsync(User user)
+    {
+        return await _userManager.IsEmailConfirmedAsync(user);
     }
 
     public async Task<bool> IsUserInRoleAsync(User user, string rolename)

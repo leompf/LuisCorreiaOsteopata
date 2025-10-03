@@ -36,10 +36,21 @@ public class AppointmentRepository : GenericRepository<Appointment>, IAppointmen
 
     public async Task<List<Appointment>> GetAppointmentsByUserAsync(User user)
     {
-        return await _context.Appointments
+        var role = await _userHelper.GetUserRoleAsync(user);
+        
+        if (role == "Utente")
+        {
+            return await _context.Appointments
                          .Include(a => a.Staff)
                          .Include(a => a.Patient)
                          .Where(a => a.Patient.User.Id == user.Id)
+                         .ToListAsync();
+        }
+
+        return await _context.Appointments
+                         .Include(a => a.Staff)
+                         .Include(a => a.Patient)
+                         .Where(a => a.Staff.User.Id == user.Id)
                          .ToListAsync();
     }
 

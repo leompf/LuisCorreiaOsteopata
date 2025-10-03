@@ -40,7 +40,7 @@
 </section>
 
 <!--Start Sign Up One-->
-<section class="sign-up-one">
+<section class="sign-up-one" id="register-section">
     <div class="container">
         <div class="sign-up-one__form">
             <div class="inner-title text-center">
@@ -114,28 +114,38 @@
 @section Scripts {
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
-        <script>
-                document.addEventListener("DOMContentLoaded", function () {
-                const input = document.querySelector("#phone");
-
-                const iti = window.intlTelInput(input, {
-                    initialCountry: "pt",
-                    preferredCountries: ["pt", "us", "gb"],
-                    separateDialCode: true,
-                    formatOnDisplay: true
-                });
-
-                // Ensure phone number is E.164 before form submission
-                const form = input.closest("form");
-                form.addEventListener("submit", function () {
-                    if (iti.isValidNumber()) {
-                        input.value = iti.getNumber(); // e.g. +351912345678
-                    } else {
-                        alert("Número de telefone inválido.");
-                        event.preventDefault();
+        <script type="text/javascript">
+                document.addEventListener("DOMContentLoaded", function () 
+                {
+                    const registerSection = document.getElementById("register-section");
+                    if (registerSection)
+                    {
+                        registerSection.scrollIntoView({ behavior: "smooth" });
                     }
+
+                    const input = document.querySelector("#phone");
+
+                    const iti = window.intlTelInput(input, 
+                    {
+                        initialCountry: "pt",
+                        separateDialCode: true,
+                        formatOnDisplay: true
+                    });
+
+                    const form = input.closest("form");
+                    form.addEventListener("submit", function () 
+                    {
+                        if (iti.isValidNumber()) 
+                        {
+                            input.value = iti.getNumber(); 
+                        } 
+                        else 
+                        {
+                            alert("Número de telefone inválido.");
+                            event.preventDefault();
+                        }
+                    });
                 });
-            });
         </script>
     }
 }

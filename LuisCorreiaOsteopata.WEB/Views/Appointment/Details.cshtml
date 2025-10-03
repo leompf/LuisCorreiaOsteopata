@@ -82,7 +82,7 @@
                                                 <div class="product-details__tab-content-inner">
                                                     <div class="product-details__description-content">
                                                         <p class="product-details__description-text-1">
-                                                            @Model.PatientNotes
+                                                            @Html.Raw(Model.PatientNotes)
                                                         </p>
                                                     </div>
                                                 </div>
@@ -92,7 +92,7 @@
                                                 <div class="product-details__tab-content-inner">
                                                     <div class="product-details__additional-information-content">
                                                         <p class="product-details__additional-information-text-1">
-                                                            @Model.StaffNotes
+                                                            @Html.Raw(Model.StaffNotes)
                                                         </p>
                                                     </div>
                                                 </div>

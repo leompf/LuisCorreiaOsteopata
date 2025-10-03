@@ -5,6 +5,7 @@ using LuisCorreiaOsteopata.WEB.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Identity.UI.Services;
 
 namespace LuisCorreiaOsteopata.WEB.Controllers
 {
@@ -14,17 +15,19 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
         private readonly IPatientRepository _patientRepository;
         private readonly IStaffRepository _staffRepository;
         private readonly IAppointmentRepository _appointmentRepository;
-
+        private readonly IEmailSender _emailSender;
 
         public AccountController(IUserHelper userHelper,
             IPatientRepository patientRepository,
             IStaffRepository staffRepository,
-            IAppointmentRepository appointmentRepository)
+            IAppointmentRepository appointmentRepository,
+            IEmailSender emailSender)
         {
             _userHelper = userHelper;
             _patientRepository = patientRepository;
             _staffRepository = staffRepository;
             _appointmentRepository = appointmentRepository;
+            _emailSender = emailSender;
         }
 
         public async Task<IActionResult> Index()
@@ -62,53 +65,128 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
         [HttpPost]
         public async Task<IActionResult> SignUp(SignUpViewModel model)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                var user = await _userHelper.GetUserByEmailAsync(model.Email);
-
-                if (user == null)
-                {
-                    user = new User
-                    {
-                        FirstName = model.FirstName,
-                        LastName = model.LastName,
-                        Email = model.Email,
-                        UserName = model.Email,
-                        PhoneNumber = model.PhoneNumber,
-                    };
-
-                    var result = await _userHelper.AddUserAsync(user, model.Password);
-
-                    await _userHelper.AddUserToRoleAsync(user, "Utente");
-
-                    var role = await _userHelper.IsUserInRoleAsync(user, "Utente");
-                    if (!role)
-                    {
-                        await _userHelper.AddUserToRoleAsync(user, "Utente");
-                    }
-
-                    var patient = await _patientRepository.CreatePatientAsync(user, "Utente");
-                    if (patient != null)
-                    {
-                        await _patientRepository.CreateAsync(patient);
-                    }
-
-                    if (result != IdentityResult.Success)
-                    {
-                        ModelState.AddModelError(string.Empty, "Houve um erro ao criar o utilizador.");
-                        return View(model);
-                    }
-
-                    var result2 = await _userHelper.LoginAsync(model.Email, model.Password, false);
-                    if (result2.Succeeded)
-                    {
-                        return RedirectToAction("Index", "Account");
-                    }
-                }
+                return View(model);
             }
 
-            ModelState.AddModelError(string.Empty, "Já existe um utilizador com esse email.");
-            return View(model);
+            var user = await _userHelper.GetUserByEmailAsync(model.Email);
+            if (user != null)
+            {
+                ModelState.AddModelError(string.Empty, "Já existe um utilizador com esse email.");
+                return View(model);
+            }
+
+            user = new User
+            {
+                FirstName = model.FirstName,
+                LastName = model.LastName,
+                Email = model.Email,
+                UserName = model.Email,
+                PhoneNumber = model.PhoneNumber,
+            };
+
+            var result = await _userHelper.AddUserAsync(user, model.Password);
+            if (result != IdentityResult.Success)
+            {
+                ModelState.AddModelError(string.Empty, "Houve um erro ao criar o utilizador.");
+                return View(model);
+            }
+
+            await _userHelper.AddUserToRoleAsync(user, "Utente");
+
+            var patient = await _patientRepository.CreatePatientAsync(user, "Utente");
+            if (patient != null)
+            {
+                await _patientRepository.CreateAsync(patient);
+            }
+
+            var token = await _userHelper.GenerateEmailConfirmationTokenAsync(user);
+            var confirmationLink = Url.Action("ConfirmEmail", "Account", new
+            {
+                userId = user.Id,
+                token = token
+            }, protocol: HttpContext.Request.Scheme);
+
+            var mailMessage = $"Viva, {user.FirstName}!<br/><br/>Bem-vindo à plataforma Luis Correia, Osteopata. Aqui é o lugar ideal para gestionares todas as tuas consultas bem como estar a par de todas as novidades acerca do meu trabalho.<br/>" +
+                $"Para aceder à plataforma, primeiro necessitas de confirmar a tua conta, clicando aqui <a href='{confirmationLink}'>Confirmar Conta</a>";
+
+            await _emailSender.SendEmailAsync(user.Email, "Ativação de Conta - Luis Correia, Osteopata", mailMessage);
+
+            TempData["SuccessMessage"] = "Registo realizado! Por favor, verifica o teu email para confirmar a conta.";
+            return RedirectToAction("Login");
+
+            //if (ModelState.IsValid)
+            //{
+            //    var user = await _userHelper.GetUserByEmailAsync(model.Email);
+
+            //    if (user == null)
+            //    {
+            //        user = new User
+            //        {
+            //            FirstName = model.FirstName,
+            //            LastName = model.LastName,
+            //            Email = model.Email,
+            //            UserName = model.Email,
+            //            PhoneNumber = model.PhoneNumber,
+            //        };
+
+            //        var result = await _userHelper.AddUserAsync(user, model.Password);
+
+            //        await _userHelper.AddUserToRoleAsync(user, "Utente");
+
+            //        var role = await _userHelper.IsUserInRoleAsync(user, "Utente");
+            //        if (!role)
+            //        {
+            //            await _userHelper.AddUserToRoleAsync(user, "Utente");
+            //        }
+
+            //        var patient = await _patientRepository.CreatePatientAsync(user, "Utente");
+            //        if (patient != null)
+            //        {
+            //            await _patientRepository.CreateAsync(patient);
+            //        }
+
+            //        if (result != IdentityResult.Success)
+            //        {
+            //            ModelState.AddModelError(string.Empty, "Houve um erro ao criar o utilizador.");
+            //            return View(model);
+            //        }
+
+            //        var result2 = await _userHelper.LoginAsync(model.Email, model.Password, false);
+            //        if (result2.Succeeded)
+            //        {
+            //            return RedirectToAction("Index", "Account");
+            //        }
+            //    }
+            //}
+
+            //ModelState.AddModelError(string.Empty, "Já existe um utilizador com esse email.");
+            //return View(model);
+        }
+
+        public async Task<IActionResult> ConfirmEmail(string userId, string token)
+        {
+            if (userId == null || token == null)
+            {
+                return RedirectToAction("Index", "Home");
+            }
+
+            var user = await _userHelper.GetUserByIdAsync(userId);
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            var result = await _userHelper.ConfirmEmailAsync(user, token);
+            if (result.Succeeded)
+            {
+                TempData["SuccessMessage"] = "Email confirmado com sucesso! Podes usar a conta.";
+                return RedirectToAction("Login");
+            }
+
+            TempData["ErrorMessage"] = "Erro ao confirmar email.";
+            return RedirectToAction("Index", "Home");
         }
 
         public IActionResult Login()
@@ -125,6 +203,13 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
                 var result = await _userHelper.LoginAsync(model.Username, model.Password, model.RememberMe);
                 if (result.Succeeded)
                 {
+                    var user = await _userHelper.GetUserByEmailAsync(model.Username);
+                    if (user != null && !await _userHelper.IsEmailConfirmedAsync(user))
+                    {
+                        ModelState.AddModelError(string.Empty, "Por favor confirma o teu email antes de fazer login.");
+                        return View(model);                      
+                    }
+
                     if (this.Request.Query.Keys.Contains("ReturnUrl"))
                     {
                         return Redirect(this.Request.Query["ReturnUrl"].First());

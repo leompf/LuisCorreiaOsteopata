@@ -31,7 +31,7 @@
 </section>
 <!--Page Header End-->
 <!--Start Login One-->
-<section class="login-one">
+<section class="login-one" id="login-section">
     <div class="container">
         <div class="login-one__form">
             <div class="inner-title text-center">
@@ -89,5 +89,15 @@
 @section Scripts {
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
+        <script type="text/javascript">
+            document.addEventListener("DOMContentLoaded", function () 
+            {
+                const loginSection = document.getElementById("login-section");
+                if (loginSection)
+                {
+                    loginSection.scrollIntoView({ behavior: "smooth" });
+                }
+            });
+        </script>
     }
 }
