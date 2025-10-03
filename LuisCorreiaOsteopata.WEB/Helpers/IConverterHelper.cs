@@ -1,4 +1,4 @@
-﻿using LuisCorreiaOsteopata.Library.Data.Entities;
+﻿using LuisCorreiaOsteopata.WEB.Data.Entities;
 using LuisCorreiaOsteopata.WEB.Models;
 
 namespace LuisCorreiaOsteopata.WEB.Helpers

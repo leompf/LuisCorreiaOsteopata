@@ -104,6 +104,13 @@
                                                 <a asp-controller="Account" asp-action="SignUp">Registar</a>
                                             </li>
                                         }
+                                        @if (!User?.Identity.IsAuthenticated == true && !"Login".Equals(ViewContext.RouteData.Values["Action"]?.ToString()))
+                                        {
+                                            <li>
+                                                <a asp-controller="Account" asp-action="Login">Login</a>
+                                            </li>
+                                        }
+
                                     </ul>
                                 </div>
                                 <div class="main-menu__right">

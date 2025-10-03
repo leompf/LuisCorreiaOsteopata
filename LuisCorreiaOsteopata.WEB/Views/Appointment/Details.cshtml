@@ -22,32 +22,91 @@
     </div>
 </section>
 
-<section class="appoinment-page">
+<section class="appoinment-page" style="margin-top: -100px">
     <div class="container">
         <div class="row">
-            <div class="col-xl-8 col-lg-7">
+            <div class="col-xl-12 col-lg-7">
                 <div class="appoinment-page__left">
                     <h3 class="appoinment-page__title">Detalhes da Consulta</h3>
                     <div class="row">
-                        <div class="col-xl-12 col-md-6">
-                            <label><strong>Data da Consulta:</strong> @Model.AppointmentDate.ToShortDateString()</label>
-                        </div>
-
                         <div class="col-xl-3 col-md-6" style="margin-right: -35px">
-                            <label><strong>Hora de início:</strong> @Model.StartTime.ToShortTimeString()</label>
+                            <label style="font-size: 1.2rem;"><strong>Data da Consulta:</strong> @Model.AppointmentDate.ToShortDateString()</label>
                         </div>
 
-                        <div class="col-xl-3 col-md-6">
-                            <label><strong>Termina às:</strong> @Model.EndTime.ToShortTimeString()</label>
+                        <div class="col-xl-3 col-md-6" style="margin-right: -80px">
+                            <label style="font-size: 1.2rem;"><strong>Profissional:</strong> @Model.StaffName</label>
                         </div>
 
-                        <div class="col-xl-3 col-md-6">
-                            <label><strong>Profissional</strong> @Model.StaffId</label>
+                        <div class="col-xl-6 col-md-6">
+                            <label style="font-size: 1.2rem;"><strong>Paciente: </strong>@Model.PatientName</label>
                         </div>
+
+                        <div class="col-xl-3 col-md-6" style="margin-right: -100px; margin-top: 10px">
+                            <label style="font-size: 1.2rem;"><strong>Hora de início:</strong> @Model.StartTime.ToString("HH\\hmm")</label>
+                        </div>
+
+                        <div class="col-xl-9 col-md-6" style="margin-top: 10px">
+                            <label style="font-size: 1.2rem;"><strong>Termina:</strong> @Model.EndTime.ToString("HH\\hmm")</label>
+                        </div>
+
+                        <div class="col-xl-3 col-md-6" style="margin-top: 10px; margin-right: -30px;">
+                            <label style="font-size: 1.2rem;"><strong>Estado da Consulta: </strong>@Model.AppointmentStatus</label>
+                        </div>
+
+                        <div class="col-xl-9 col-md-6" style="margin-top: 10px">
+                            <label style="font-size: 1.2rem;">
+                                <strong>Estado de Pagamento: </strong>
+                                @if (@Model.IsPaid)
+                                {
+                                    @:Pago
+                                }
+                                else
+                                {
+                                    @:Não pago
+                                }
+                            </label>
+                        </div>
+
+
+                        <section class="product-description" style="margin-top: 10px">
+                            <div class="container">
+                                <div class="product-details__description">
+                                    <div class="product-details__main-tab-box tabs-box">
+                                        <ul class="tab-buttons clearfix list-unstyled">
+                                            <li data-tab="#description" class="tab-btn active-btn"><span>Notas do Paciente</span></li>
+                                            <li data-tab="#additional-information" class="tab-btn"><span>Notas do Profissional</span></li>
+                                        </ul>
+                                        <div class="tabs-content">
+                                            <!--tab-->
+                                            <div class="tab active-tab" id="description">
+                                                <div class="product-details__tab-content-inner">
+                                                    <div class="product-details__description-content">
+                                                        <p class="product-details__description-text-1">
+                                                            @Model.PatientNotes
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <!--tab-->
+                                            <div class="tab " id="additional-information">
+                                                <div class="product-details__tab-content-inner">
+                                                    <div class="product-details__additional-information-content">
+                                                        <p class="product-details__additional-information-text-1">
+                                                            @Model.StaffNotes
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
                     </div>
-
                 </div>
             </div>
         </div>
     </div>
 </section>
+
+
