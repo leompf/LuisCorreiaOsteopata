@@ -5,7 +5,6 @@ using LuisCorreiaOsteopata.WEB.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using System.Threading.Tasks;
 
 namespace LuisCorreiaOsteopata.WEB.Controllers
 {
@@ -14,30 +13,45 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
         private readonly IUserHelper _userHelper;
         private readonly IPatientRepository _patientRepository;
         private readonly IStaffRepository _staffRepository;
-        private readonly UserManager<User> _userManager;
+        private readonly IAppointmentRepository _appointmentRepository;
+
 
         public AccountController(IUserHelper userHelper,
             IPatientRepository patientRepository,
             IStaffRepository staffRepository,
-            UserManager<User> userManager)
+            IAppointmentRepository appointmentRepository)
         {
             _userHelper = userHelper;
             _patientRepository = patientRepository;
             _staffRepository = staffRepository;
-            _userManager = userManager;
+            _appointmentRepository = appointmentRepository;
         }
 
         public async Task<IActionResult> Index()
         {
             if (User.Identity.IsAuthenticated)
             {
-                var user = await _userManager.GetUserAsync(User);
+                var user = await _userHelper.GetCurrentUserAsync();
+
+                var appointments = await _appointmentRepository.GetAppointmentsByUserAsync(user);
+
+                var events = appointments.Select(a => new
+                {
+                    id = a.Id,
+                    title = $"Consulta com {a.Staff.FullName}",
+                    start = a.StartTime.ToString("s"),  // ISO 8601
+                    end = a.EndTime.ToString("s"),      // ISO 8601
+                    allDay = false
+                }).ToList();
+
+                ViewBag.Appointments = events; ;
 
                 return View();
             }
 
             return RedirectToAction("Login", "Account");
         }
+
 
         public IActionResult SignUp()
         {
@@ -144,7 +158,7 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
             if (ModelState.IsValid)
             {
                 var user = await _userHelper.GetUserByEmailAsync(model.Email);
-                var password =  _userHelper.GenerateRandomPassword();
+                var password = _userHelper.GenerateRandomPassword();
 
                 if (user == null)
                 {

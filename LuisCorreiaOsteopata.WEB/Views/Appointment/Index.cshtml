@@ -1,0 +1,121 @@
+﻿@model LuisCorreiaOsteopata.WEB.Models.BookAppointmentViewModel
+
+@{
+    ViewData["Title"] = "Marcar Consulta";
+    Layout = "~/Views/Shared/_Layout2.cshtml";
+}
+
+<section class="page-header">
+    <div class="page-header__bg" style="background-image: url(assets/images/backgrounds/page-header-bg.jpg);">
+    </div>
+    <div class="container">
+        <div class="page-header__inner">
+            <h3>Marcar Consulta</h3>
+            <div class="thm-breadcrumb__inner">
+                <ul class="thm-breadcrumb list-unstyled">
+                    <li><a href="index.html">Home</a></li>
+                    <li><span class="icon-arrow-left"></span></li>
+                    <li>Marcar Consulta</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="appoinment-page">
+    <div class="container">
+        <div class="row">
+            <div class="col-xl-8 col-lg-7">
+                <div class="appoinment-page__left">
+                    <h3 class="appoinment-page__title">Marcar Consulta</h3>
+                    <form class="appoinment-page__form" method="post" asp-action="Index">
+                        <div class="row">
+                            <div class="col-xl-6 col-md-6">
+                                <div class="appoinment-page__input-box">
+                                    <span asp-validation-for="AppointmentDate"></span>
+                                    <input asp-for="AppointmentDate" type="date" id="AppointmentDate" />
+                                </div>
+                            </div>
+                            <div class="col-xl-6 col-md-6">
+                                <div class="appoinment-page__input-box">
+                                    <span asp-validation-for="StaffId"></span>
+                                    <select asp-for="StaffId" asp-items="Model.Staff"></select>
+                                </div>
+                            </div>
+                            <div class="col-xl-6 col-md-6">
+                                <div class="appoinment-page__input-box">
+                                    <span asp-validation-for="StartTime"></span>
+                                    <select asp-for="StartTime" asp-items="Model.TimeSlots" id="timeSlots"></select>
+                                </div>
+                            </div>
+                            <div class="col-xl-12">
+                                <div class="appoinment-page__input-box text-message-box">
+                                    <span asp-validation-for="Notes"></span>
+                                    <textarea asp-for="Notes" placeholder="Razão da consulta..."></textarea>
+                                </div>
+                                <div class="appoinment-page__btn-box">
+                                    <button type="submit" class="thm-btn">
+                                        Marcar<span class="icon-plus"></span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                    <div class="result"></div>
+                    <div asp-validation-summary="ModelOnly"></div>
+                </div>
+            </div>
+            <div class="col-xl-4 col-lg-5">
+                <div class="appoinment-page__right">
+                    <div class="appoinment-page__working-hour">
+                        <h3 class="appoinment-page__working-hour-title">Horário de Funcionamento</h3>
+                        <ul class="appoinment-page__working-hour-list list-unstyled">
+                            <li>
+                                <span>Segunda-Sexta</span>
+                                <p>09h00 às 19h00</p>
+                            </li>
+                            <li>
+                                <span>Sábado</span>
+                                <p>09h00 às 13h00</p>
+                            </li>
+                            <li>
+                                <span>Domingo</span>
+                                <p>Encerrado</p>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script>
+            $('#AppointmentDate').on('change', function () {
+            const selectedDate = $(this).val();
+            if (!selectedDate) return;
+
+            $.getJSON('api/Appointments/AvailableTimeSlots', { date: selectedDate })
+                .done(function (data) {
+                    const $timeSlots = $('#timeSlots');
+                    $timeSlots.empty();
+
+                    if (data.length === 0) {
+                        $timeSlots.append($('<option>', { value: '', text: 'Sem horários disponíveis' }));
+                    } else {
+                        $.each(data, function (i, slot) {
+                            $timeSlots.append($('<option>', { value: slot.value, text: slot.text }));
+                        });
+                        $timeSlots.val(data[0].value);
+                    }
+
+                    // Refresh the nice-select UI
+                    $timeSlots.niceSelect('update');
+                });
+        });
+    </script>
+}

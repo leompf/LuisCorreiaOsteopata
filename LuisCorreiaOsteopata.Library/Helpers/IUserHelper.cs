@@ -9,6 +9,8 @@ public interface IUserHelper
 
     Task<User> GetUserByNifAsync(string nif);
 
+    Task<User> GetCurrentUserAsync();
+
     Task<IdentityResult> AddUserAsync(User user, string password);
 
     Task<IdentityResult> UpdateUserAsync(User user);

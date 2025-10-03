@@ -1431,7 +1431,6 @@ Product Details
 }
 
 .product-details__select-size ul li label i::before {
-    content: "";
     position: absolute;
     top: -1px;
     left: -1px;

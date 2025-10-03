@@ -1,4 +1,5 @@
 ﻿using LuisCorreiaOsteopata.Library.Data.Entities;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 
 namespace LuisCorreiaOsteopata.Library.Helpers;
@@ -8,14 +9,17 @@ public class UserHelper : IUserHelper
     private readonly UserManager<User> _userManager;
     private readonly SignInManager<User> _signInManager;
     private readonly RoleManager<IdentityRole> _roleManager;
+    private readonly IHttpContextAccessor _httpContextAccessor;
 
     public UserHelper(UserManager<User> userManager,
         SignInManager<User> signInManager,
-        RoleManager<IdentityRole> roleManager)
+        RoleManager<IdentityRole> roleManager,
+        IHttpContextAccessor httpContextAccessor)
     {
         _userManager = userManager;
         _signInManager = signInManager;
         _roleManager = roleManager;
+        _httpContextAccessor = httpContextAccessor;
     }
 
     public async Task<IdentityResult> AddUserAsync(User user, string password)
@@ -106,6 +110,18 @@ public class UserHelper : IUserHelper
         }
 
         return new string(chars.ToArray());
+    }
+
+    public async Task<User> GetCurrentUserAsync()
+    {
+        var email = _httpContextAccessor.HttpContext.User.Identity.Name;
+
+        if(string.IsNullOrEmpty(email))
+        {
+            return null;
+        }
+
+        return await GetUserByEmailAsync(email);
     }
 
     public async Task<User> GetUserByEmailAsync(string email)

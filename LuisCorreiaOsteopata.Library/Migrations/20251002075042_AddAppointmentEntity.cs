@@ -32,13 +32,13 @@ namespace LuisCorreiaOsteopata.Library.Migrations
                         column: x => x.PatientId,
                         principalTable: "Patients",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_Appointments_Staff_StaffId",
                         column: x => x.StaffId,
                         principalTable: "Staff",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateIndex(

@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace LuisCorreiaOsteopata.Library.Migrations
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20251001191629_AddAppointmentEntity")]
-    partial class AddAppointmentEntity
+    [Migration("20251003082911_UpdateAppointmentEntity")]
+    partial class UpdateAppointmentEntity
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -36,18 +36,31 @@ namespace LuisCorreiaOsteopata.Library.Migrations
                     b.Property<DateTime>("AppointmentDate")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("AppointmentStatus")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
                     b.Property<DateTime>("EndTime")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("Notes")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
+                    b.Property<bool>("IsPaid")
+                        .HasColumnType("bit");
 
                     b.Property<int>("PatientId")
                         .HasColumnType("int");
 
+                    b.Property<string>("PatientNotes")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
                     b.Property<int>("StaffId")
                         .HasColumnType("int");
+
+                    b.Property<string>("StaffNotes")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("StartTime")
                         .HasColumnType("datetime2");
@@ -360,13 +373,13 @@ namespace LuisCorreiaOsteopata.Library.Migrations
                     b.HasOne("LuisCorreiaOsteopata.Library.Data.Entities.Patient", "Patient")
                         .WithMany()
                         .HasForeignKey("PatientId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("LuisCorreiaOsteopata.Library.Data.Entities.Staff", "Staff")
                         .WithMany()
                         .HasForeignKey("StaffId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Patient");
