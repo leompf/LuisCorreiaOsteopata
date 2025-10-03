@@ -15,6 +15,11 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
 
         public IActionResult Index()
         {
+            if (User.Identity.IsAuthenticated)
+            {
+                return RedirectToAction("Index", "Account");
+            }
+
             return View();
         }
 

@@ -1,6 +1,6 @@
-﻿using LuisCorreiaOsteopata.Library.Data;
-using LuisCorreiaOsteopata.Library.Data.Entities;
-using LuisCorreiaOsteopata.Library.Helpers;
+﻿using LuisCorreiaOsteopata.WEB.Data.Entities;
+using LuisCorreiaOsteopata.WEB.Data;
+using LuisCorreiaOsteopata.WEB.Helpers;
 using LuisCorreiaOsteopata.WEB.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -13,18 +13,21 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
         private readonly IAppointmentRepository _appointmentRepository;
         private readonly IPatientRepository _patientRepository;
         private readonly IStaffRepository _staffRepository;
+        private readonly IConverterHelper _converterHelper;
         private readonly DataContext _context;
 
         public AppointmentController(IUserHelper userHelper,
             IAppointmentRepository appointmentRepository,
             IPatientRepository patientRepository,
             IStaffRepository staffRepository,
+            IConverterHelper converterHelper,
             DataContext context)
         {
             _userHelper = userHelper;
             _appointmentRepository = appointmentRepository;
             _patientRepository = patientRepository;
             _staffRepository = staffRepository;
+            _converterHelper = converterHelper;
             _context = context;
         }
 
@@ -113,11 +116,13 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
                 return NotFound();
             }
 
-            var appointment = await _appointmentRepository.GetByIdAsync(id.Value);
+            var appointment = await _appointmentRepository.GetAppointmentByIdAsync(id.Value);
             if (appointment == null)
                 return NotFound();
 
-            return View(appointment);
+            var model = _converterHelper.ToAppointmentViewModel(appointment);
+
+            return View(model);
         }
     }
 }

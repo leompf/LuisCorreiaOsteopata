@@ -1,6 +1,6 @@
-﻿using LuisCorreiaOsteopata.Library.Data;
-using LuisCorreiaOsteopata.Library.Data.Entities;
-using LuisCorreiaOsteopata.Library.Helpers;
+﻿using LuisCorreiaOsteopata.WEB.Data.Entities;
+using LuisCorreiaOsteopata.WEB.Data;
+using LuisCorreiaOsteopata.WEB.Helpers;
 using LuisCorreiaOsteopata.WEB.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -35,7 +35,6 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
 
                 var appointments = await _appointmentRepository.GetAppointmentsByUserAsync(user);
 
-
                 var events = appointments.Select(a => new
                 {
                     id = a.Id,
@@ -45,7 +44,7 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
                     allDay = false
                 }).ToList();
 
-                ViewBag.Appointments = events; ;
+                ViewBag.Appointments = events; 
 
                 return View();
             }

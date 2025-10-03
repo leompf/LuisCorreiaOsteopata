@@ -1,4 +1,4 @@
-﻿using LuisCorreiaOsteopata.Library.Data;
+﻿using LuisCorreiaOsteopata.WEB.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

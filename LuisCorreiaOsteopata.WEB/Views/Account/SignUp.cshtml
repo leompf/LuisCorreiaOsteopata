@@ -10,9 +10,6 @@
     <li>
         <a asp-controller="Home" asp-action="Index">Home</a>
     </li>
-    <li>
-        <a asp-controller="Account" asp-action="Login">Login</a>
-    </li>
 }
 
 
@@ -35,7 +32,7 @@
 </section>
 <!--Page Header End-->
 <!--Start Sign Up One-->
-<section class="sign-up-one">
+<section class="sign-up-one" id="register-section">
     <div class="container">
         <div class="sign-up-one__form">
             <div class="inner-title text-center">
@@ -121,6 +118,10 @@
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
         <script>
                 document.addEventListener("DOMContentLoaded", function () {
+                const registerSection = document.getElementById("register-section");
+                if (registerSection) {
+                    registerSection.scrollIntoView({ behavior: "smooth" });
+                }
                 const input = document.querySelector("#phone");
 
                 const iti = window.intlTelInput(input, {

@@ -1,6 +1,6 @@
-using LuisCorreiaOsteopata.Library.Data;
-using LuisCorreiaOsteopata.Library.Data.Entities;
-using LuisCorreiaOsteopata.Library.Helpers;
+using LuisCorreiaOsteopata.WEB.Data;
+using LuisCorreiaOsteopata.WEB.Data.Entities;
+using LuisCorreiaOsteopata.WEB.Helpers;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -34,6 +34,7 @@ public class Program
 
         builder.Services.AddTransient<SeedDB>();
         builder.Services.AddScoped<IUserHelper, UserHelper>();
+        builder.Services.AddScoped<IConverterHelper, ConverterHelper>();
 
         builder.Services.AddScoped<IPatientRepository, PatientRepository>();
         builder.Services.AddScoped<IStaffRepository, StaffRepository>();
