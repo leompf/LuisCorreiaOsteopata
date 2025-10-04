@@ -5,7 +5,8 @@ using LuisCorreiaOsteopata.WEB.Helpers;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
-using WebPWrecover.Services;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
+
 
 namespace LuisCorreiaOsteopata.WEB;
 
@@ -21,6 +22,7 @@ public class Program
         builder.Services.AddIdentity<User, IdentityRole>(cfg =>
         {
             cfg.User.RequireUniqueEmail = true;
+            cfg.SignIn.RequireConfirmedAccount = true;
             cfg.Password.RequireDigit = false;
             cfg.Password.RequiredUniqueChars = 0;
             cfg.Password.RequireLowercase = false;

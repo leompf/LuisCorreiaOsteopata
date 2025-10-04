@@ -1,0 +1,44 @@
+﻿@{
+    ViewData["Title"] = "Erro";
+    Layout = "~/Views/Shared/_Layout2.cshtml";
+}
+
+@section MainMenu
+{
+    <li>
+        <a asp-controller="Home" asp-action="Index">Home</a>
+    </li>
+}
+
+<section class="page-header">
+    <div class="page-header__bg" style="background-image: url(~/assets/images/backgrounds/page-header-bg.jpg);">
+    </div>
+    <div class="container">
+        <div class="page-header__inner">
+            <h3>Erro Confirmação de conta</h3>
+            <div class="thm-breadcrumb__inner">
+                <ul class="thm-breadcrumb list-unstyled">
+                    <li><a asp-controller="Home" asp-action="Index">Home</a></li>
+                    <li><span class="icon-arrow-left"></span></li>
+                    <li>Erro Confirmação de conta</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="alert alert-danger mt-4 inner-title text-center">
+    <h2>Não foi possível confirmar a conta</h2>
+    <p>O link de confirmação é inválido ou expirou.</p>
+    <p>Se precisares, solicita um novo email de confirmação.</p>
+    <form method="get">
+        <div class="form-group">
+            <button asp-action="Login" class="thm-btn" type="submit" data-loading-text="Por favor aguarda...">
+                Voltar ao Login
+                <span class="icon-right-arrow"></span>
+            </button>
+            <a class="btn btn-secondary" href="@Url.Action("ResendConfirmationEmail", "Account")">Reenviar Confirmação</a>
+        </div>
+    </form>
+</div>
+

@@ -28,7 +28,7 @@ public class StaffRepository : GenericRepository<Staff>, IStaffRepository
 
         var staff = new Staff
         {
-            FirstName = user.FirstName,
+            Names = user.Names,
             LastName = user.LastName,
             User = user,
             Email = user.Email,

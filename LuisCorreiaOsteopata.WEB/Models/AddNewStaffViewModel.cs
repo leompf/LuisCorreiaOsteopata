@@ -7,7 +7,7 @@ public class AddNewStaffViewModel
 {
     [Required(ErrorMessage = "*Campo obrigatório")]
     [Display(Name = "First Name")]
-    public string FirstName { get; set; }
+    public string Names { get; set; }
 
 
     [Required(ErrorMessage = "*Campo obrigatório")]
@@ -24,6 +24,10 @@ public class AddNewStaffViewModel
     [Phone]
     [Display(Name = "Telefone")]
     public string PhoneNumber { get; set; }
+
+    [Required(ErrorMessage = "*Campo obrigatório")]
+    [Display(Name = "Data de Nascimento")]
+    public DateTime Birthdate { get; set; }
 
 
     [Required(ErrorMessage = "*Campo obrigatório")]

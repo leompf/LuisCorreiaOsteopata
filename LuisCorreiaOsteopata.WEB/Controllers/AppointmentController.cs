@@ -105,7 +105,14 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
             await _appointmentRepository.CreateAsync(appointment);
             await _context.SaveChangesAsync();
 
-            return RedirectToAction("Index", "Account");
+            var message =
+                $"<p>A consulta foi marcada com <strong>sucesso!</strong></p>" +
+                $"<p>Por favor, verifica o teu calendário na homepage e clica na consulta para confirmar os seus detalhes.</p>" +
+                $"Obrigado por contares connosco!";
+
+            ViewBag.AppointmentBookingMessage = _converterHelper.Sanitize(message);
+
+            return View(model);
         }
 
 

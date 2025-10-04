@@ -23,7 +23,7 @@
     </div>
 </section>
 
-<section class="appoinment-page">
+<section class="appoinment-page" id="appointment-section">
     <div class="container">
         <div class="row">
             <div class="col-xl-8 col-lg-7">
@@ -59,10 +59,10 @@
                                         Marcar<span class="icon-plus"></span>
                                     </button>
                                 </div>
-                            </div>
+                            </div>                            
                         </div>
                     </form>
-                    <div class="result"></div>
+                    <div style="margin-top: 10px" class="text-success">@Html.Raw(ViewBag.AppointmentBookingMessage)</div>
                     <div asp-validation-summary="ModelOnly"></div>
                 </div>
             </div>
@@ -97,10 +97,14 @@
     }
     <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
     <script>
-        $(document).ready(function () 
-        {
+         $(document).ready(function ()
+         {
+             const appointmentSection = document.getElementById("appointment-section");
+                if (appointmentSection) {
+                    appointmentSection.scrollIntoView({ behavior: "smooth" });
+                }
             // --- Quill Editor Setup ---
-            var quill = new Quill('#quill-editor', 
+            var quill = new Quill('#quill-editor',
             {
                 theme: 'snow',
                 placeholder: 'Razão da consulta...',
@@ -110,26 +114,52 @@
             });
 
             // Sync Quill content into hidden input before form submit
-            $('form').on('submit', function () 
+            $('form').on('submit', function ()
             {
                 $('#Notes').val(quill.root.innerHTML);
             });
 
+            // --- Initialize timeSlots variable ---
+            const $timeSlots = $('#timeSlots');
+
+            // Initialize dropdown with placeholder on page load
+            if ($timeSlots.find('option').length === 0)
+            {
+                $timeSlots.append($('<option>',
+                {
+                    value: '',
+                    text: 'Sem horários disponíveis',
+                    disabled: true,
+                    selected: true
+                }));
+                $timeSlots.niceSelect('update');
+            }
 
             // --- Appointment Date Change Handler ---
-            $('#AppointmentDate').on('change', function () {
+            $('#AppointmentDate').on('change', function ()
+            {
                 const selectedDate = $(this).val();
                 if (!selectedDate) return;
 
                 $.getJSON('api/Appointments/AvailableTimeSlots', { date: selectedDate })
-                    .done(function (data) {
-                        const $timeSlots = $('#timeSlots');
+                    .done(function (data)
+                    {
                         $timeSlots.empty();
 
-                        if (data.length === 0) {
-                            $timeSlots.append($('<option>', { value: '', text: 'Sem horários disponíveis' }));
-                        } else {
-                            $.each(data, function (i, slot) {
+                        if (data.length === 0)
+                        {
+                            $timeSlots.append($('<option>',
+                            {
+                                value: '',
+                                text: 'Sem horários disponíveis',
+                                disabled: true,
+                                selected: true
+                            }));
+                        }
+                        else
+                        {
+                            $.each(data, function (i, slot)
+                            {
                                 $timeSlots.append($('<option>', { value: slot.value, text: slot.text }));
                             });
                             $timeSlots.val(data[0].value);

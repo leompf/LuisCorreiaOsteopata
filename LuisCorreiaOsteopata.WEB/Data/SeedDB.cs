@@ -29,7 +29,7 @@ public class SeedDB
         {
             user = new User
             {
-                FirstName = "Leonardo",
+                Names = "Leonardo Miguel Petricciuolo",
                 LastName = "Fraqueiro",
                 Email = "lmfraqueiro@gmail.com",
                 UserName = "lmfraqueiro@gmail.com",

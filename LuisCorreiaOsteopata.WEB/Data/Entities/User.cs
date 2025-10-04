@@ -6,8 +6,8 @@ namespace LuisCorreiaOsteopata.WEB.Data.Entities;
 public class User : IdentityUser
 {
     [Required]
-    [Display(Name = "First Name")]
-    public string FirstName { get; set; }
+    [Display(Name = "Names")]
+    public string Names { get; set; }
 
 
     [Required]
