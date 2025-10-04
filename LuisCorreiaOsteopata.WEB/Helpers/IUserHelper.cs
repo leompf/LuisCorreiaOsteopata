@@ -19,8 +19,6 @@ public interface IUserHelper
 
     Task<IdentityResult> ConfirmEmailAsync(User user, string token);
 
-    Task<bool> IsEmailConfirmedAsync(User user);
-
     Task<IdentityResult> UpdateUserAsync(User user);
 
     Task<SignInResult> LoginAsync(string username, string password, bool rememberMe);

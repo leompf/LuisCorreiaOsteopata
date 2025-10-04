@@ -29,7 +29,7 @@ public class PatientRepository : GenericRepository<Patient>, IPatientRepository
 
         var patient = new Patient
         {
-            FirstName = user.FirstName,
+            Names = user.Names,
             LastName = user.LastName,
             User = user,
             Email = user.Email,

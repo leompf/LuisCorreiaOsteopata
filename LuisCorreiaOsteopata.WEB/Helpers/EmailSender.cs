@@ -1,10 +1,9 @@
-﻿using LuisCorreiaOsteopata.WEB.Helpers;
-using Microsoft.AspNetCore.Identity.UI.Services;
+﻿using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.Extensions.Options;
 using SendGrid;
 using SendGrid.Helpers.Mail;
 
-namespace WebPWrecover.Services;
+namespace LuisCorreiaOsteopata.WEB.Helpers;
 
 public class EmailSender : IEmailSender
 {
@@ -17,7 +16,7 @@ public class EmailSender : IEmailSender
         _logger = logger;
     }
 
-    public AuthMessageSenderOptions Options { get; } //Set with Secret Manager.
+    public AuthMessageSenderOptions Options { get; } 
 
     public async Task SendEmailAsync(string toEmail, string subject, string message)
     {

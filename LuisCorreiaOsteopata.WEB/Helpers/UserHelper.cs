@@ -50,24 +50,6 @@ public class UserHelper : IUserHelper
         return await _userManager.ConfirmEmailAsync(user, token);
     }
 
-    public async Task<Patient> CreatePatientAsync(User user, string roleName)
-    {
-        var isInrole = await _userManager.IsInRoleAsync(user, roleName);
-        if (!isInrole)
-        {
-            return null;
-        }
-
-        var patient = new Patient
-        {
-            FirstName = user.FirstName,
-            LastName = user.LastName,
-            User = user,
-        };
-
-        return patient;
-    }
-
     public async Task<string> GenerateEmailConfirmationTokenAsync(User user)
     {
         return await _userManager.GenerateEmailConfirmationTokenAsync(user);
@@ -86,10 +68,10 @@ public class UserHelper : IUserHelper
         };
 
         string[] randomChars = new[] {
-            "ABCDEFGHJKLMNOPQRSTUVWXYZ",    // uppercase 
-            "abcdefghijkmnopqrstuvwxyz",    // lowercase
-            "0123456789",                   // digits
-            "!@$?_-"                        // non-alphanumeric
+            "ABCDEFGHJKLMNOPQRSTUVWXYZ",    
+            "abcdefghijkmnopqrstuvwxyz",    
+            "0123456789",                   
+            "!@$?_-"                        
         };
 
         Random rand = new Random(Environment.TickCount);
@@ -154,11 +136,6 @@ public class UserHelper : IUserHelper
     {
         var role = await _userManager.GetRolesAsync(user);
         return role.FirstOrDefault();
-    }
-
-    public async Task<bool> IsEmailConfirmedAsync(User user)
-    {
-        return await _userManager.IsEmailConfirmedAsync(user);
     }
 
     public async Task<bool> IsUserInRoleAsync(User user, string rolename)

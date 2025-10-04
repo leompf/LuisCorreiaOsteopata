@@ -21,6 +21,10 @@ public class DataContext : IdentityDbContext<User>
     {
         base.OnModelCreating(modelbuilder);
 
+        modelbuilder.Entity<User>()
+            .HasIndex(u => u.Nif)
+            .IsUnique();
+
         modelbuilder.Entity<Appointment>()
             .HasOne(a => a.Patient)
             .WithMany()  // or .WithMany(p => p.Appointments) if you want collection

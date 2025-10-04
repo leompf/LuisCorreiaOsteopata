@@ -13,6 +13,12 @@ public class ConverterHelper : IConverterHelper
     {
         _sanitizer = sanitizer;
     }
+
+    public string Sanitize(string html)
+    {
+        return _sanitizer.Sanitize(html);
+    }
+
     public AppointmentViewModel ToAppointmentViewModel(Appointment appointment)
     {
         return new AppointmentViewModel

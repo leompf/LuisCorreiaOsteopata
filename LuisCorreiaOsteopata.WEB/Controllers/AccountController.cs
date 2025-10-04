@@ -42,12 +42,12 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
                 {
                     id = a.Id,
                     title = $"Consulta com {a.Staff.FullName}",
-                    start = a.StartTime.ToString("s"),  
-                    end = a.EndTime.ToString("s"),      
+                    start = a.StartTime.ToString("s"),
+                    end = a.EndTime.ToString("s"),
                     allDay = false
                 }).ToList();
 
-                ViewBag.Appointments = events; 
+                ViewBag.Appointments = events;
 
                 return View();
             }
@@ -79,11 +79,13 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
 
             user = new User
             {
-                FirstName = model.FirstName,
+                Names = model.Names,
                 LastName = model.LastName,
                 Email = model.Email,
                 UserName = model.Email,
                 PhoneNumber = model.PhoneNumber,
+                Birthdate = model.Birthdate,
+                Nif = model.Nif,
             };
 
             var result = await _userHelper.AddUserAsync(user, model.Password);
@@ -108,85 +110,36 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
                 token = token
             }, protocol: HttpContext.Request.Scheme);
 
-            var mailMessage = $"Viva, {user.FirstName}!<br/><br/>Bem-vindo à plataforma Luis Correia, Osteopata. Aqui é o lugar ideal para gestionares todas as tuas consultas bem como estar a par de todas as novidades acerca do meu trabalho.<br/>" +
+            var mailMessage = $"Viva, {user.Names.Split(' ')[0]}!<br/><br/>Bem-vindo à plataforma Luis Correia, Osteopata. Aqui é o lugar ideal para gestionares todas as tuas consultas bem como estar a par de todas as novidades acerca do meu trabalho.<br/>" +
                 $"Para aceder à plataforma, primeiro necessitas de confirmar a tua conta, clicando aqui <a href='{confirmationLink}'>Confirmar Conta</a>";
 
             await _emailSender.SendEmailAsync(user.Email, "Ativação de Conta - Luis Correia, Osteopata", mailMessage);
 
-            TempData["SuccessMessage"] = "Registo realizado! Por favor, verifica o teu email para confirmar a conta.";
-            return RedirectToAction("Login");
+            ViewBag.SignUpMessage = "Registo realizado! Por favor, verifica o teu email para confirmares a conta.";
 
-            //if (ModelState.IsValid)
-            //{
-            //    var user = await _userHelper.GetUserByEmailAsync(model.Email);
-
-            //    if (user == null)
-            //    {
-            //        user = new User
-            //        {
-            //            FirstName = model.FirstName,
-            //            LastName = model.LastName,
-            //            Email = model.Email,
-            //            UserName = model.Email,
-            //            PhoneNumber = model.PhoneNumber,
-            //        };
-
-            //        var result = await _userHelper.AddUserAsync(user, model.Password);
-
-            //        await _userHelper.AddUserToRoleAsync(user, "Utente");
-
-            //        var role = await _userHelper.IsUserInRoleAsync(user, "Utente");
-            //        if (!role)
-            //        {
-            //            await _userHelper.AddUserToRoleAsync(user, "Utente");
-            //        }
-
-            //        var patient = await _patientRepository.CreatePatientAsync(user, "Utente");
-            //        if (patient != null)
-            //        {
-            //            await _patientRepository.CreateAsync(patient);
-            //        }
-
-            //        if (result != IdentityResult.Success)
-            //        {
-            //            ModelState.AddModelError(string.Empty, "Houve um erro ao criar o utilizador.");
-            //            return View(model);
-            //        }
-
-            //        var result2 = await _userHelper.LoginAsync(model.Email, model.Password, false);
-            //        if (result2.Succeeded)
-            //        {
-            //            return RedirectToAction("Index", "Account");
-            //        }
-            //    }
-            //}
-
-            //ModelState.AddModelError(string.Empty, "Já existe um utilizador com esse email.");
-            //return View(model);
+            return View();            
         }
 
         public async Task<IActionResult> ConfirmEmail(string userId, string token)
         {
             if (userId == null || token == null)
             {
-                return RedirectToAction("Index", "Home");
+                return View("ConfirmEmailFailure");
             }
 
             var user = await _userHelper.GetUserByIdAsync(userId);
             if (user == null)
             {
-                return NotFound();
+                return View("ConfirmEmailFailure");
             }
 
             var result = await _userHelper.ConfirmEmailAsync(user, token);
             if (result.Succeeded)
-            {
-                TempData["SuccessMessage"] = "Email confirmado com sucesso! Podes usar a conta.";
-                return RedirectToAction("Login");
+            {                
+                return View("ConfirmEmailSuccess");
             }
 
-            TempData["ErrorMessage"] = "Erro ao confirmar email.";
-            return RedirectToAction("Index", "Home");
+            return View("ConfirmEmailFailure");
         }
 
         public IActionResult Login()
@@ -203,19 +156,17 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
                 var result = await _userHelper.LoginAsync(model.Username, model.Password, model.RememberMe);
                 if (result.Succeeded)
                 {
-                    var user = await _userHelper.GetUserByEmailAsync(model.Username);
-                    if (user != null && !await _userHelper.IsEmailConfirmedAsync(user))
-                    {
-                        ModelState.AddModelError(string.Empty, "Por favor confirma o teu email antes de fazer login.");
-                        return View(model);                      
-                    }
-
                     if (this.Request.Query.Keys.Contains("ReturnUrl"))
                     {
                         return Redirect(this.Request.Query["ReturnUrl"].First());
                     }
 
                     return this.RedirectToAction("Index", "Account");
+                }
+                else if (result.IsNotAllowed)
+                {
+                    ModelState.AddModelError(string.Empty, "Por favor confirma o teu email antes de fazer login.");
+                    return View(model);
                 }
             }
 
@@ -249,23 +200,18 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
                 {
                     user = new User
                     {
-                        FirstName = model.FirstName,
+                        Names = model.Names,
                         LastName = model.LastName,
                         Email = model.Email,
                         UserName = model.Email,
                         PhoneNumber = model.PhoneNumber,
                         Nif = model.Nif,
+                        Birthdate = model.Birthdate
                     };
 
                     var result = await _userHelper.AddUserAsync(user, password);
 
                     await _userHelper.AddUserToRoleAsync(user, "Colaborador");
-
-                    var role = await _userHelper.IsUserInRoleAsync(user, "Colaborador");
-                    if (!role)
-                    {
-                        await _userHelper.AddUserToRoleAsync(user, "Colaborador");
-                    }
 
                     var staff = await _staffRepository.CreatStaffAsync(user, "Colaborador");
                     if (staff != null)
@@ -279,8 +225,22 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
                         return View(model);
                     }
 
-                    TempData["SuccessMessage"] = "Colaborador criado com sucesso!";
-                    return RedirectToAction("Index", "Account");
+                    var token = await _userHelper.GenerateEmailConfirmationTokenAsync(user);
+                    var confirmationLink = Url.Action("ConfirmEmail", "Account",
+                        new { userId = user.Id, token = token }, protocol: HttpContext.Request.Scheme);
+
+                    var mailMessage = $@"Bem-vindo à equipa, {user.Names.Split(' ')[0]}!<br/><br/><p>" +
+                        $"Foi criado um utilizador para ti no sistema.</p>" +
+                        $"<p><strong>Email:</strong> {user.Email}<br/>" +
+                        $"<strong>Password temporária:</strong> {password}</p>" +
+                        $"<p>Antes de iniciar sessão, tens de confirmar a tua conta clicando no seguinte link <a href='{confirmationLink}'>Confirmar conta</a></p>" +
+                        $"Após confirmares, podes iniciar sessão e alterar a tua password.</p>";
+                                           
+                    await _emailSender.SendEmailAsync(user.Email, "Bem-vindo à equipa!", mailMessage);
+
+                    ViewBag.AddStaffMessage = "Colaborador adicionado com sucesso! Foi enviado um email de confirmação de conta para o email estipulado.";
+                    
+                    return View();
                 }
             }
 

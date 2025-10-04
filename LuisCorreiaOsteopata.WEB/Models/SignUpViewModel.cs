@@ -6,7 +6,7 @@ public class SignUpViewModel
 {
     [Required(ErrorMessage = "*Campo obrigatório")]
     [Display(Name = "First Name")]
-    public string FirstName { get; set; }
+    public string Names { get; set; }
 
 
     [Required(ErrorMessage = "*Campo obrigatório")]
@@ -23,6 +23,17 @@ public class SignUpViewModel
     [Phone]
     [Display(Name = "Telefone")]
     public string PhoneNumber { get; set; }
+
+
+    [Required(ErrorMessage = "*Campo obrigatório")]
+    [Display(Name = "Data de Nascimento")]
+    public DateTime Birthdate { get; set; }
+
+
+    [Required(ErrorMessage = "*Campo obrigatório")]
+    [Display(Name = "Contribuinte")]
+    [StringLength(9)]
+    public string Nif { get; set; }
 
 
     [Required(ErrorMessage = "*Campo obrigatório")]

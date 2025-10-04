@@ -9,8 +9,8 @@ public class Staff : IEntity
 
 
     [Required]
-    [Display(Name = "First Name")]
-    public string FirstName { get; set; }
+    [Display(Name = "Names")]
+    public string Names { get; set; }
 
 
     [Required]
@@ -19,7 +19,7 @@ public class Staff : IEntity
 
 
     [Display(Name = "Full Name")]
-    public string FullName => $"{FirstName} {LastName}";
+    public string FullName => $"{Names} {LastName}";
 
 
     [Required]

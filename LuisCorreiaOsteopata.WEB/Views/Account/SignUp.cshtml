@@ -44,8 +44,8 @@
                     <div class="col-xl-6">
                         <div class="form-group">
                             <div class="input-box">
-                                <span asp-validation-for="FirstName"></span>
-                                <input asp-for="FirstName" type="text" placeholder="Primeiro nome..." />
+                                <span asp-validation-for="Names"></span>
+                                <input asp-for="Names" type="text" placeholder="Nomes..." />
                             </div>
                         </div>
                     </div>
@@ -53,7 +53,7 @@
                         <div class="form-group">
                             <div class="input-box">
                                 <span asp-validation-for="LastName"></span>
-                                <input asp-for="LastName" type="text" placeholder="Último nome..." />
+                                <input asp-for="LastName" type="text" placeholder="Apelido..." />
                             </div>
                         </div>
                     </div>
@@ -70,6 +70,22 @@
                             <div class="input-box">
                                 <span asp-validation-for="PhoneNumber"></span>
                                 <input asp-for="PhoneNumber" type="tel" id="phone" placeholder="Telefone..." />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-6">
+                        <div class="form-group">
+                            <div class="input-box">
+                                <span asp-validation-for="Nif"></span>
+                                <input asp-for="Nif" type="text" id="nif" placeholder="Nif..." />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-6">
+                        <div class="form-group">
+                            <div class="appoinment-page__input-box">
+                                <span asp-validation-for="Birthdate"></span>
+                                <input asp-for="Birthdate" type="date" placeholder="Data de Nascimento..." />
                             </div>
                         </div>
                     </div>
@@ -96,6 +112,9 @@
                         </div>
                     </div>
                 </div>
+                <div class="text-center text-success">
+                    <p>@ViewBag.SignUpMessage</p>
+                </div>
                 <div class="google-facebook justify-content-center">
                     <a href="https://www.google.com/">
                         <div class="icon">
@@ -106,7 +125,7 @@
                 </div>
                 <div class="create-account text-center">
                     <p>Já tens conta? <a asp-action="Login">Faz login</a></p>
-                </div>
+                </div>               
             </form>
         </div>
     </div>
@@ -117,36 +136,93 @@
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
         <script type="text/javascript">
-                document.addEventListener("DOMContentLoaded", function () 
-                {
-                    const registerSection = document.getElementById("register-section");
-                    if (registerSection) 
-                    {
-                        registerSection.scrollIntoView({ behavior: "smooth" });
+            document.addEventListener("DOMContentLoaded", function () {
+
+                // Scroll to register section
+                const registerSection = document.getElementById("register-section");
+                if (registerSection) {
+                    registerSection.scrollIntoView({ behavior: "smooth" });
+                }
+
+                // Phone input
+                const phoneInput = document.querySelector("#phone");
+                const nifInput = document.querySelector("#nif");
+
+                const iti = window.intlTelInput(phoneInput, {
+                    initialCountry: "pt",
+                    separateDialCode: false,
+                    formatOnDisplay: true
+                });
+
+                const form = phoneInput.closest("form");
+
+                // Create inline error spans if they don't exist
+                function ensureErrorSpan(input) {
+                    let span = input.nextElementSibling;
+                    if (!span || !span.classList.contains("inline-error")) {
+                        span = document.createElement("span");
+                        span.classList.add("inline-error");
+                        span.style.color = "red";
+                        span.style.fontSize = "0.9rem";
+                        input.parentNode.appendChild(span);
+                    }
+                    span.textContent = "";
+                    return span;
+                }
+
+                form.addEventListener("submit", function (event) {
+                    let hasErrors = false;
+
+                    // Phone validation
+                    const phoneError = ensureErrorSpan(phoneInput);
+                    if (!iti.isValidNumber()) {
+                        phoneError.textContent = "Número de telefone inválido.";
+                        phoneInput.classList.add("is-invalid");
+                        hasErrors = true;
+                    } else {
+                        phoneInput.value = iti.getNumber();
+                        phoneInput.classList.remove("is-invalid");
                     }
 
-                    const input = document.querySelector("#phone");
+                    // NIF validation
+                    const nifError = ensureErrorSpan(nifInput);
+                    if (!validaContribuinte(nifInput.value)) {
+                        nifError.textContent = "Número de contribuinte inválido.";
+                        nifInput.classList.add("is-invalid");
+                        hasErrors = true;
+                    } else {
+                        nifInput.classList.remove("is-invalid");
+                    }
 
-                    const iti = window.intlTelInput(input, 
-                    {
-                        initialCountry: "pt",  
-                        separateDialCode: true,
-                        formatOnDisplay: true
-                    });
-
-                    const form = input.closest("form");
-                    form.addEventListener("submit", function () 
-                    {
-                        if (iti.isValidNumber()) 
-                        {
-                            input.value = iti.getNumber();
-                        } else 
-                        {
-                            alert("Número de telefone inválido.");
-                            event.preventDefault();
-                        }
-                    });
+                    if (hasErrors) {
+                        event.preventDefault();
+                    }
                 });
+
+                // NIF validation function
+                function validaContribuinte(contribuinte) {
+                    if (!/^\d{9}$/.test(contribuinte)) return false;
+
+                    const prefix = parseInt(contribuinte.substr(0, 2));
+                    const firstDigit = parseInt(contribuinte.charAt(0));
+                    const invalidPrefixes = [45, 70, 71, 72, 77, 79, 90, 91, 98, 99];
+                    const validFirstDigits = [1, 2, 3, 5, 6, 8];
+
+                    if (!validFirstDigits.includes(firstDigit) && !invalidPrefixes.includes(prefix)) return false;
+
+                    let total = 0;
+                    for (let i = 0, j = 9; i < 8; i++, j--) {
+                        total += parseInt(contribuinte.charAt(i)) * j;
+                    }
+
+                    let modulo11 = total % 11;
+                    let comparador = (modulo11 === 0 || modulo11 === 1) ? 0 : 11 - modulo11;
+                    const ultimoDigito = parseInt(contribuinte.charAt(8));
+
+                    return ultimoDigito === comparador;
+                }
+
+            });
         </script>
     }
 }
