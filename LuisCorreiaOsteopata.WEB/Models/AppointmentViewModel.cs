@@ -12,6 +12,8 @@ public class AppointmentViewModel
 
     public int StaffId { get; set; }
 
+    public string StaffUserId { get; set; }
+
     public string StaffName { get; set; } = string.Empty;
 
     public DateTime CreatedDate { get; set; }

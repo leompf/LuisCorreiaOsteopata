@@ -131,5 +131,22 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
 
             return View(model);
         }
+
+
+        [HttpPost]
+        public async Task<IActionResult> Unbook(int id)
+        {
+            var appointment = await _appointmentRepository.GetByIdAsync(id);
+            if (appointment == null)
+            {
+                return NotFound();
+            }
+
+            _context.Appointments.Remove(appointment);
+
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction("Index", "Account");
+        }
     }
 }

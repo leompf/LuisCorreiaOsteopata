@@ -68,7 +68,7 @@ namespace LuisCorreiaOsteopata.Library.Migrations
 
                     b.HasIndex("StaffId");
 
-                    b.ToTable("Appointments");
+                    b.ToTable("Appointments", (string)null);
                 });
 
             modelBuilder.Entity("LuisCorreiaOsteopata.WEB.Data.Entities.Patient", b =>
@@ -106,7 +106,7 @@ namespace LuisCorreiaOsteopata.Library.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Patients");
+                    b.ToTable("Patients", (string)null);
                 });
 
             modelBuilder.Entity("LuisCorreiaOsteopata.WEB.Data.Entities.Staff", b =>
@@ -146,7 +146,7 @@ namespace LuisCorreiaOsteopata.Library.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Staff");
+                    b.ToTable("Staff", (string)null);
                 });
 
             modelBuilder.Entity("LuisCorreiaOsteopata.WEB.Data.Entities.User", b =>

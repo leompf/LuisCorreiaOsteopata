@@ -27,6 +27,7 @@ public class ConverterHelper : IConverterHelper
             PatientId = appointment.PatientId,
             PatientName = appointment.Patient.FullName,
             StaffId = appointment.StaffId,
+            StaffUserId = appointment.Staff.User.Id,
             StaffName = appointment.Staff.FullName,
             CreatedDate = appointment.CreatedDate,
             AppointmentDate = appointment.AppointmentDate,
@@ -35,7 +36,7 @@ public class ConverterHelper : IConverterHelper
             AppointmentStatus = appointment.AppointmentStatus,
             PatientNotes = _sanitizer.Sanitize(appointment.PatientNotes),
             StaffNotes = _sanitizer.Sanitize(appointment.StaffNotes),
-            IsPaid = appointment.IsPaid
+            IsPaid = appointment.IsPaid          
         };
     }
 }

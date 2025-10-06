@@ -31,23 +31,32 @@
                     <h3 class="appoinment-page__title">Marcar Consulta</h3>
                     <form class="appoinment-page__form" method="post" asp-action="Index">
                         <div class="row">
-                            <div class="col-xl-6 col-md-6">
+                            <div class="col-xl-3 col-md-6">
                                 <div class="appoinment-page__input-box">
                                     <span asp-validation-for="AppointmentDate"></span>
-                                    <input asp-for="AppointmentDate" type="date" id="AppointmentDate" />
+                                    <input asp-for="AppointmentDate" type="date" id="AppointmentDate" placeholder="Selecione uma data..." />
                                 </div>
                             </div>
-                            <div class="col-xl-6 col-md-6">
+                        </div>
+                        <div class="row">
+                            <div class="col-xl-4 col-md-6">
                                 <div class="appoinment-page__input-box">
                                     <span asp-validation-for="StaffId"></span>
                                     <select asp-for="StaffId" asp-items="Model.Staff"></select>
                                 </div>
                             </div>
-                            <div class="col-xl-6 col-md-6">
+                            <div class="col-xl-4 col-md-6">
                                 <div class="appoinment-page__input-box">
                                     <span asp-validation-for="StartTime"></span>
                                     <select asp-for="StartTime" asp-items="Model.TimeSlots" id="timeSlots"></select>
                                 </div>
+                            </div>
+                            <div class="col-xl-12 col-md-6 mb-3">
+                                <ul>
+                                    <li>Preço por consulta: <strong>50€</strong></li>
+                                    <li>As consultas devem ser marcadas no mínimo com 48h de antecedência.</li>
+                                    <li>Consultas desmarcadas até <strong>24h</strong> antes serão cobradas no seu valor integral.</li>
+                                </ul>
                             </div>
                             <div class="col-xl-12">
                                 <div class="appoinment-page__input-box text-message-box">
@@ -59,7 +68,7 @@
                                         Marcar<span class="icon-plus"></span>
                                     </button>
                                 </div>
-                            </div>                            
+                            </div>
                         </div>
                     </form>
                     <div style="margin-top: 10px" class="text-success">@Html.Raw(ViewBag.AppointmentBookingMessage)</div>
@@ -78,10 +87,6 @@
                             <li>
                                 <span>Sábado</span>
                                 <p>09h00 às 13h00</p>
-                            </li>
-                            <li>
-                                <span>Domingo</span>
-                                <p>Encerrado</p>
                             </li>
                         </ul>
                     </div>
@@ -103,26 +108,29 @@
                 if (appointmentSection) {
                     appointmentSection.scrollIntoView({ behavior: "smooth" });
                 }
-            // --- Quill Editor Setup ---
-            var quill = new Quill('#quill-editor',
-            {
-                theme: 'snow',
-                placeholder: 'Razão da consulta...',
-                modules: {
-                    toolbar: [['bold', 'italic', 'underline'], [{ 'list': 'ordered' }, { 'list': 'bullet' }]]
-                }
-            });
 
-            // Sync Quill content into hidden input before form submit
-            $('form').on('submit', function ()
-            {
-                $('#Notes').val(quill.root.innerHTML);
-            });
+            const toolbarOptions = [
+                    ['bold', 'italic', 'underline'],
+                    ['link'],
+                    ['clean'],
+                 ];
 
-            // --- Initialize timeSlots variable ---
+                 const quill = new Quill('#quill-editor', {
+                    theme: 'snow',
+                    placeholder: 'Razão da consulta...',
+                    modules: {
+                        toolbar: toolbarOptions
+                    }
+                });
+
+                // Sync Quill content into hidden input before form submit
+                $('form').on('submit', function ()
+                {
+                    $('#Notes').val(quill.root.innerHTML);
+                });
+
             const $timeSlots = $('#timeSlots');
 
-            // Initialize dropdown with placeholder on page load
             if ($timeSlots.find('option').length === 0)
             {
                 $timeSlots.append($('<option>',
@@ -135,7 +143,6 @@
                 $timeSlots.niceSelect('update');
             }
 
-            // --- Appointment Date Change Handler ---
             $('#AppointmentDate').on('change', function ()
             {
                 const selectedDate = $(this).val();

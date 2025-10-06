@@ -10,10 +10,10 @@
     cursor: pointer;
     float: none;
     font-family: inherit;
-    color: #888888;
+    color: var(--careon-gray);
     font-size: 14px;
     font-weight: 300;
-    height: 70px;
+    height: 50px;
     line-height: 48px;
     outline: none;
     padding-left: 25px;

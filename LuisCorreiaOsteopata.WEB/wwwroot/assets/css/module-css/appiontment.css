@@ -548,6 +548,12 @@
     background-color: var(--careon-primary);
 }
 
+.appoinment-page__btn-box .unbook-btn {
+        border: none;
+        color: var(--careon-black);
+        background-color: red;
+}
+
 .appoinment-page__right {
     position: relative;
     display: block;

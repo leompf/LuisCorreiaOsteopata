@@ -127,7 +127,7 @@
 
 .banner-one__img img {
     width: 100%;
-    animation: topBottom 3s ease-in-out infinite;
+    /*animation: topBottom 3s ease-in-out infinite;*/
 }
 
 .banner-one__img-shape-1 {

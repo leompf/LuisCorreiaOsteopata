@@ -22,7 +22,9 @@ public class AppointmentRepository : GenericRepository<Appointment>, IAppointmen
     {
         return await _context.Appointments
             .Include(a => a.Staff)
+                .ThenInclude(s => s.User)
             .Include(a => a.Patient)
+                .ThenInclude(p => p.User)
             .ToListAsync();
     }
 
@@ -30,14 +32,16 @@ public class AppointmentRepository : GenericRepository<Appointment>, IAppointmen
     {
         return await _context.Appointments
            .Include(a => a.Patient)
+            .ThenInclude(p => p.User)
            .Include(a => a.Staff)
+            .ThenInclude(s => s.User)
            .FirstOrDefaultAsync(a => a.Id == id);
     }
 
     public async Task<List<Appointment>> GetAppointmentsByUserAsync(User user)
     {
         var role = await _userHelper.GetUserRoleAsync(user);
-        
+
         if (role == "Utente")
         {
             return await _context.Appointments
@@ -56,15 +60,19 @@ public class AppointmentRepository : GenericRepository<Appointment>, IAppointmen
 
     public IEnumerable<SelectListItem> GetAvailableTimeSlotsCombo(DateTime date)
     {
-        if (date.Date < DateTime.Today)
+        var now = DateTime.Now;;
+
+        // Disallow booking less than 48 hours in advance
+        if (date.AddDays(1) <= now.AddHours(48))
             return new List<SelectListItem>();
 
+        // Get already booked slots
         var booked = _context.Appointments
             .Where(a => a.AppointmentDate.Date == date.Date)
             .Select(a => TimeOnly.FromDateTime(a.StartTime))
             .ToList();
 
-        var slots = new List<TimeOnly>();
+        // Define working hours
         TimeOnly start, end;
 
         if (date.DayOfWeek == DayOfWeek.Saturday)
@@ -79,23 +87,23 @@ public class AppointmentRepository : GenericRepository<Appointment>, IAppointmen
         }
         else
         {
+            // Sunday → closed
             return new List<SelectListItem>();
         }
 
+        // Generate hourly time slots
         var slotDuration = TimeSpan.FromMinutes(60);
-        var now = DateTime.Now;
+        var slots = new List<TimeOnly>();
 
         for (var t = start; t < end; t = t.AddMinutes(slotDuration.TotalMinutes))
         {
             if (booked.Contains(t))
                 continue;
 
-            if (date.Date == now.Date && t < TimeOnly.FromDateTime(now))
-                continue;
-
             slots.Add(t);
         }
 
+        // Return available slots as a dropdown list
         return slots.Select(t => new SelectListItem
         {
             Text = t.ToString("HH:mm"),
@@ -112,6 +120,7 @@ public class AppointmentRepository : GenericRepository<Appointment>, IAppointmen
             PatientId = a.PatientId,
             StaffId = a.StaffId,
             StaffName = a.Staff.FullName,
+            StaffUserId = a.Staff.User.Id,
             CreatedDate = a.CreatedDate,
             AppointmentStatus = a.AppointmentStatus,
             AppointmentDate = a.AppointmentDate,
