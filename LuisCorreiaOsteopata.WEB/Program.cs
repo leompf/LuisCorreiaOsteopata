@@ -5,7 +5,6 @@ using LuisCorreiaOsteopata.WEB.Helpers;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 
 namespace LuisCorreiaOsteopata.WEB;
@@ -50,6 +49,20 @@ public class Program
 
         builder.Services.Configure<AuthMessageSenderOptions>(builder.Configuration);
 
+        builder.Services.AddAuthentication()
+            .AddGoogle(options =>
+            {
+                options.ClientId = builder.Configuration["GoogleSettings:ClientId"];
+                options.ClientSecret = builder.Configuration["GoogleSettings:ClientSecret"];
+                options.CallbackPath = "/signin-google";
+
+                options.Scope.Add("https://www.googleapis.com/auth/calendar.events");
+                options.Scope.Add("email");
+                options.Scope.Add("profile");
+
+                options.SaveTokens = true;
+            });
+
         var app = builder.Build();
 
         // Configure the HTTP request pipeline.
@@ -65,6 +78,7 @@ public class Program
 
         app.UseRouting();
 
+        app.UseAuthentication();
         app.UseAuthorization();
 
         app.MapControllerRoute(

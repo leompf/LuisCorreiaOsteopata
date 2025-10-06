@@ -17,6 +17,8 @@ public interface IUserHelper
 
     Task<string> GenerateEmailConfirmationTokenAsync(User user);
 
+    Task StoreUserTokenAsync(User user, string loginProvider, string name, string value);
+
     Task<IdentityResult> ConfirmEmailAsync(User user, string token);
 
     Task<IdentityResult> UpdateUserAsync(User user);

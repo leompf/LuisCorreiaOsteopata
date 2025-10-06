@@ -3487,7 +3487,46 @@ Product Description
     font-weight: 500;
 }
 
+.login-one__form form .google-facebook {
+    position: relative;
+    display: flex;
+    align-items: center;
+    margin-top: 10px;
+}
 
+.login-one__form form .google-facebook a {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--careon-gray);
+    background-color: var(--careon-white);
+    color: var(--careon-black);
+    font-size: 16px;
+    line-height: 28px;
+    font-family: var(--careon-font);
+    font-weight: 500;
+    padding: 10px 15px 10px;
+    border-radius: 5px;
+    letter-spacing: -0.01em;
+    transition: all 200ms linear;
+    transition-delay: 0.1s;
+}
+
+.login-one__form form .google-facebook a:hover {
+    border: 1px solid var(--careon-base);
+    background-color: var(--careon-white);
+}
+
+.login-one__form form .google-facebook a+a {
+    margin-left: 14px;
+}
+
+.sign-up-one__form form .google-facebook a .icon {
+    position: relative;
+    display: block;
+    line-height: 0;
+    margin-right: 10px;
 
 
 

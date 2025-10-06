@@ -23,7 +23,7 @@ public class SeedDB
         await _userHelper.CheckRoleAsync("Colaborador");
         await _userHelper.CheckRoleAsync("Administrador");
 
-        var adminUser = await _userHelper.GetUserByEmailAsync("lmfraqueiro@gmail.com");
+        var adminUser = await _userHelper.GetUserByEmailAsync("leonardex97@hotmail.com");
 
         if (adminUser == null)
         {
@@ -31,8 +31,8 @@ public class SeedDB
             {
                 Names = "Leonardo Miguel Petricciuolo",
                 LastName = "Fraqueiro",
-                Email = "lmfraqueiro@gmail.com",
-                UserName = "lmfraqueiro@gmail.com",
+                Email = "leonardex97@hotmail.com",
+                UserName = "leonardex97@hotmail.com",
                 EmailConfirmed = true
             };
 
@@ -83,7 +83,7 @@ public class SeedDB
             }
         }
 
-        var staffUser = await _userHelper.GetUserByEmailAsync("leonardex97@hotmail.com");
+        var staffUser = await _userHelper.GetUserByEmailAsync("leozao997@hotmail.com");
 
         if (staffUser == null)
         {
@@ -91,8 +91,8 @@ public class SeedDB
             {
                 Names = "Luis Miguel",
                 LastName = "Correia",
-                Email = "leonardex97@hotmail.com",
-                UserName = "leonardex97@hotmail.com",
+                Email = "leozao997@hotmail.com",
+                UserName = "leozao997@hotmail.com",
                 EmailConfirmed = true,
                 Nif = "231029012",
                 PhoneNumber = "+351932458961"

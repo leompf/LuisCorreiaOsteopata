@@ -1,29 +1,36 @@
-﻿using LuisCorreiaOsteopata.WEB.Data.Entities;
-using LuisCorreiaOsteopata.WEB.Data;
+﻿using LuisCorreiaOsteopata.WEB.Data;
+using LuisCorreiaOsteopata.WEB.Data.Entities;
 using LuisCorreiaOsteopata.WEB.Helpers;
 using LuisCorreiaOsteopata.WEB.Models;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Identity.UI.Services;
+using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace LuisCorreiaOsteopata.WEB.Controllers
 {
     public class AccountController : Controller
     {
         private readonly IUserHelper _userHelper;
+        private readonly SignInManager<User> _signInManager;
         private readonly IPatientRepository _patientRepository;
         private readonly IStaffRepository _staffRepository;
         private readonly IAppointmentRepository _appointmentRepository;
         private readonly IEmailSender _emailSender;
 
         public AccountController(IUserHelper userHelper,
+            SignInManager<User> signInManager,
             IPatientRepository patientRepository,
             IStaffRepository staffRepository,
             IAppointmentRepository appointmentRepository,
             IEmailSender emailSender)
         {
             _userHelper = userHelper;
+            _signInManager = signInManager;
             _patientRepository = patientRepository;
             _staffRepository = staffRepository;
             _appointmentRepository = appointmentRepository;
@@ -117,7 +124,7 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
 
             ViewBag.SignUpMessage = "Registo realizado! Por favor, verifica o teu email para confirmares a conta.";
 
-            return View();            
+            return View();
         }
 
         public async Task<IActionResult> ConfirmEmail(string userId, string token)
@@ -135,12 +142,13 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
 
             var result = await _userHelper.ConfirmEmailAsync(user, token);
             if (result.Succeeded)
-            {                
+            {
                 return View("ConfirmEmailSuccess");
             }
 
             return View("ConfirmEmailFailure");
         }
+
 
         public IActionResult Login()
         {
@@ -175,17 +183,89 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
         }
 
 
+        public IActionResult LoginGoogle()
+        {
+            var redirectUrl = Url.Action("Response", "Account");
+            var properties = _signInManager.ConfigureExternalAuthenticationProperties(GoogleDefaults.AuthenticationScheme, redirectUrl);
+            return Challenge(properties, GoogleDefaults.AuthenticationScheme);
+        }
+
+
+        public async Task<IActionResult> Response()
+        {
+            var loginInfo = await _signInManager.GetExternalLoginInfoAsync();
+            if (loginInfo == null)
+                return RedirectToAction("Login");
+
+            var result = await _signInManager.ExternalLoginSignInAsync(
+                loginInfo.LoginProvider,
+                loginInfo.ProviderKey,
+                isPersistent: true,
+                bypassTwoFactor: true
+            );
+
+            if (result.Succeeded)
+                return RedirectToAction("Index", "Account");
+
+            var claims = loginInfo.Principal.Identities.FirstOrDefault()?.Claims;
+            var email = claims?.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value;
+            var name = claims?.FirstOrDefault(c => c.Type == ClaimTypes.Name)?.Value;
+            var googleId = claims?.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+
+            var user = await _userHelper.GetUserByEmailAsync(email);
+            if (user == null)
+            {
+                user = new User
+                {
+                    Email = email,
+                    UserName = email,
+                    Names = name.Split(' ')[0],
+                    LastName = name.Contains(" ") ? name.Substring(name.IndexOf(" ") + 1) : "",
+                    EmailConfirmed = true
+                };
+
+                await _userHelper.AddUserAsync(user, Guid.NewGuid().ToString());
+                await _userHelper.AddUserToRoleAsync(user, "Utente");
+
+                var patient = await _patientRepository.CreatePatientAsync(user, "Utente");
+                if (patient != null)
+                {
+                    await _patientRepository.CreateAsync(patient);
+                }
+            }
+
+            // get the tokens
+            var accessToken = loginInfo.AuthenticationTokens.FirstOrDefault(t => t.Name == "access_token")?.Value;
+            var refreshToken = loginInfo.AuthenticationTokens.FirstOrDefault(t => t.Name == "refresh_token")?.Value;
+            var expiresAt = loginInfo.AuthenticationTokens.FirstOrDefault(t => t.Name == "expires_at")?.Value;
+
+            if (!string.IsNullOrEmpty(accessToken))
+                await _userHelper.StoreUserTokenAsync(user, "Google", "access_token", accessToken);
+            if (!string.IsNullOrEmpty(refreshToken))
+                await _userHelper.StoreUserTokenAsync(user, "Google", "refresh_token", refreshToken);
+            if (!string.IsNullOrEmpty(expiresAt))
+                await _userHelper.StoreUserTokenAsync(user, "Google", "expires_at", expiresAt);
+
+            await _signInManager.SignInAsync(user, isPersistent: true);
+
+            return RedirectToAction("Index", "Account");
+        }
+
         public async Task<IActionResult> Logout()
         {
             await _userHelper.LogoutAsync();
+            await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
+
             return RedirectToAction("Index", "Home");
         }
+
 
         [Authorize(Roles = "Administrador")]
         public IActionResult AddStaff()
         {
             return View();
         }
+
 
         [Authorize(Roles = "Administrador")]
         [HttpPost]
@@ -235,11 +315,11 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
                         $"<strong>Password temporária:</strong> {password}</p>" +
                         $"<p>Antes de iniciar sessão, tens de confirmar a tua conta clicando no seguinte link <a href='{confirmationLink}'>Confirmar conta</a></p>" +
                         $"Após confirmares, podes iniciar sessão e alterar a tua password.</p>";
-                                           
+
                     await _emailSender.SendEmailAsync(user.Email, "Bem-vindo à equipa!", mailMessage);
 
                     ViewBag.AddStaffMessage = "Colaborador adicionado com sucesso! Foi enviado um email de confirmação de conta para o email estipulado.";
-                    
+
                     return View();
                 }
             }

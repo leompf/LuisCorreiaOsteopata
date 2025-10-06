@@ -1,6 +1,7 @@
 ﻿using LuisCorreiaOsteopata.WEB.Data.Entities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
+using System.Security.Claims;
 
 namespace LuisCorreiaOsteopata.WEB.Helpers;
 
@@ -49,6 +50,7 @@ public class UserHelper : IUserHelper
     {
         return await _userManager.ConfirmEmailAsync(user, token);
     }
+
 
     public async Task<string> GenerateEmailConfirmationTokenAsync(User user)
     {
@@ -106,7 +108,7 @@ public class UserHelper : IUserHelper
 
     public async Task<User> GetCurrentUserAsync()
     {
-        var email = _httpContextAccessor.HttpContext.User.Identity.Name;
+        var email = _httpContextAccessor.HttpContext.User?.FindFirst(ClaimTypes.Email)?.Value;
 
         if (string.IsNullOrEmpty(email))
         {
@@ -156,6 +158,13 @@ public class UserHelper : IUserHelper
     public async Task LogoutAsync()
     {
         await _signInManager.SignOutAsync();
+    }
+
+    public async Task StoreUserTokenAsync(User user, string loginProvider, string name, string value)
+    {
+        await _userManager.RemoveAuthenticationTokenAsync(user, loginProvider, name);
+
+        await _userManager.SetAuthenticationTokenAsync(user, loginProvider, name, value);
     }
 
     public Task<IdentityResult> UpdateUserAsync(User user)
