@@ -1,6 +1,7 @@
 ﻿using LuisCorreiaOsteopata.WEB.Data.Entities;
 using LuisCorreiaOsteopata.WEB.Helpers;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 
 namespace LuisCorreiaOsteopata.WEB.Data;
@@ -38,6 +39,23 @@ public class PatientRepository : GenericRepository<Patient>, IPatientRepository
         };
 
         return patient;
+    }
+
+    public IEnumerable<SelectListItem> GetComboPatients()
+    {
+        var list = _context.Patients.Select(s => new SelectListItem
+        {
+            Text = s.FullName,
+            Value = s.Id.ToString(),
+        }).ToList();
+
+        list.Insert(0, new SelectListItem
+        {
+            Text = "(Seleciona um paciente...)",
+            Value = "0"
+        });
+
+        return list;
     }
 
     public async Task<Patient?> GetPatientByUserEmailAsync(string email)

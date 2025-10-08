@@ -26,9 +26,18 @@ public class BookAppointmentViewModel
     [Range(1, int.MaxValue, ErrorMessage = "Selecione um profissional")]
     public int StaffId { get; set; }
 
+    
+    [Display(Name = "Patient")]
+    [Range(1, int.MaxValue, ErrorMessage = "Selecione um paciente")]
+    public int PatientId { get; set; }
+
 
     [ValidateNever]
     public IEnumerable<SelectListItem> Staff { get; set; }
+
+
+    [ValidateNever]
+    public IEnumerable<SelectListItem> Patients { get; set; }
 
 
     [ValidateNever]

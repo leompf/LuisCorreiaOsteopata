@@ -37,7 +37,8 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
             var model = new BookAppointmentViewModel
             {
                 Staff = _staffRepository.GetComboStaff(),
-                TimeSlots = _appointmentRepository.GetAvailableTimeSlotsCombo(DateTime.Today)
+                TimeSlots = _appointmentRepository.GetAvailableTimeSlotsCombo(DateTime.Today),
+                Patients = _patientRepository.GetComboPatients()
             };
 
             return View(model);
@@ -49,19 +50,42 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
         {
             model.Staff = _staffRepository.GetComboStaff();
 
+            if (User.IsInRole("Colaborador"))
+                model.Patients = _patientRepository.GetComboPatients();
+
             if (!ModelState.IsValid)
             {
-                model.Staff = _staffRepository.GetComboStaff();
                 model.TimeSlots = _appointmentRepository.GetAvailableTimeSlotsCombo(model.AppointmentDate);
                 return View(model);
             }
 
             var user = await _userHelper.GetCurrentUserAsync();
+            int patientId;
 
-            var patient = await _patientRepository.GetPatientByUserEmailAsync(user.Email);
-            if (patient == null)
+            if(User.IsInRole("Utente"))
             {
-                ModelState.AddModelError(string.Empty, "Paciente não encontrado.");
+                var patient = await _patientRepository.GetPatientByUserEmailAsync(user.Email);
+                if (patient == null)
+                {
+                    ModelState.AddModelError(string.Empty, "Paciente não encontrado.");
+                    model.TimeSlots = _appointmentRepository.GetAvailableTimeSlotsCombo(model.AppointmentDate);
+                    return View(model);
+                }
+                patientId = patient.Id;
+            }
+            else if (User.IsInRole("Colaborador"))
+            {
+                if (model.PatientId == null)
+                {
+                    ModelState.AddModelError(string.Empty, "Paciente não encontrado.");
+                    model.TimeSlots = _appointmentRepository.GetAvailableTimeSlotsCombo(model.AppointmentDate);
+                    return View(model);
+                }
+                patientId = model.PatientId;
+            }
+            else
+            {
+                ModelState.AddModelError(string.Empty, "Não é possível marcar a consulta.");
                 return View(model);
             }
 
@@ -69,6 +93,7 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
             if (staff == null)
             {
                 ModelState.AddModelError(string.Empty, "Colaborador selecionado não encontrado.");
+                model.TimeSlots = _appointmentRepository.GetAvailableTimeSlotsCombo(model.AppointmentDate);
                 return View(model);
             }
 
@@ -91,7 +116,7 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
 
             var appointment = new Appointment
             {
-                PatientId = patient.Id,
+                PatientId = patientId,
                 StaffId = staff.Id,
                 PatientNotes = model.Notes,
                 AppointmentDate = model.AppointmentDate.Date,

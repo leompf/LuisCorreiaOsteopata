@@ -23,78 +23,164 @@
     </div>
 </section>
 
-<section class="appoinment-page" id="appointment-section">
-    <div class="container">
-        <div class="row">
-            <div class="col-xl-8 col-lg-7">
-                <div class="appoinment-page__left">
-                    <h3 class="appoinment-page__title">Marcar Consulta</h3>
-                    <form class="appoinment-page__form" method="post" asp-action="Index">
-                        <div class="row">
-                            <div class="col-xl-3 col-md-6">
-                                <div class="appoinment-page__input-box">
-                                    <span asp-validation-for="AppointmentDate"></span>
-                                    <input asp-for="AppointmentDate" type="date" id="AppointmentDate" placeholder="Selecione uma data..." />
+@if (User.IsInRole("Utente"))
+{
+    <section class="appoinment-page" id="appointment-section">
+        <div class="container">
+            <div class="row">
+                <div class="col-xl-8 col-lg-7">
+                    <div class="appoinment-page__left">
+                        <h3 class="appoinment-page__title">Marcar Consulta</h3>
+                        <form class="appoinment-page__form" method="post" asp-action="Index">
+                            <div class="row">
+                                <div class="col-xl-3 col-md-6">
+                                    <div class="appoinment-page__input-box">
+                                        <span asp-validation-for="AppointmentDate"></span>
+                                        <input asp-for="AppointmentDate" type="date" id="AppointmentDate" placeholder="Selecione uma data..." />
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-xl-4 col-md-6">
-                                <div class="appoinment-page__input-box">
-                                    <span asp-validation-for="StaffId"></span>
-                                    <select asp-for="StaffId" asp-items="Model.Staff"></select>
+                            <div class="row">
+                                <div class="col-xl-4 col-md-6">
+                                    <div class="appoinment-page__input-box">
+                                        <span asp-validation-for="StaffId"></span>
+                                        <select asp-for="StaffId" asp-items="Model.Staff"></select>
+                                    </div>
+                                </div>
+                                <div class="col-xl-4 col-md-6">
+                                    <div class="appoinment-page__input-box">
+                                        <span asp-validation-for="StartTime"></span>
+                                        <select asp-for="StartTime" asp-items="Model.TimeSlots" id="timeSlots"></select>
+                                    </div>
+                                </div>
+                                <div class="col-xl-12 col-md-6 mb-3">
+                                    <ul>
+                                        <li>Preço por consulta: <strong>50€</strong></li>
+                                        <li>As consultas devem ser marcadas no mínimo com 48h de antecedência.</li>
+                                        <li>Consultas desmarcadas até <strong>24h</strong> antes serão cobradas no seu valor integral.</li>
+                                    </ul>
+                                </div>
+                                <div class="col-xl-12">
+                                    <div class="appoinment-page__input-box text-message-box">
+                                        <div id="quill-editor"></div>
+                                        <input type="hidden" asp-for="Notes" id="Notes" />
+                                    </div>
+                                    <div class="appoinment-page__btn-box" style="margin-top: 70px">
+                                        <button type="submit" class="thm-btn">
+                                            Marcar<span class="icon-plus"></span>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="col-xl-4 col-md-6">
-                                <div class="appoinment-page__input-box">
-                                    <span asp-validation-for="StartTime"></span>
-                                    <select asp-for="StartTime" asp-items="Model.TimeSlots" id="timeSlots"></select>
-                                </div>
-                            </div>
-                            <div class="col-xl-12 col-md-6 mb-3">
-                                <ul>
-                                    <li>Preço por consulta: <strong>50€</strong></li>
-                                    <li>As consultas devem ser marcadas no mínimo com 48h de antecedência.</li>
-                                    <li>Consultas desmarcadas até <strong>24h</strong> antes serão cobradas no seu valor integral.</li>
-                                </ul>
-                            </div>
-                            <div class="col-xl-12">
-                                <div class="appoinment-page__input-box text-message-box">
-                                    <div id="quill-editor"></div>
-                                    <input type="hidden" asp-for="Notes" id="Notes" />
-                                </div>
-                                <div class="appoinment-page__btn-box" style="margin-top: 70px">
-                                    <button type="submit" class="thm-btn">
-                                        Marcar<span class="icon-plus"></span>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </form>
-                    <div style="margin-top: 10px" class="text-success">@Html.Raw(ViewBag.AppointmentBookingMessage)</div>
-                    <div asp-validation-summary="ModelOnly"></div>
+                        </form>
+                        <div style="margin-top: 10px" class="text-success">@Html.Raw(ViewBag.AppointmentBookingMessage)</div>
+                        <div asp-validation-summary="ModelOnly"></div>
+                    </div>
                 </div>
-            </div>
-            <div class="col-xl-4 col-lg-5">
-                <div class="appoinment-page__right">
-                    <div class="appoinment-page__working-hour">
-                        <h3 class="appoinment-page__working-hour-title">Horário de Funcionamento</h3>
-                        <ul class="appoinment-page__working-hour-list list-unstyled">
-                            <li>
-                                <span>Segunda-Sexta</span>
-                                <p>09h00 às 19h00</p>
-                            </li>
-                            <li>
-                                <span>Sábado</span>
-                                <p>09h00 às 13h00</p>
-                            </li>
-                        </ul>
+                <div class="col-xl-4 col-lg-5">
+                    <div class="appoinment-page__right">
+                        <div class="appoinment-page__working-hour">
+                            <h3 class="appoinment-page__working-hour-title">Horário de Funcionamento</h3>
+                            <ul class="appoinment-page__working-hour-list list-unstyled">
+                                <li>
+                                    <span>Segunda-Sexta</span>
+                                    <p>09h00 às 19h00</p>
+                                </li>
+                                <li>
+                                    <span>Sábado</span>
+                                    <p>09h00 às 13h00</p>
+                                </li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-</section>
+    </section>
+}
+
+@if (User.IsInRole("Colaborador"))
+{
+    <section class="appoinment-page" id="appointment-section">
+        <div class="container">
+            <div class="row">
+                <div class="col-xl-8 col-lg-7">
+                    <div class="appoinment-page__left">
+                        <h3 class="appoinment-page__title">Marcar Consulta</h3>
+                        <form class="appoinment-page__form" method="post" asp-action="Index">
+                            <div class="row">
+                                <div class="col-xl-3 col-md-6">
+                                    <div class="appoinment-page__input-box">
+                                        <span asp-validation-for="AppointmentDate"></span>
+                                        <input asp-for="AppointmentDate" type="date" id="AppointmentDate" placeholder="Selecione uma data..." />
+                                    </div>
+                                </div>
+                                <div class="col-xl-4 col-md-6">
+                                    <div class="appoinment-page__input-box">
+                                        <span asp-validation-for="StartTime"></span>
+                                        <select asp-for="StartTime" asp-items="Model.TimeSlots" id="timeSlots"></select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-xl-4 col-md-6">
+                                    <div class="appoinment-page__input-box">
+                                        <span asp-validation-for="PatientId"></span>
+                                        <select asp-for="PatientId" asp-items="Model.Patients"></select>
+                                    </div>
+                                </div>
+                                <div class="col-xl-4 col-md-6">
+                                    <div class="appoinment-page__input-box">
+                                        <span asp-validation-for="StaffId"></span>
+                                        <select asp-for="StaffId" asp-items="Model.Staff"></select>
+                                    </div>
+                                </div>
+                                <div class="col-xl-12 col-md-6 mb-3">
+                                    <ul>
+                                        <li>Preço por consulta: <strong>50€</strong></li>
+                                        <li>As consultas devem ser marcadas no mínimo com 48h de antecedência.</li>
+                                        <li>Consultas desmarcadas até <strong>24h</strong> antes serão cobradas no seu valor integral.</li>
+                                    </ul>
+                                </div>
+                                <div class="col-xl-12">
+                                    <div class="appoinment-page__input-box text-message-box">
+                                        <div id="quill-editor"></div>
+                                        <input type="hidden" asp-for="Notes" id="Notes" />
+                                    </div>
+                                    <div class="appoinment-page__btn-box" style="margin-top: 70px">
+                                        <button type="submit" class="thm-btn">
+                                            Marcar<span class="icon-plus"></span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                        <div style="margin-top: 10px" class="text-success">@Html.Raw(ViewBag.AppointmentBookingMessage)</div>
+                        <div asp-validation-summary="ModelOnly"></div>
+                    </div>
+                </div>
+                <div class="col-xl-4 col-lg-5">
+                    <div class="appoinment-page__right">
+                        <div class="appoinment-page__working-hour">
+                            <h3 class="appoinment-page__working-hour-title">Horário de Funcionamento</h3>
+                            <ul class="appoinment-page__working-hour-list list-unstyled">
+                                <li>
+                                    <span>Segunda-Sexta</span>
+                                    <p>09h00 às 19h00</p>
+                                </li>
+                                <li>
+                                    <span>Sábado</span>
+                                    <p>09h00 às 13h00</p>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+}
 
 @section Scripts {
     @{
