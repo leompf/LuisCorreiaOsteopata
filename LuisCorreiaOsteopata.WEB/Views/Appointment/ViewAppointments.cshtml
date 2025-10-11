@@ -1,0 +1,111 @@
+﻿@model LuisCorreiaOsteopata.WEB.Models.AppointmentListViewModel
+
+@{
+    ViewData["Title"] = "ViewAppointments";
+    Layout = "~/Views/Shared/_Layout2.cshtml";
+}
+
+@section MainMenu
+{
+    <partial name="_Menu"></partial>
+}
+
+<section class="page-header">
+    <div class="page-header__bg" style="background-image: url(assets/images/backgrounds/page-header-bg.jpg);">
+    </div>
+    <div class="container">
+        <div class="page-header__inner">
+            <h3>Detalhes da Consulta</h3>
+            <div class="thm-breadcrumb__inner">
+                <ul class="thm-breadcrumb list-unstyled">
+                    <li><a asp-controller="Account" asp-action="Index">Home</a></li>
+                    <li><span class="icon-arrow-left"></span></li>
+                    <li>Detalhes Consulta</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="appoinment-page" id="profile-section" style="margin-top: -100px">
+    <div class="container">
+        <div class="row">
+            <form method="get">
+                <div class="row">
+                    <div class="row align-items-center mb-3">
+                        <div class="col-auto">
+                            <label class="col-form-label fw-bold pe-1">Colaborador:</label>
+                        </div>
+                        <div class="col-auto ps-0">
+                            <select asp-for="StaffId" asp-items="Model.StaffMembers"></select>
+                        </div>
+
+
+                        <div class="col-auto">
+                            <label class="col-form-label fw-bold pe-1">Paciente:</label>
+                        </div>
+                        <div class="col-auto ps-0">
+                            <select asp-for="PatientId" asp-items="Model.Patients"></select>
+                        </div>
+                    </div>
+
+                    <div class="row align-items-center mb-3">
+
+                        <div class="col-auto">
+                            <label class="col-form-label fw-bold pe-0">De:</label>
+                        </div>
+                        <div class="col-auto ps-0">
+                            <input asp-for="FromDate" type="date" class="form-control" />
+                        </div>
+
+                        <div class="col-auto">
+                            <label class="col-form-label fw-bold pe-0">Até:</label>
+                        </div>
+                        <div class="col-auto ps-0">
+                            <input asp-for="ToDate" type="date" class="form-control" />
+                        </div>
+
+                        <div class="col-auto">
+                            <button type="submit" class="btn btn-primary w-100">Filtrar</button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Data</th>
+                    <th>Hora</th>
+                    <th>Paciente</th>
+                    <th>Colaborador</th>
+                    <th>Estado</th>
+                    <th>Notas</th>
+                    <th>Pago</th>
+                    <th>Ver</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var appt in Model.Appointments)
+                {
+                    <tr>
+                        <td>@appt.AppointmentDate.ToString("dd/MM/yyyy")</td>
+                        <td>@appt.StartTime.ToString("HH:mm") - @appt.EndTime.ToString("HH:mm")</td>
+                        <td>@appt.PatientName</td>
+                        <td>@appt.StaffName</td>
+                        <td>@appt.AppointmentStatus</td>
+                        <td>@appt.StaffNotes</td>
+                        <td>@(appt.IsPaid ? "Sim" : "Não")</td>
+                        <td>
+                            <a asp-action="Details" asp-route-id="@appt.Id" class="btn btn-sm btn-primary">
+                                Ver Detalhes
+                            </a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</section>
+

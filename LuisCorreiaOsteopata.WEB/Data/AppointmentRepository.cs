@@ -62,17 +62,14 @@ public class AppointmentRepository : GenericRepository<Appointment>, IAppointmen
     {
         var now = DateTime.Now;;
 
-        // Disallow booking less than 48 hours in advance
         if (date.AddDays(1) <= now.AddHours(48))
             return new List<SelectListItem>();
 
-        // Get already booked slots
         var booked = _context.Appointments
             .Where(a => a.AppointmentDate.Date == date.Date)
             .Select(a => TimeOnly.FromDateTime(a.StartTime))
             .ToList();
 
-        // Define working hours
         TimeOnly start, end;
 
         if (date.DayOfWeek == DayOfWeek.Saturday)
@@ -87,11 +84,9 @@ public class AppointmentRepository : GenericRepository<Appointment>, IAppointmen
         }
         else
         {
-            // Sunday → closed
             return new List<SelectListItem>();
         }
 
-        // Generate hourly time slots
         var slotDuration = TimeSpan.FromMinutes(60);
         var slots = new List<TimeOnly>();
 
@@ -103,12 +98,49 @@ public class AppointmentRepository : GenericRepository<Appointment>, IAppointmen
             slots.Add(t);
         }
 
-        // Return available slots as a dropdown list
         return slots.Select(t => new SelectListItem
         {
             Text = t.ToString("HH:mm"),
             Value = t.ToString("HH:mm")
         }).ToList();
+    }
+
+    public async Task<List<Appointment>> GetFilteredAppointmentsAsync(int? staffId, int? patientId, DateTime? fromDate, DateTime? toDate)
+    {
+        var appointments = await GetAllAppointmentsAsync();
+
+        if (staffId.HasValue && staffId.Value > 0)
+        {
+            appointments = appointments
+                .Where(a => a.Staff.Id == staffId)
+                .ToList();
+        }
+
+        if (patientId.HasValue && patientId.Value > 0)
+        {
+            appointments = appointments
+                .Where(a => a.Patient.Id == patientId)
+                .ToList();
+        }
+
+        if (fromDate.HasValue)
+        {
+            appointments = appointments
+                .Where(a => a.AppointmentDate >= fromDate.Value)
+                .ToList();
+        }
+
+        if (toDate.HasValue)
+        {
+            appointments = appointments
+                .Where(a => a.AppointmentDate <= toDate.Value)
+                .ToList();
+        }
+
+        return appointments
+            .OrderBy(a => a.AppointmentDate)
+            .ThenBy(a => a.StartTime)
+            .ToList();
     }
 
     public async Task<List<AppointmentViewModel>> GetSchedulledAppointmentsAsync()

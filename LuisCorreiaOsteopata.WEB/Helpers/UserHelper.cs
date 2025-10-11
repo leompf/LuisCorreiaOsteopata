@@ -1,6 +1,7 @@
 ﻿using LuisCorreiaOsteopata.WEB.Data.Entities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
 namespace LuisCorreiaOsteopata.WEB.Helpers;
@@ -106,6 +107,14 @@ public class UserHelper : IUserHelper
         return new string(chars.ToArray());
     }
 
+    public async Task<List<User>> GetAllUsersAsync()
+    {
+        var users = await _userManager.Users.ToListAsync();
+        return await _userManager.Users
+            .OrderBy(u => u.Names)
+            .ToListAsync();
+    }
+
     public async Task<User> GetCurrentUserAsync()
     {
         var email = _httpContextAccessor.HttpContext.User?.FindFirst(ClaimTypes.Email)?.Value;
@@ -140,6 +149,15 @@ public class UserHelper : IUserHelper
         return role.FirstOrDefault();
     }
 
+    public async Task<string> GetUserTokenAsync(User user, string loginProvider, string tokenName)
+    {
+        if (user == null)
+            return null;
+
+        var token = await _userManager.GetAuthenticationTokenAsync(user, loginProvider, tokenName);
+        return token;
+    }
+
     public async Task<bool> IsUserInRoleAsync(User user, string rolename)
     {
         return await _userManager.IsInRoleAsync(user, rolename);
@@ -167,9 +185,9 @@ public class UserHelper : IUserHelper
         await _userManager.SetAuthenticationTokenAsync(user, loginProvider, name, value);
     }
 
-    public Task<IdentityResult> UpdateUserAsync(User user)
+    public async Task<IdentityResult> UpdateUserAsync(User user)
     {
-        throw new NotImplementedException();
+        return await _userManager.UpdateAsync(user);       
     }
 
 }

@@ -42,12 +42,15 @@ public class Program
         builder.Services.AddScoped<IUserHelper, UserHelper>();
         builder.Services.AddScoped<IConverterHelper, ConverterHelper>();
         builder.Services.AddScoped<HtmlSanitizer>();
+        builder.Services.AddScoped<IGoogleHelper, GoogleHelper>();
+
 
         builder.Services.AddScoped<IPatientRepository, PatientRepository>();
         builder.Services.AddScoped<IStaffRepository, StaffRepository>();
         builder.Services.AddScoped<IAppointmentRepository, AppointmentRepository>();
 
         builder.Services.Configure<AuthMessageSenderOptions>(builder.Configuration);
+        builder.Services.Configure<GoogleSettings>(builder.Configuration.GetSection("GoogleSettings"));
 
         builder.Services.AddAuthentication()
             .AddGoogle(options =>
@@ -56,11 +59,19 @@ public class Program
                 options.ClientSecret = builder.Configuration["GoogleSettings:ClientSecret"];
                 options.CallbackPath = "/signin-google";
 
+                options.Scope.Add("https://www.googleapis.com/auth/calendar");
                 options.Scope.Add("https://www.googleapis.com/auth/calendar.events");
                 options.Scope.Add("email");
                 options.Scope.Add("profile");
 
-                options.SaveTokens = true;
+                options.AccessType = "offline";
+                options.SaveTokens = true;                
+
+                options.Events.OnRedirectToAuthorizationEndpoint = context =>
+                {
+                    context.Response.Redirect(context.RedirectUri + "&prompt=consent");
+                    return Task.CompletedTask;
+                };
             });
 
         var app = builder.Build();

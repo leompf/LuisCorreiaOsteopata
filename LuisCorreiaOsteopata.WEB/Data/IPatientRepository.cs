@@ -9,5 +9,7 @@ public interface IPatientRepository : IGenericRepository<Patient>
 
     Task<Patient?> GetPatientByUserEmailAsync(string email);
 
+    Task<Patient?> GetPatientByIdAsync(int id);
+
     IEnumerable<SelectListItem> GetComboPatients();
 }

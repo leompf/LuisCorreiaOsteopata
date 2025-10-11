@@ -7,19 +7,7 @@
 
 @section MainMenu
 {
-    <li class="scrollToLink">
-        <a asp-controller="Account" asp-action="Index">Home </a>
-    </li>
-    <li>
-        <a href="#blog">Blog</a>
-    </li>
-    <li class="dropdown">
-        <a><i class="fas fa-user"></i></a>
-        <ul>
-            <li><a asp-action="Profile">Perfil</a></li>
-            <li><a asp-action="Logout">Logout</a></li>
-        </ul>
-    </li>
+    <partial name="_Menu"></partial>
 }
 
 <section class="page-header">
@@ -128,13 +116,11 @@
         <script type="text/javascript">
             document.addEventListener("DOMContentLoaded", function () {
 
-                // Scroll to register section
                 const registerSection = document.getElementById("register-section");
                 if (registerSection) {
                     registerSection.scrollIntoView({ behavior: "smooth" });
                 }
 
-                // Phone input
                 const phoneInput = document.querySelector("#phone");
                 const nifInput = document.querySelector("#nif");
 
@@ -146,7 +132,6 @@
 
                 const form = phoneInput.closest("form");
 
-                // Create inline error spans if they don't exist
                 function ensureErrorSpan(input) {
                     let span = input.nextElementSibling;
                     if (!span || !span.classList.contains("inline-error")) {
@@ -163,7 +148,6 @@
                 form.addEventListener("submit", function (event) {
                     let hasErrors = false;
 
-                    // Phone validation
                     const phoneError = ensureErrorSpan(phoneInput);
                     if (!iti.isValidNumber()) {
                         phoneError.textContent = "Número de telefone inválido.";
@@ -174,7 +158,6 @@
                         phoneInput.classList.remove("is-invalid");
                     }
 
-                    // NIF validation
                     const nifError = ensureErrorSpan(nifInput);
                     if (!validaContribuinte(nifInput.value)) {
                         nifError.textContent = "Número de contribuinte inválido.";

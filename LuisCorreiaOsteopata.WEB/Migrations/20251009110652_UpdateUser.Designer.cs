@@ -4,6 +4,7 @@ using LuisCorreiaOsteopata.WEB.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace LuisCorreiaOsteopata.Library.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20251009110652_UpdateUser")]
+    partial class UpdateUser
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -69,41 +72,6 @@ namespace LuisCorreiaOsteopata.Library.Migrations
                     b.HasIndex("StaffId");
 
                     b.ToTable("Appointments");
-                });
-
-            modelBuilder.Entity("LuisCorreiaOsteopata.WEB.Data.Entities.GoogleCalendar", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("AppointmentId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("CalendarId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("EventId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Role")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("GoogleCalendar");
                 });
 
             modelBuilder.Entity("LuisCorreiaOsteopata.WEB.Data.Entities.Patient", b =>
@@ -192,7 +160,7 @@ namespace LuisCorreiaOsteopata.Library.Migrations
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("int");
 
-                    b.Property<DateTime?>("Birthdate")
+                    b.Property<DateTime>("Birthdate")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("CalendarId")

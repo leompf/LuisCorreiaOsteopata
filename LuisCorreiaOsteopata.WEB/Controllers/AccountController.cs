@@ -3,13 +3,15 @@ using LuisCorreiaOsteopata.WEB.Data.Entities;
 using LuisCorreiaOsteopata.WEB.Helpers;
 using LuisCorreiaOsteopata.WEB.Models;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using System.Security.Claims;
+using System.Threading.Tasks;
+
 
 namespace LuisCorreiaOsteopata.WEB.Controllers
 {
@@ -20,21 +22,30 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
         private readonly IPatientRepository _patientRepository;
         private readonly IStaffRepository _staffRepository;
         private readonly IAppointmentRepository _appointmentRepository;
+        private readonly IGoogleHelper _googleHelper;
         private readonly IEmailSender _emailSender;
+        private readonly IConverterHelper _converterHelper;
+        private readonly ILogger<AccountController> _logger;
 
         public AccountController(IUserHelper userHelper,
             SignInManager<User> signInManager,
             IPatientRepository patientRepository,
             IStaffRepository staffRepository,
             IAppointmentRepository appointmentRepository,
-            IEmailSender emailSender)
+            IGoogleHelper googleHelper,
+            IEmailSender emailSender,
+            IConverterHelper converterHelper,
+            ILogger<AccountController> logger)
         {
             _userHelper = userHelper;
             _signInManager = signInManager;
             _patientRepository = patientRepository;
             _staffRepository = staffRepository;
             _appointmentRepository = appointmentRepository;
+            _googleHelper = googleHelper;
             _emailSender = emailSender;
+            _converterHelper = converterHelper;
+            _logger = logger;
         }
 
         public async Task<IActionResult> Index()
@@ -126,6 +137,7 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
 
             return View();
         }
+
 
         public async Task<IActionResult> ConfirmEmail(string userId, string token)
         {
@@ -234,7 +246,6 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
                 }
             }
 
-            // get the tokens
             var accessToken = loginInfo.AuthenticationTokens.FirstOrDefault(t => t.Name == "access_token")?.Value;
             var refreshToken = loginInfo.AuthenticationTokens.FirstOrDefault(t => t.Name == "refresh_token")?.Value;
             var expiresAt = loginInfo.AuthenticationTokens.FirstOrDefault(t => t.Name == "expires_at")?.Value;
@@ -250,6 +261,7 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
 
             return RedirectToAction("Index", "Account");
         }
+
 
         public async Task<IActionResult> Logout()
         {
@@ -325,6 +337,122 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
             }
 
             ModelState.AddModelError(string.Empty, "Já existe um utilizador com esse email.");
+            return View(model);
+        }
+
+
+        public async Task<IActionResult> Profile(string? id)
+        {
+            User user;
+
+            if (string.IsNullOrEmpty(id))
+            {
+                user = await _userHelper.GetCurrentUserAsync();
+                if (user == null)
+                    return RedirectToAction("Login", "Account");
+            }
+            else
+            {
+                if (User.IsInRole("Utente"))
+                    return Forbid();
+
+                user = await _userHelper.GetUserByIdAsync(id);
+                if (user == null)
+                    return NotFound();
+            }
+
+            var role = await _userHelper.GetUserRoleAsync(user);
+
+            var accessToken = await _userHelper.GetUserTokenAsync(user, "Google", "access_token");
+            ViewBag.Token = accessToken;
+
+            ViewBag.GoogleCalendars = new List<SelectListItem>();
+
+            if (!string.IsNullOrEmpty(accessToken))
+            {
+                try
+                {
+                    var calendars = await _googleHelper.GetUserCalendarsAsync(user, CancellationToken.None);
+
+                    ViewBag.GoogleCalendars = calendars
+                        .Select(c => new SelectListItem
+                        {
+                            Value = c.Id,
+                            Text = c.Summary
+                        })
+                        .ToList();
+                }
+                catch (InvalidOperationException ex) when (ex.Message.Contains("Google account not connected"))
+                {
+                    _logger.LogInformation("User {Email} has no Google account connected.", user.Email);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to retrieve Google calendars for {Email}.", user.Email);
+                }
+            }
+
+            var model = new ProfileViewModel
+            {
+                Name = $"{user.Names} {user.LastName}",
+                Email = user.Email,
+                PhoneNumber = user.PhoneNumber,
+                BirthDate = user.Birthdate,
+                NIF = user.Nif,
+                Role = role,
+                CalendarId = user.CalendarId,
+                CalendarName = null,
+                IsEditable = string.IsNullOrEmpty(id)
+            };
+
+            if (!string.IsNullOrWhiteSpace(user.CalendarId) && ViewBag.GoogleCalendars != null)
+            {
+                var selected = ((List<SelectListItem>)ViewBag.GoogleCalendars)
+                                    .FirstOrDefault(c => c.Value == user.CalendarId);
+                if (selected != null)
+                {
+                    model.CalendarName = selected.Text;
+                }
+            }
+
+            return View(model);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> UpdateUser(ProfileViewModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                var user = await _userHelper.GetCurrentUserAsync();
+                if (user != null)
+                {
+                    user.Email = model.Email;
+                    user.PhoneNumber = model.PhoneNumber;
+                    user.Nif = model.NIF;
+                    if (model.BirthDate.HasValue)
+                    {
+                        user.Birthdate = model.BirthDate.Value;
+                    }
+
+                    await _userHelper.UpdateUserAsync(user);
+                }
+            }
+
+            return RedirectToAction("Profile");
+        }
+
+        [Authorize(Roles = "Administrador,Colaborador")]
+        public async Task<IActionResult> ViewAllUsers()
+        {
+            var users = await _userHelper.GetAllUsersAsync();
+
+            var model = new List<UserListViewModel>();
+            foreach (var user in users)
+            {
+                var role = await _userHelper.GetUserRoleAsync(user);
+                model.Add(_converterHelper.ToUserListViewModel(user, role));
+            }
+            
             return View(model);
         }
     }

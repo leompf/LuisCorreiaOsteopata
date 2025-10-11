@@ -13,29 +13,7 @@
 
 @section MainMenu
 {
-    <li class="scrollToLink">
-        <a href="#home">Home </a>
-    </li>
-    <li>
-        <a href="#blog">Blog</a>
-    </li>
-    @if (await _userManager.IsInRoleAsync(loggedUser, "Administrador"))
-    {
-        <li class="dropdown">
-            <a><i style="margin-right: 5px;" class="fas fa-users-cog fa-fw"></i>Gestão de Utilizadores</a>
-            <ul>
-                <li><a asp-action="AddStaff">Criar Colaborador</a></li>
-                <li><a asp-action="Logout">Ver Utilizadores</a></li>
-            </ul>
-        </li>
-    }
-    <li class="dropdown">
-        <a><i style="margin-right: 5px;" class="fas fa-user"></i>Área Pessoal</a>
-        <ul>
-            <li><a asp-action="Profile">Perfil</a></li>
-            <li><a asp-action="Logout">Logout</a></li>
-        </ul>
-    </li>
+    <partial name="_Menu"></partial>
 }
 
 <section class="service-details" id="home">
@@ -44,13 +22,13 @@
             <div class="service-details__content">
                 <h3 class="service-details__title-1">
                     Bem-vindo,
-                    @if (await _userManager.IsInRoleAsync(loggedUser, "Administrador"))
+                    @if (User.IsInRole("Administrador"))
                     {
                         @:Administrador
                     }
                     else
                     {
-                        @loggedUser.Names.Split(' ')[0]
+                        @loggedUser?.Names.Split(' ')[0]
                     }
                 </h3>
             </div>
@@ -63,7 +41,7 @@
         <div class="col-xl-10 col-lg-7">
             <div class="view-appointment__left">
                 <h3 class="view-appointment__title">Vê as tuas consultas</h3>
-                <div id="calendar"></div>
+                <div class="mt-2" id="calendar"></div>
             </div>
         </div>
     </div>
@@ -74,23 +52,23 @@
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
         <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.19/index.global.min.js'></script>
         <script type="text/javascript">
-            document.addEventListener('DOMContentLoaded', function() 
+            document.addEventListener('DOMContentLoaded', function()
             {
                 var calendarEl = document.getElementById('calendar');
                 var calendarEvents = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.Appointments));
 
-                var calendar = new FullCalendar.Calendar(calendarEl, 
+                var calendar = new FullCalendar.Calendar(calendarEl,
                 {
                     initialView: 'dayGridMonth',
                     locale: 'pt',
                     events: calendarEvents,
-                    headerToolbar: 
+                    headerToolbar:
                     {
                         left: 'prev,next today',
                         center: 'title',
                         right: 'dayGridMonth,timeGridWeek,timeGridDay'
                     },
-                    eventClick: function(info) 
+                    eventClick: function(info)
                     {
                         var appointmentId = info.event.id;
                         window.location.href = '/Appointment/Details/' + appointmentId;

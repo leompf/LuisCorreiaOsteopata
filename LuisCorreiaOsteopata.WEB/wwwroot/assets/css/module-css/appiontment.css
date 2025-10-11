@@ -501,9 +501,21 @@
     margin-bottom: 30px;
 }
 
-.appoinment-page__input-box input[type="text"],
-.appoinment-page__input-box input[type="email"], 
 .appoinment-page__input-box input[type="date"] {
+    height: 60px;
+    width: 100%;
+    padding-left: 30px;
+    padding-right: 30px;
+    outline: none;
+    font-size: 14px;
+    font-weight: 450;
+    background-color: var(--careon-extra);
+    color: var(--careon-gray);
+    display: block;
+}
+
+.appoinment-page__input-box input[type="text"],
+.appoinment-page__input-box input[type="email"] {
     height: 60px;
     width: 100%;
     padding-left: 30px;

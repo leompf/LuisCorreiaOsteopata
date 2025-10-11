@@ -1612,7 +1612,7 @@ Product Description
 .product-description {
     position: relative;
     display: block;
-    padding: 0 0 110px;
+    padding: 0 0 30px;
     z-index: 1;
 }
 
@@ -2379,6 +2379,13 @@ Product Description
 }
 
 .cart-page__buttons-1 .thm-btn {
+    background: transparent;
+    border: 1px solid var(--careon-base);
+    color: var(--careon-base);
+    padding: 15px 30px 15px;
+}
+
+.twm-btn {
     background: transparent;
     border: 1px solid var(--careon-base);
     color: var(--careon-base);

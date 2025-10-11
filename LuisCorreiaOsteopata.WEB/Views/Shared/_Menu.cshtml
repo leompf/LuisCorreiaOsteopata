@@ -1,0 +1,30 @@
+﻿<li class="scrollToLink">
+    <a asp-controller="Account" asp-action="Index">Home </a>
+</li>
+@if (User.IsInRole("Administrador"))
+{
+    <li class="dropdown">
+        <a><i style="margin-right: 5px;" class="fas fa-users-cog fa-fw"></i>Gestão de Administrador</a>
+        <ul>
+            <li><a asp-controller="Account" asp-action="AddStaff">Criar Colaborador</a></li>
+            <li><a asp-controller="Account" asp-action="ViewAllUsers">Ver Utilizadores</a></li>
+        </ul>
+    </li>
+}
+@if (User.IsInRole("Colaborador"))
+{
+    <li class="dropdown">
+        <a><i style="margin-right: 5px;" class="fas fa-users-cog fa-fw"></i>Gestão de Colaborador</a>
+        <ul>
+            <li><a asp-controller="Account" asp-action="ViewAllUsers">Ver Utilizadores</a></li>
+            <li><a asp-controller="Appointment" asp-action="ViewAppointments" >Ver Todas as Consultas</a></li>
+        </ul>
+    </li>
+}
+<li class="dropdown">
+    <a><i style="margin-right: 5px;" class="fas fa-user"></i>Área Pessoal</a>
+    <ul>
+        <li><a asp-controller="Account" asp-action="Profile">Perfil</a></li>
+        <li><a asp-controller="Account" asp-action="Logout">Logout</a></li>
+    </ul>
+</li>

@@ -13,6 +13,8 @@ public class DataContext : IdentityDbContext<User>
 
     public DbSet<Appointment> Appointments { get; set; }
 
+    public DbSet<GoogleCalendar> GoogleCalendar { get; set; }
+
     public DataContext(DbContextOptions<DataContext> options) : base(options)
     {
     }
@@ -27,14 +29,14 @@ public class DataContext : IdentityDbContext<User>
 
         modelbuilder.Entity<Appointment>()
             .HasOne(a => a.Patient)
-            .WithMany()  // or .WithMany(p => p.Appointments) if you want collection
+            .WithMany()  
             .HasForeignKey(a => a.PatientId)
             .IsRequired()
             .OnDelete(DeleteBehavior.Restrict);
 
         modelbuilder.Entity<Appointment>()
             .HasOne(a => a.Staff)
-            .WithMany()  // or .WithMany(s => s.Appointments)
+            .WithMany()  
             .HasForeignKey(a => a.StaffId)
             .IsRequired()
             .OnDelete(DeleteBehavior.Restrict);

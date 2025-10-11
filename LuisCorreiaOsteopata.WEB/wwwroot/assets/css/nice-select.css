@@ -3,18 +3,16 @@
     display: block;
     -webkit-tap-highlight-color: transparent;
     background-color: #f6f4f9;
-    border-radius: 0px;
-    border: 0px solid #e4e4e4;
     box-sizing: border-box;
     clear: both;
     cursor: pointer;
-    float: none;
+
     font-family: inherit;
     color: var(--careon-gray);
     font-size: 14px;
-    font-weight: 300;
-    height: 50px;
-    line-height: 48px;
+    font-weight: 450;
+    height: 60px;
+    line-height: 58px;
     outline: none;
     padding-left: 25px;
     padding-right: 25px;

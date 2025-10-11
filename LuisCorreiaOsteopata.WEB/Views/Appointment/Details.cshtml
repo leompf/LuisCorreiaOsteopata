@@ -12,6 +12,10 @@
 }
 
 <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+@section MainMenu
+{
+    <partial name="_Menu"></partial>
+}
 
 <section class="page-header">
     <div class="page-header__bg" style="background-image: url(assets/images/backgrounds/page-header-bg.jpg);">
@@ -30,40 +34,31 @@
     </div>
 </section>
 
-<section class="appoinment-page" style="margin-top: -100px">
+<section class="appoinment-page mt-0" id="appointment-details-section">
     <div class="container">
         <div class="row">
             <div class="col-xl-12 col-lg-7">
                 <div class="appoinment-page__left">
                     <h3 class="appoinment-page__title">Detalhes da Consulta</h3>
                     <div class="row">
-                        <div class="col-xl-12 col-md-6" style="margin-right: -35px">
-                            <label style="font-size: 1.2rem;"><strong>Data da Consulta:</strong> @Model.AppointmentDate.ToShortDateString()</label>
+                        <div class="form-group row">
+                            <label style="font-size: 1.2rem" class="col-auto col-form-label pe-1"><strong>Data da Consulta:</strong> @Model.AppointmentDate.ToShortDateString()</label>
                         </div>
 
-                        <div class="col-xl-12 col-md-6 mt-2">
-                            <label style="font-size: 1.2rem;"><strong>Paciente: </strong>@Model.PatientName</label>
+                        <div class="form-group row">
+                            <label style="font-size: 1.2rem" class="col-auto col-form-label pe-1"><strong>Paciente:</strong> @Model.PatientName</label>
+                            <label style="font-size: 1.2rem" class="col-auto col-form-label pe-1"><strong>Profissional:</strong> @Model.StaffName</label>
                         </div>
 
-                        <div class="col-xl-12 col-md-6 mt-2">
-                            <label style="font-size: 1.2rem;"><strong>Profissional:</strong> @Model.StaffName</label>
+                        <div class="form-group row">
+                            <label style="font-size: 1.2rem" class="col-auto col-form-label pe-1"><strong>Inícia:</strong> @Model.StartTime.ToString("HH\\hmm")</label>
+                            <label style="font-size: 1.2rem" class="col-auto col-form-label pe-1"><strong>Termina:</strong> @Model.EndTime.ToString("HH\\hmm")</label>
                         </div>
 
-                        <div class="col-xl-3 col-md-6 mt-2" style="margin-right: -100px">
-                            <label style="font-size: 1.2rem;"><strong>Hora de início:</strong> @Model.StartTime.ToString("HH\\hmm")</label>
-                        </div>
-
-                        <div class="col-xl-9 col-md-6 mt-2">
-                            <label style="font-size: 1.2rem;"><strong>Termina:</strong> @Model.EndTime.ToString("HH\\hmm")</label>
-                        </div>
-
-                        <div class="col-xl-3 col-md-6 mt-2" style="margin-right: -30px;">
-                            <label style="font-size: 1.2rem;"><strong>Estado da Consulta: </strong>@Model.AppointmentStatus</label>
-                        </div>
-
-                        <div class="col-xl-9 col-md-6 mt-2">
-                            <label style="font-size: 1.2rem;">
-                                <strong>Estado de Pagamento: </strong>
+                        <div class="form-group row">
+                            <label style="font-size: 1.2rem" class="col-auto col-form-label pe-1"><strong>Estado da Consulta:</strong> @Model.AppointmentStatus</label>
+                            <label style="font-size: 1.2rem" class="col-auto col-form-label pe-1">
+                                <strong>Estado de Pagamento:</strong>
                                 @if (@Model.IsPaid)
                                 {
                                     @:Pago
@@ -75,46 +70,48 @@
                             </label>
                         </div>
 
-
-                        <section class="product-description" style="margin-top: 10px; margin-bottom: -80px;">
-                            <div class="container">
-                                <div class="product-details__description">
-                                    <div class="product-details__main-tab-box tabs-box">
-                                        <ul class="tab-buttons clearfix list-unstyled">
-                                            <li data-tab="#description" class="tab-btn active-btn"><span>Notas do Paciente</span></li>
-                                            <li data-tab="#additional-information" class="tab-btn"><span>Notas do Profissional</span></li>
-                                        </ul>
-                                        <div class="tabs-content">
-                                            <!--tab-->
-                                            <div class="tab active-tab" id="description">
-                                                <div class="product-details__tab-content-inner">
-                                                    <div class="product-details__description-content">
-                                                        <p class="product-details__description-text-1">
-                                                            @Html.Raw(Model.PatientNotes)
-                                                        </p>
+                        <div class="form-group row mt-2">
+                            <section class="product-description">
+                                <div class="container">
+                                    <div class="product-details__description">
+                                        <div class="product-details__main-tab-box tabs-box">
+                                            <ul class="tab-buttons clearfix list-unstyled">
+                                                <li data-tab="#description" class="tab-btn active-btn"><span>Notas do Paciente</span></li>
+                                                <li data-tab="#additional-information" class="tab-btn"><span>Notas do Profissional</span></li>
+                                            </ul>
+                                            <div class="tabs-content">
+                                                <!--tab-->
+                                                <div class="tab active-tab" id="description">
+                                                    <div class="product-details__tab-content-inner">
+                                                        <div class="product-details__description-content">
+                                                            <p class="product-details__description-text-1">
+                                                                @Html.Raw(Model.PatientNotes)
+                                                            </p>
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                            <!--tab-->
-                                            <div class="tab " id="additional-information">
-                                                <div class="product-details__tab-content-inner">
-                                                    <div class="product-details__additional-information-content">
-                                                        <p class="product-details__additional-information-text-1">
-                                                            @Html.Raw(Model.StaffNotes)
-                                                        </p>
+                                                <!--tab-->
+                                                <div class="tab " id="additional-information">
+                                                    <div class="product-details__tab-content-inner">
+                                                        <div class="product-details__additional-information-content">
+                                                            <p class="product-details__additional-information-text-1">
+                                                                @Html.Raw(Model.StaffNotes)
+                                                            </p>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                        </section>
+                            </section>
+                        </div>
+
 
                         @if (isAppointmentStaff)
                         {
                             <form class="appoinment-page__form" method="post">
-                                <div class="col-xl-12">
+                                <div class="form-group">
                                     <div class="appoinment-page__input-box text-message-box">
                                         <div id="quill-editor" style=""></div>
                                         <input type="hidden" asp-for="StaffNotes" id="Notes" />
@@ -124,14 +121,14 @@
                         }
                         @if (Model.AppointmentStatus != "Realizada")
                         {
-                            <div class="appoinment-page__btn-box" style="margin-top: 30px;">
-                                <form asp-action="Unbook" method="post">
+                            <form class="appoinment-page__form" asp-action="Unbook" method="post">
+                                <div class="appoinment-page__btn-box mt-5">
                                     <input type="hidden" name="id" value="@Model.Id" />
                                     <button type="submit" class="thm-btn">
                                         Desmarcar<span class="icon-plus"></span>
                                     </button>
-                                </form>
-                            </div>
+                                </div>
+                            </form>
                         }
                     </div>
                 </div>
@@ -165,5 +162,15 @@
         {
             $('#Notes').val(quill.root.innerHTML);
         });
+
+        document.addEventListener("DOMContentLoaded", function ()
+        {
+            const appointmentDetailsSection = document.getElementById("appointment-details-section");
+            if (appointmentDetailsSection)
+            {
+                appointmentDetailsSection.scrollIntoView({ behavior: "smooth" });
+            }
+        });
+
     </script>
 }

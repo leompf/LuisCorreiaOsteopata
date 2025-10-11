@@ -27,6 +27,7 @@ public class EmailSender : IEmailSender
         await Execute(Options.SendGridKey, subject, message, toEmail);
     }
 
+
     public async Task Execute(string apiKey, string subject, string message, string toEmail)
     {
         var client = new SendGridClient(apiKey);
@@ -42,9 +43,24 @@ public class EmailSender : IEmailSender
         // Disable click tracking.
         // See https://sendgrid.com/docs/User_Guide/Settings/tracking.html
         msg.SetClickTracking(false, false);
-        var response = await client.SendEmailAsync(msg);
-        _logger.LogInformation(response.IsSuccessStatusCode
-                               ? $"Email to {toEmail} queued successfully!"
-                               : $"Failure Email to {toEmail}");
-    }
+
+        try
+        {
+            var response = await client.SendEmailAsync(msg);
+
+            _logger.LogInformation($"SendGrid status code: {response.StatusCode}");
+            _logger.LogInformation($"Email to {toEmail} queued: {response.IsSuccessStatusCode}");
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var responseBody = await response.Body.ReadAsStringAsync();
+                _logger.LogWarning($"SendGrid response for {toEmail}: {responseBody}");
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, $"Exception sending email to {toEmail}");
+            throw;
+        }
+    }   
 }

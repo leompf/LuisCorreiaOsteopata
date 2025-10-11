@@ -1,7 +1,7 @@
-﻿using LuisCorreiaOsteopata.WEB.Data.Entities;
+﻿using Ganss.Xss;
+using LuisCorreiaOsteopata.WEB.Data.Entities;
 using LuisCorreiaOsteopata.WEB.Models;
-
-using Ganss.Xss;
+using System.Data;
 
 namespace LuisCorreiaOsteopata.WEB.Helpers;
 
@@ -37,6 +37,20 @@ public class ConverterHelper : IConverterHelper
             PatientNotes = _sanitizer.Sanitize(appointment.PatientNotes),
             StaffNotes = _sanitizer.Sanitize(appointment.StaffNotes),
             IsPaid = appointment.IsPaid          
+        };
+    }
+
+    public UserListViewModel ToUserListViewModel(User user, string role)
+    {
+        return new UserListViewModel
+        {
+            Id = user.Id,
+            Name = $"{user.Names} {user.LastName}",
+            Birthdate = user.Birthdate,
+            Email = user.Email,
+            NIF = user.Nif,
+            PhoneNumber = user.PhoneNumber,
+            Role = role
         };
     }
 }

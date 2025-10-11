@@ -57,6 +57,7 @@
     <link rel="stylesheet" href="~/assets/css/module-css/appiontment.css" />
     <link rel="stylesheet" href="~/assets/css/module-css/error-page.css" />
     <link rel="stylesheet" href="~/assets/css/module-css/shop.css" />
+    <link rel="stylesheet" href="~/assets/css/module-css/pricing.css" />
 
     <!-- template styles -->
     <link rel="stylesheet" href="~/assets/css/style.css" />
@@ -88,7 +89,7 @@
                                         else
                                         {
                                             <a asp-controller="Account" asp-action="Index"><img src="~/assets/images/resources/logo-1.png" alt=""></a>
-                                        }  
+                                        }
                                     </div>
                                 </div>
                                 <div class="main-menu__main-menu-box">
@@ -96,7 +97,7 @@
                                     <ul class="main-menu__list one-page-scroll-menu">
                                         @if (IsSectionDefined("MainMenu"))
                                         {
-                                            @RenderSection("MainMenu", required: false)                                           
+                                            @RenderSection("MainMenu", required: false)
                                         }
                                         @if (!User?.Identity.IsAuthenticated == true && !"SignUp".Equals(ViewContext.RouteData.Values["Action"]?.ToString()))
                                         {
@@ -228,28 +229,28 @@
                                     </ul>
                                 </div>
                             </div>
-                            @* <div class="col-xl-2 col-lg-6 col-md-6 wow fadeInUp" data-wow-delay="400ms">
+                            <div class="col-xl-2 col-lg-6 col-md-6 wow fadeInUp" data-wow-delay="400ms">
                                 <div class="footer-widget__page-link">
                                     <h4 class="footer-widget__title">Ligações</h4>
                                     <ul class="footer-widget__services-link-list list-unstyled">
                                         <li>
-                                            <a href="about.html">About Us</a>
+                                            <a asp-controller="Home" asp-action="About">About Us</a>
                                         </li>
-                                        <li>
+                                        @* <li>
                                             <a href="services.html">Services</a>
                                         </li>
                                         <li>
                                             <a href="about.html">Why Chose Us</a>
+                                        </li> *@
+                                        <li>
+                                            <a asp-controller="Home" asp-action="Price">Preçário</a>
                                         </li>
                                         <li>
-                                            <a href="doctor.html">Doctors</a>
-                                        </li>
-                                        <li>
-                                            <a href="blog.html">Blog And News</a>
+                                            <a asp-controller="Blog" asp-action="Index">Blog</a>
                                         </li>
                                     </ul>
                                 </div>
-                            </div> *@
+                            </div>
                         </div>
                     </div>
                 </div>

@@ -1,6 +1,5 @@
 ﻿using LuisCorreiaOsteopata.WEB.Data.Entities;
 using LuisCorreiaOsteopata.WEB.Helpers;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 
@@ -22,7 +21,7 @@ public class PatientRepository : GenericRepository<Patient>, IPatientRepository
     public async Task<Patient> CreatePatientAsync(User user, string roleName)
     {
         var isInRole = await _userHelper.IsUserInRoleAsync(user, roleName);
-        
+
         if (!isInRole)
         {
             return null;
@@ -52,10 +51,18 @@ public class PatientRepository : GenericRepository<Patient>, IPatientRepository
         list.Insert(0, new SelectListItem
         {
             Text = "(Seleciona um paciente...)",
-            Value = "0"
+            Value = null //Alterado para ver se os filtros funcionam na pagina com todas as consultas. Original "0"
         });
 
         return list;
+    }
+
+    public async Task<Patient?> GetPatientByIdAsync(int id)
+    {
+        return await _context.Patients
+                        .Include(p => p.User)
+                        .AsNoTracking()
+                        .FirstOrDefaultAsync(p => p.Id == id);
     }
 
     public async Task<Patient?> GetPatientByUserEmailAsync(string email)

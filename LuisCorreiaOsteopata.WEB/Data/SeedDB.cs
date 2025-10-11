@@ -64,14 +64,15 @@ public class SeedDB
                 UserName = "lmpfraqueiro@gmail.com",
                 EmailConfirmed = true,
                 Nif = "255408650",
-                PhoneNumber = "+351965571434"
+                PhoneNumber = "+351965571434",
+                Birthdate = new DateTime(1997, 09, 30)
             };
 
             var result = await _userHelper.AddUserAsync(patientUser, "123456");
 
             if (result != IdentityResult.Success)
             {
-                throw new InvalidOperationException("Não foi possível criar o utitlizador no Seeder");
+                throw new InvalidOperationException("Não foi possível criar o utilizador no Seeder");
             }
 
             await _userHelper.AddUserToRoleAsync(patientUser, "Utente");
@@ -83,7 +84,7 @@ public class SeedDB
             }
         }
 
-        var staffUser = await _userHelper.GetUserByEmailAsync("leozao997@hotmail.com");
+        var staffUser = await _userHelper.GetUserByEmailAsync("leozao997@gmail.com");
 
         if (staffUser == null)
         {
@@ -91,8 +92,8 @@ public class SeedDB
             {
                 Names = "Luis Miguel",
                 LastName = "Correia",
-                Email = "leozao997@hotmail.com",
-                UserName = "leozao997@hotmail.com",
+                Email = "leozao997@gmail.com",
+                UserName = "leozao997@gmail.com",
                 EmailConfirmed = true,
                 Nif = "231029012",
                 PhoneNumber = "+351932458961"
