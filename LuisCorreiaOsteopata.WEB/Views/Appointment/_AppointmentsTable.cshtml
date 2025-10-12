@@ -1,0 +1,33 @@
+﻿@model IEnumerable<LuisCorreiaOsteopata.WEB.Models.AppointmentViewModel>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th><a href="#" class="sortable" data-sort="Date"><span>Data</span> <i class="sort-icon"></i></a></th>
+            <th><a href="#" class="sortable" data-sort="Patient"><span>Paciente</span> <i class="sort-icon"></i></a></th>
+            <th><a href="#" class="sortable" data-sort="Staff"><span>Colaborador</span> <i class="sort-icon"></i></a></th>
+            <th><a href="#" class="sortable" data-sort="Status"><span>Estado</span> <i class="sort-icon"></i></a></th>
+            <th>Notas</th>
+            <th>Pago</th>
+            <th>Ver</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var appt in Model)
+        {
+            <tr>
+                <td>@appt.AppointmentDate.ToString("dd/MM/yyyy")</td>
+                <td>@appt.PatientName</td>
+                <td>@appt.StaffName</td>
+                <td>@appt.AppointmentStatus</td>
+                <td>@appt.StaffNotes</td>
+                <td>@(appt.IsPaid ? "Sim" : "Não")</td>
+                <td>
+                    <a asp-action="Details" asp-route-id="@appt.Id" class="btn-link">
+                        Ver Detalhes
+                    </a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

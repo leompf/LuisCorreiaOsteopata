@@ -5,8 +5,8 @@ using LuisCorreiaOsteopata.WEB.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using System.Drawing;
 
 namespace LuisCorreiaOsteopata.WEB.Controllers;
 
@@ -297,22 +297,27 @@ public class AppointmentController : Controller
 
 
     [Authorize(Roles = "Administrador,Colaborador")]
-    public async Task<IActionResult> ViewAppointments(int? staffId, int? patientId,DateTime? fromDate, DateTime? toDate)
-    {
-        var appointments = await _appointmentRepository.GetFilteredAppointmentsAsync(staffId, patientId, fromDate, toDate);
-        var users = await _userHelper.GetAllUsersAsync();
+    [HttpGet("Appointment/ViewAppointments/{userId?}")]
+    public async Task<IActionResult> ViewAppointments(string? userId, string? staffName, string? patientName, DateTime? fromDate, DateTime? toDate, string? sortBy = "Date", bool sortDescending = true)
+    {      
+        var appointments = await _appointmentRepository.GetFilteredAppointmentsAsync(userId, staffName, patientName, fromDate, toDate, sortBy, sortDescending);
 
         var model = new AppointmentListViewModel
         {
-            StaffId = staffId,
-            PatientId = patientId,
+            StaffName = staffName,
+            PatientName = patientName,
             FromDate = fromDate,
             ToDate = toDate,
-            StaffMembers = _staffRepository.GetComboStaff(),
-            Patients = _patientRepository.GetComboPatients(),
             Appointments = appointments.Select(a => _converterHelper.ToAppointmentViewModel(a))
         };
+
+        ViewBag.DefaultSortBy = sortBy;
+        ViewBag.DefaultSortDescending = sortDescending;
+
+        if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+            return PartialView("_AppointmentsTable", model.Appointments); 
 
         return View(model);
     }
 }
+

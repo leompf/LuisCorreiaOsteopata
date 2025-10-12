@@ -1,6 +1,7 @@
 ﻿using LuisCorreiaOsteopata.WEB.Data.Entities;
-using Microsoft.AspNetCore.Http;
+using LuisCorreiaOsteopata.WEB.Models;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
@@ -52,6 +53,36 @@ public class UserHelper : IUserHelper
         return await _userManager.ConfirmEmailAsync(user, token);
     }
 
+    public List<UserViewModel> FilterUsers(IEnumerable<UserViewModel> users, string? nameFilter, string? emailFilter, string? phoneFilter, string? nifFilter)
+    {
+        var filtered = users.ToList();
+
+        if (!string.IsNullOrEmpty(nameFilter))
+            filtered = filtered
+                .Where(u => !string.IsNullOrEmpty(u.Name) &&
+                            u.Name.Contains(nameFilter, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+        if (!string.IsNullOrEmpty(emailFilter))
+            filtered = filtered
+                .Where(u => !string.IsNullOrEmpty(u.Email) &&
+                            u.Email.Contains(emailFilter, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+        if (!string.IsNullOrEmpty(phoneFilter))
+            filtered = filtered
+                .Where(u => !string.IsNullOrEmpty(u.PhoneNumber) &&
+                            u.PhoneNumber.Contains(phoneFilter, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+        if (!string.IsNullOrEmpty(nifFilter))
+            filtered = filtered
+                .Where(u => !string.IsNullOrEmpty(u.NIF) &&
+                            u.NIF.Contains(nifFilter, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+        return filtered;
+    }
 
     public async Task<string> GenerateEmailConfirmationTokenAsync(User user)
     {
@@ -71,10 +102,10 @@ public class UserHelper : IUserHelper
         };
 
         string[] randomChars = new[] {
-            "ABCDEFGHJKLMNOPQRSTUVWXYZ",    
-            "abcdefghijkmnopqrstuvwxyz",    
-            "0123456789",                   
-            "!@$?_-"                        
+            "ABCDEFGHJKLMNOPQRSTUVWXYZ",
+            "abcdefghijkmnopqrstuvwxyz",
+            "0123456789",
+            "!@$?_-"
         };
 
         Random rand = new Random(Environment.TickCount);
@@ -105,6 +136,17 @@ public class UserHelper : IUserHelper
         }
 
         return new string(chars.ToArray());
+    }
+
+    public IEnumerable<SelectListItem> GetAllRolesAsync()
+    {
+        var roles = _roleManager.Roles.ToList();
+
+        return roles.Select(r => new SelectListItem
+        {
+            Value = r.Name,
+            Text = r.Name
+        });
     }
 
     public async Task<List<User>> GetAllUsersAsync()
@@ -178,6 +220,20 @@ public class UserHelper : IUserHelper
         await _signInManager.SignOutAsync();
     }
 
+    public List<UserViewModel> SortUsers(IEnumerable<UserViewModel> users, string? sortBy, bool sortDescending)
+    {
+        return sortBy switch
+        {
+            "Name" => sortDescending ? users.OrderByDescending(u => u.Name).ToList() : users.OrderBy(u => u.Name).ToList(),
+            "Birthdate" => sortDescending ? users.OrderByDescending(u => u.Birthdate).ToList() : users.OrderBy(u => u.Birthdate).ToList(),
+            "NIF" => sortDescending ? users.OrderByDescending(u => u.NIF).ToList() : users.OrderBy(u => u.NIF).ToList(),
+            "Email" => sortDescending ? users.OrderByDescending(u => u.Email).ToList() : users.OrderBy(u => u.Email).ToList(),
+            "PhoneNumber" => sortDescending ? users.OrderByDescending(u => u.PhoneNumber).ToList() : users.OrderBy(u => u.PhoneNumber).ToList(),
+            "Role" => sortDescending ? users.OrderByDescending(u => u.Role).ToList() : users.OrderBy(u => u.Role).ToList(),
+            _ => sortDescending ? users.OrderByDescending(u => u.Name).ToList() : users.OrderBy(u => u.Name).ToList()
+        };
+    }
+
     public async Task StoreUserTokenAsync(User user, string loginProvider, string name, string value)
     {
         await _userManager.RemoveAuthenticationTokenAsync(user, loginProvider, name);
@@ -187,7 +243,7 @@ public class UserHelper : IUserHelper
 
     public async Task<IdentityResult> UpdateUserAsync(User user)
     {
-        return await _userManager.UpdateAsync(user);       
+        return await _userManager.UpdateAsync(user);
     }
 
 }

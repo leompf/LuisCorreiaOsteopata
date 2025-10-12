@@ -105,21 +105,32 @@ public class AppointmentRepository : GenericRepository<Appointment>, IAppointmen
         }).ToList();
     }
 
-    public async Task<List<Appointment>> GetFilteredAppointmentsAsync(int? staffId, int? patientId, DateTime? fromDate, DateTime? toDate)
+    public async Task<List<Appointment>> GetFilteredAppointmentsAsync(string? userId, string? staffName, string? patientName, DateTime? fromDate, DateTime? toDate, string? sortBy, bool sortDescending = false)
     {
         var appointments = await GetAllAppointmentsAsync();
 
-        if (staffId.HasValue && staffId.Value > 0)
+        if (!string.IsNullOrEmpty(userId))
         {
             appointments = appointments
-                .Where(a => a.Staff.Id == staffId)
+                .Where(a => (a.Staff != null && a.Staff.User.Id == userId)
+                         || (a.Patient != null && a.Patient.User.Id == userId))
                 .ToList();
         }
 
-        if (patientId.HasValue && patientId.Value > 0)
+        // Apply name filters for real-time search
+        if (!string.IsNullOrWhiteSpace(staffName))
         {
             appointments = appointments
-                .Where(a => a.Patient.Id == patientId)
+                .Where(a => a.Staff != null &&
+                            a.Staff.FullName.Contains(staffName, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+        }
+
+        if (!string.IsNullOrWhiteSpace(patientName))
+        {
+            appointments = appointments
+                .Where(a => a.Patient != null &&
+                            a.Patient.FullName.Contains(patientName, StringComparison.OrdinalIgnoreCase))
                 .ToList();
         }
 
@@ -137,10 +148,29 @@ public class AppointmentRepository : GenericRepository<Appointment>, IAppointmen
                 .ToList();
         }
 
-        return appointments
-            .OrderBy(a => a.AppointmentDate)
-            .ThenBy(a => a.StartTime)
-            .ToList();
+        // Sorting
+        appointments = sortBy switch
+        {
+            "Date" => sortDescending
+                ? appointments.OrderByDescending(a => a.AppointmentDate).ThenByDescending(a => a.StartTime).ToList()
+                : appointments.OrderBy(a => a.AppointmentDate).ThenBy(a => a.StartTime).ToList(),
+
+            "Patient" => sortDescending
+                ? appointments.OrderByDescending(a => a.Patient.FullName).ToList()
+                : appointments.OrderBy(a => a.Patient.FullName).ToList(),
+
+            "Staff" => sortDescending
+                ? appointments.OrderByDescending(a => a.Staff.FullName).ToList()
+                : appointments.OrderBy(a => a.Staff.FullName).ToList(),
+
+            "Status" => sortDescending
+                ? appointments.OrderByDescending(a => a.AppointmentStatus).ToList()
+                : appointments.OrderBy(a => a.AppointmentStatus).ToList(),
+
+            _ => appointments.OrderBy(a => a.AppointmentDate).ThenBy(a => a.StartTime).ToList()
+        };
+
+        return appointments;
     }
 
     public async Task<List<AppointmentViewModel>> GetSchedulledAppointmentsAsync()

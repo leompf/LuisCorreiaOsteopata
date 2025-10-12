@@ -5,6 +5,7 @@
     Layout = "~/Views/Shared/_Layout2.cshtml";
 }
 
+
 @section MainMenu
 {
     <partial name="_Menu"></partial>
@@ -32,20 +33,21 @@
         <div class="row">
             <form method="get">
                 <div class="row">
+                    <h4 class="mb-3">Filtros</h4>
+                    <hr />
                     <div class="row align-items-center mb-3">
                         <div class="col-auto">
                             <label class="col-form-label fw-bold pe-1">Colaborador:</label>
                         </div>
                         <div class="col-auto ps-0">
-                            <select asp-for="StaffId" asp-items="Model.StaffMembers"></select>
+                            <input asp-for="StaffName" class="form-control" id="StaffName" />
                         </div>
-
 
                         <div class="col-auto">
                             <label class="col-form-label fw-bold pe-1">Paciente:</label>
                         </div>
                         <div class="col-auto ps-0">
-                            <select asp-for="PatientId" asp-items="Model.Patients"></select>
+                            <input asp-for="PatientName" class="form-control" id="PatientName" />
                         </div>
                     </div>
 
@@ -73,39 +75,78 @@
             </form>
         </div>
 
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>Data</th>
-                    <th>Hora</th>
-                    <th>Paciente</th>
-                    <th>Colaborador</th>
-                    <th>Estado</th>
-                    <th>Notas</th>
-                    <th>Pago</th>
-                    <th>Ver</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var appt in Model.Appointments)
-                {
-                    <tr>
-                        <td>@appt.AppointmentDate.ToString("dd/MM/yyyy")</td>
-                        <td>@appt.StartTime.ToString("HH:mm") - @appt.EndTime.ToString("HH:mm")</td>
-                        <td>@appt.PatientName</td>
-                        <td>@appt.StaffName</td>
-                        <td>@appt.AppointmentStatus</td>
-                        <td>@appt.StaffNotes</td>
-                        <td>@(appt.IsPaid ? "Sim" : "Não")</td>
-                        <td>
-                            <a asp-action="Details" asp-route-id="@appt.Id" class="btn btn-sm btn-primary">
-                                Ver Detalhes
-                            </a>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+        <div id="appointments-table">
+            @await Html.PartialAsync("_AppointmentsTable", Model.Appointments)    
+        </div>
     </div>
 </section>
 
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            let currentSortColumn = '@ViewBag.DefaultSortBy';
+            let currentSortState = '@(ViewBag.DefaultSortDescending ? "desc" : "asc")';
+
+            function updateSortIcons() {
+                $(".sortable").each(function () {
+                    const icon = $(this).find(".sort-icon");
+                    const col = $(this).data("sort");
+                    icon.removeClass("fa-sort-up fa-sort-down fa-sort text-muted");
+                    if (col === currentSortColumn) {
+                        icon.addClass(currentSortState === "asc" ? "fa fa-sort-up" : "fa fa-sort-down");
+                    } else {
+                        icon.addClass("fa fa-sort text-muted");
+                    }
+                });
+            }
+
+            function getNameFilters() {
+                return {
+                    staffName: $("#StaffName").val(),
+                    patientName: $("#PatientName").val()
+                };
+            }
+
+            function loadAppointments() {
+                const filters = getNameFilters();
+                $.ajax({
+                    url: '@Url.Action("ViewAppointments", "Appointment")',
+                    type: 'GET',
+                    data: {
+                        ...filters,
+                        sortBy: currentSortColumn,
+                        sortDescending: currentSortState === "desc"
+                    },
+                    success: function (result) {
+                        $("#appointments-table").html(result);
+                        updateSortIcons();
+                    },
+                    error: function () {
+                        alert("Erro ao carregar os dados.");
+                    }
+                });
+            }
+
+            $("#StaffName, #PatientName").on("input", function () {
+                loadAppointments();
+            });
+
+            $(document).on("click", ".sortable", function (e) {
+                e.preventDefault();
+                const sortBy = $(this).data("sort");
+                if (currentSortColumn === sortBy) {
+                    currentSortState = currentSortState === "desc" ? "asc" : "desc";
+                } else {
+                    currentSortColumn = sortBy;
+                    currentSortState = "desc";
+                }
+                loadAppointments();
+            });
+
+            $("form").on("submit", function () {
+                return true;
+            });
+        });
+    </script>
+
+}

@@ -1,4 +1,5 @@
-﻿using LuisCorreiaOsteopata.WEB.Data;
+﻿using AngleSharp.Dom;
+using LuisCorreiaOsteopata.WEB.Data;
 using LuisCorreiaOsteopata.WEB.Data.Entities;
 using LuisCorreiaOsteopata.WEB.Helpers;
 using LuisCorreiaOsteopata.WEB.Models;
@@ -10,7 +11,6 @@ using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System.Security.Claims;
-using System.Threading.Tasks;
 
 
 namespace LuisCorreiaOsteopata.WEB.Controllers
@@ -402,7 +402,7 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
                 Role = role,
                 CalendarId = user.CalendarId,
                 CalendarName = null,
-                IsEditable = string.IsNullOrEmpty(id)
+                IsEditable = string.IsNullOrEmpty(id) || User.IsInRole("Administrador") || User.IsInRole("Colaborador")
             };
 
             if (!string.IsNullOrWhiteSpace(user.CalendarId) && ViewBag.GoogleCalendars != null)
@@ -441,18 +441,44 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
             return RedirectToAction("Profile");
         }
 
-        [Authorize(Roles = "Administrador,Colaborador")]
-        public async Task<IActionResult> ViewAllUsers()
+        public async Task<IActionResult> ViewAllUsers(string? name, string? email, string? phone, string? nif, string? role, string? sortBy, bool sortDescending = true)
         {
             var users = await _userHelper.GetAllUsersAsync();
+            var userList = new List<UserViewModel>();
 
-            var model = new List<UserListViewModel>();
             foreach (var user in users)
             {
-                var role = await _userHelper.GetUserRoleAsync(user);
-                model.Add(_converterHelper.ToUserListViewModel(user, role));
+                var userRole = await _userHelper.GetUserRoleAsync(user);
+                userList.Add(_converterHelper.ToUserViewModel(user, userRole));
             }
-            
+
+            userList = _userHelper.FilterUsers(userList, name, email, phone, nif);
+
+            // Use the helper for sorting
+            userList = _userHelper.SortUsers(userList, sortBy, sortDescending);
+
+            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+            {
+                var partialModel = new UserListViewModel
+                {
+                    Users = userList
+                };
+                return PartialView("_ViewAllUsersTable", partialModel.Users);
+            }
+
+            var model = new UserListViewModel
+            {
+                NameFilter = name,
+                EmailFilter = email,
+                PhoneFilter = phone,
+                NifFilter = nif,
+                Users = userList,
+                Roles = _userHelper.GetAllRolesAsync()
+            };
+
+            ViewBag.DefaultSortColumn = sortBy ?? "Name";
+            ViewBag.DefaultSortDescending = sortDescending;
+
             return View(model);
         }
     }

@@ -1,6 +1,4 @@
-﻿using LuisCorreiaOsteopata.WEB.Data.Entities;
-
-namespace LuisCorreiaOsteopata.WEB.Models;
+﻿namespace LuisCorreiaOsteopata.WEB.Models;
 
 public class AppointmentViewModel
 {

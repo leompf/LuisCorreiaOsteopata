@@ -1,4 +1,4 @@
-﻿@model IEnumerable<LuisCorreiaOsteopata.WEB.Models.UserListViewModel>
+﻿@model LuisCorreiaOsteopata.WEB.Models.UserListViewModel
 
 @{
     ViewData["Title"] = "ViewAllUsers";
@@ -30,45 +30,144 @@
 <section class="appoinment-page" id="profile-section" style="margin-top: -100px">
     <div class="container">
         <div class="row">
-            <div class="col-xl-12 col-lg-7">
-                <div class="appoinment-page__left">
-                    <h3 class="appoinment-page__title">Ver Utilizadores</h3>
-                    <form method="get">
-                        <div asp-validation-summary="ModelOnly"></div>
-                        <table class="table table-striped">
-                            <thead>
-                                <tr>
-                                    <th>@Html.DisplayNameFor(model => model.Name)</th>
-                                    <th>@Html.DisplayNameFor(model => model.Birthdate)</th>
-                                    <th>@Html.DisplayNameFor(model => model.NIF)</th>
-                                    <th>@Html.DisplayNameFor(model => model.Email)</th>
-                                    <th>@Html.DisplayNameFor(model => model.PhoneNumber)</th>
-                                    <th>@Html.DisplayNameFor(model => model.Role)</th>
-                                    <th>Ações</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var item in Model)
-                                {
-                                    <tr>
-                                        <td>@Html.DisplayFor(modelItem => item.Name)</td>
-                                        <td>@Html.DisplayFor(modelItem => item.Birthdate)</td>
-                                        <td>@Html.DisplayFor(modelItem => item.NIF)</td>
-                                        <td>@Html.DisplayFor(modelItem => item.Email)</td>
-                                        <td>@Html.DisplayFor(modelItem => item.PhoneNumber)</td>
-                                        <td>@Html.DisplayFor(modelItem => item.Role)</td>
-                                        <td>
-                                            <a asp-controller="Account" asp-action="Profile" asp-route-id="@item.Id" class="btn btn-sm btn-primary">
-                                                Ver Perfil
-                                            </a>
-                                        </td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-                    </form>
+            <form method="get">
+                <div class="row">
+                    <h4 class="mb-3">Filtros</h4>
+                    <hr />
+                    <div class="row align-items-center mb-3">
+                        <div class="col-auto">
+                            <label class="col-form-label fw-bold pe-1">Nome:</label>
+                        </div>
+                        <div class="col-auto ps-0">
+                            <input asp-for="NameFilter" class="form-control" />
+                        </div>
+
+                        <div class="col-auto">
+                            <label class="col-form-label fw-bold pe-1">Email:</label>
+                        </div>
+                        <div class="col-auto ps-0">
+                            <input asp-for="EmailFilter" class="form-control" />
+                        </div>
+
+                        <div class="col-auto">
+                            <label class="col-form-label fw-bold pe-1">Telefone:</label>
+                        </div>
+                        <div class="col-auto ps-0">
+                            <input asp-for="PhoneFilter" class="form-control" />
+                        </div>
+
+                        <div class="col-auto">
+                            <label class="col-form-label fw-bold pe-1">NIF:</label>
+                        </div>
+                        <div class="col-auto ps-0">
+                            <input asp-for="NifFilter" class="form-control" />
+                        </div>
+                    </div>
                 </div>
-            </div>
+                <hr />
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th><a href="#" class="sortable" data-sort="Name"><span>Nome</span> <i class="sort-icon"></i></a></th>
+                            <th><a href="#" class="sortable" data-sort="Birthdate"><span>Data de Nascimento</span> <i class="sort-icon"></i></a></th>
+                            <th><a href="#" class="sortable" data-sort="NIF"><span>NIF</span> <i class="sort-icon"></i></a></th>
+                            <th><a href="#" class="sortable" data-sort="Email"><span>Email</span> <i class="sort-icon"></i></a></th>
+                            <th><a href="#" class="sortable" data-sort="PhoneNumber"><span>Contacto</span> <i class="sort-icon"></i></a></th>
+                            <th><a href="#" class="sortable" data-sort="Role"><span>Perfil</span> <i class="sort-icon"></i></a></th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="users-table-body">
+                        @await Html.PartialAsync("_ViewAllUsersTable", Model.Users)
+                    </tbody>
+                </table>
+            </form>
         </div>
     </div>
 </section>
+
+@section Scripts
+{
+    <script>
+        $(document).ready(function () {
+            let currentSortColumn = '@ViewBag.DefaultSortColumn';
+            let currentSortState = '@(ViewBag.DefaultSortDescending ? "desc" : "asc")';
+            let typingTimer;
+            const debounceDelay = 0; 
+
+            function updateSortIcons() {
+                $(".sortable").each(function () {
+                    const col = $(this).data("sort");
+                    const icon = $(this).find(".sort-icon");
+
+                    $(this).removeClass("active-sort");
+                    icon.removeClass("fa-sort-up fa-sort-down fa-sort text-muted");
+
+                    if (col === currentSortColumn) {
+                        $(this).addClass("active-sort");
+                        icon.addClass(currentSortState === "asc" ? "fa fa-sort-up" : "fa fa-sort-down");
+                    } else {
+                        icon.addClass("fa fa-sort text-muted");
+                    }
+                });
+            }
+
+            updateSortIcons();
+
+            function getFilters() {
+                return {
+                    name: $("#NameFilter").val(),
+                    email: $("#EmailFilter").val(),
+                    phone: $("#PhoneFilter").val(),
+                    nif: $("#NifFilter").val()
+                };
+            }
+
+            function loadUsers() {
+                const filters = getFilters();
+                $.ajax({
+                    url: '@Url.Action("ViewAllUsers", "Account")',
+                    type: 'GET',
+                    data: {
+                        ...filters,
+                        sortBy: currentSortColumn,
+                        sortDescending: currentSortState === "desc"
+                    },
+                    success: function (result) {
+                        $("#users-table-body").html(result);
+                        updateSortIcons();
+                    },
+                    error: function () {
+                        alert("Erro ao carregar os dados.");
+                    }
+                });
+            }
+
+            $(document).on("click", ".sortable", function (e) {
+                e.preventDefault();
+                const sortBy = $(this).data("sort");
+
+                if (currentSortColumn === sortBy) {
+                    currentSortState = currentSortState === "desc" ? "asc" : "desc";
+                } else {
+                    currentSortColumn = sortBy;
+                    currentSortState = "desc"; 
+                }
+
+                loadUsers();
+            });
+
+            $("#NameFilter, #EmailFilter, #PhoneFilter, #NifFilter").on("keyup", function () {
+                clearTimeout(typingTimer);
+                typingTimer = setTimeout(loadUsers, debounceDelay);
+            });
+
+            $("#NameFilter, #EmailFilter, #PhoneFilter, #NifFilter").on("change", loadUsers);
+
+            $("form").on("submit", function (e) {
+                e.preventDefault();
+                loadUsers();
+            });
+        });
+    </script>
+}

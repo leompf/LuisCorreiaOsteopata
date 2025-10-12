@@ -8,7 +8,7 @@ public interface IAppointmentRepository : IGenericRepository<Appointment>
 {
     Task<List<Appointment>> GetAllAppointmentsAsync();
 
-    Task<List<Appointment>> GetFilteredAppointmentsAsync(int? staffId, int? patiendId, DateTime? fromDate, DateTime? toDate);
+    Task<List<Appointment>> GetFilteredAppointmentsAsync(string? userId ,string? staffName, string? patiendName, DateTime? fromDate, DateTime? toDate, string? sortBy, bool sortDescending);
 
     Task<List<AppointmentViewModel>> GetSchedulledAppointmentsAsync();
 

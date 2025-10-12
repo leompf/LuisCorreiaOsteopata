@@ -1,5 +1,7 @@
 ﻿using LuisCorreiaOsteopata.WEB.Data.Entities;
+using LuisCorreiaOsteopata.WEB.Models;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace LuisCorreiaOsteopata.WEB.Helpers;
 
@@ -33,9 +35,13 @@ public interface IUserHelper
     Task AddUserToRoleAsync(User user, string rolename);
     Task<bool> IsUserInRoleAsync(User user, string rolename);
     Task<string> GetUserRoleAsync(User user);
+    IEnumerable<SelectListItem> GetAllRolesAsync();
     #endregion
 
     #region User Helpers   
     string GenerateRandomPassword(PasswordOptions options = null);
+    List<UserViewModel> SortUsers(IEnumerable<UserViewModel> users, string? sortBy, bool sortDescending);
+
+    List<UserViewModel> FilterUsers(IEnumerable<UserViewModel> users, string? nameFilter, string? emailFilter, string? phoneFilter, string? nifFilter);
     #endregion
 }

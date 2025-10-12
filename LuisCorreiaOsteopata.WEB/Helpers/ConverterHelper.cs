@@ -40,9 +40,9 @@ public class ConverterHelper : IConverterHelper
         };
     }
 
-    public UserListViewModel ToUserListViewModel(User user, string role)
+    public UserViewModel ToUserViewModel(User user, string role)
     {
-        return new UserListViewModel
+        return new UserViewModel
         {
             Id = user.Id,
             Name = $"{user.Names} {user.LastName}",

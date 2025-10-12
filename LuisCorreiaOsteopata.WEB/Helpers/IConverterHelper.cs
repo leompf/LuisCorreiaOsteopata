@@ -6,7 +6,7 @@ namespace LuisCorreiaOsteopata.WEB.Helpers
     public interface IConverterHelper
     {
         AppointmentViewModel ToAppointmentViewModel(Appointment appointment);
-        UserListViewModel ToUserListViewModel(User user, string role);
+        UserViewModel ToUserViewModel(User user, string role);
         string Sanitize(string html);
     }
 }
