@@ -60,10 +60,7 @@ public class AppointmentRepository : GenericRepository<Appointment>, IAppointmen
 
     public IEnumerable<SelectListItem> GetAvailableTimeSlotsCombo(DateTime date)
     {
-        var now = DateTime.Now;;
-
-        if (date.AddDays(1) <= now.AddHours(48))
-            return new List<SelectListItem>();
+        var now = DateTime.Now;
 
         var booked = _context.Appointments
             .Where(a => a.AppointmentDate.Date == date.Date)
@@ -93,6 +90,9 @@ public class AppointmentRepository : GenericRepository<Appointment>, IAppointmen
         for (var t = start; t < end; t = t.AddMinutes(slotDuration.TotalMinutes))
         {
             if (booked.Contains(t))
+                continue;
+
+            if (date.Date == now.Date && t <= TimeOnly.FromDateTime(now))
                 continue;
 
             slots.Add(t);

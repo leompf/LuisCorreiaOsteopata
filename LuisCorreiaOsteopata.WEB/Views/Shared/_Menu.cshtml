@@ -1,30 +1,56 @@
-﻿<li class="scrollToLink">
-    <a asp-controller="Account" asp-action="Index">Home </a>
+﻿<li>
+    <a asp-controller="Home" asp-action="Index">Home </a>
 </li>
 @if (User.IsInRole("Administrador"))
 {
     <li class="dropdown">
-        <a><i style="margin-right: 5px;" class="fas fa-users-cog fa-fw"></i>Gestão de Administrador</a>
+        <a><i style="margin-right: 5px;" class="fas fa-user-shield"></i>Funcionalidades de Administrador</a>
         <ul>
-            <li><a asp-controller="Account" asp-action="AddStaff">Criar Colaborador</a></li>
-            <li><a asp-controller="Account" asp-action="ViewAllUsers">Ver Utilizadores</a></li>
+            <li class="dropdown">
+                <a><i style="margin-right: 5px" class="fas fa-users-cog align-content-center"></i>Gestão de Utilizadores</a>
+                <ul>
+                    <li><a asp-controller="Account" asp-action="AddStaff"><i style="margin-right: 5px" class="fas fa-user-plus align-content-center"></i>Criar Colaborador</a></li>
+                    <li><a asp-controller="Account" asp-action="ViewAllUsers"><i style="margin-right: 5px" class="fas fa-users align-content-center"></i>Ver Utilizadores</a></li>
+                </ul>
+            </li>
+            <li class="dropdown">
+                <a><i style="margin-right: 5px" class="fas fa-calendar-check align-content-center"></i>Gestão de Consultas</a>
+                <ul>
+                    <li><a asp-controller="Appointment" asp-action="ViewAppointments">Ver Todas as Consultas</a></li>
+                    <li><a asp-controller="Appointment" asp-action="Index"><i style="margin-right: 5px" class="far fa-calendar-plus align-content-center"></i>Marcar Consulta</a></li>
+                </ul>
+            </li>
         </ul>
     </li>
 }
 @if (User.IsInRole("Colaborador"))
 {
     <li class="dropdown">
-        <a><i style="margin-right: 5px;" class="fas fa-users-cog fa-fw"></i>Gestão de Colaborador</a>
+        <a><i style="margin-right: 5px;" class="fas fa-user-plus"></i>Funcionalidades de Colaborador</a>
         <ul>
-            <li><a asp-controller="Account" asp-action="ViewAllUsers">Ver Utilizadores</a></li>
-            <li><a asp-controller="Appointment" asp-action="ViewAppointments" >Ver Todas as Consultas</a></li>
+            <li class="dropdown">
+                <a><i style="margin-right: 5px" class="fas fa-users-cog align-content-center"></i>Gestão de Utilizadores</a>
+                <ul>
+                    <li><a asp-controller="Account" asp-action="ViewAllUsers">Ver Utilizadores</a></li>
+                </ul>
+            </li>
+            <li class="dropdown">
+                <a><i style="margin-right: 5px" class="fas fa-calendar-check"></i>Gestão de Consultas</a>
+                <ul>
+                    <li><a asp-controller="Appointment" asp-action="ViewAppointments">Ver Todas as Consultas</a></li>
+                    <li><a asp-controller="Appointment" asp-action="Index"><i style="margin-right: 5px" class="far fa-calendar-plus align-content-center"></i>Marcar Consulta</a></li>
+                </ul>
+            </li>
         </ul>
     </li>
 }
-<li class="dropdown">
-    <a><i style="margin-right: 5px;" class="fas fa-user"></i>Área Pessoal</a>
-    <ul>
-        <li><a asp-controller="Account" asp-action="Profile">Perfil</a></li>
-        <li><a asp-controller="Account" asp-action="Logout">Logout</a></li>
-    </ul>
-</li>
+@if (User.Identity.IsAuthenticated)
+{
+    <li class="dropdown">
+        <a><i style="margin-right: 5px;" class="fas fa-user"></i>Área Pessoal</a>
+        <ul>
+            <li><a asp-controller="Account" asp-action="Profile"><i style="margin-right: 5px" class="fas fa-user-edit align-content-center"></i>Perfil</a></li>
+            <li><a asp-controller="Account" asp-action="Logout"><i style="margin-right: 5px" class="fas fa-sign-out-alt align-content-center"></i>Logout</a></li>
+        </ul>
+    </li>
+}

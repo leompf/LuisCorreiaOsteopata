@@ -16,12 +16,12 @@
     </div>
     <div class="container">
         <div class="page-header__inner">
-            <h3>Detalhes da Consulta</h3>
+            <h3>Ver Todas as Consultas</h3>
             <div class="thm-breadcrumb__inner">
                 <ul class="thm-breadcrumb list-unstyled">
                     <li><a asp-controller="Account" asp-action="Index">Home</a></li>
                     <li><span class="icon-arrow-left"></span></li>
-                    <li>Detalhes Consulta</li>
+                    <li>Ver Todas as Consultas</li>
                 </ul>
             </div>
         </div>
@@ -81,26 +81,37 @@
     </div>
 </section>
 
-@section Scripts {
+@section Scripts 
+{
     <script>
         $(document).ready(function () {
             let currentSortColumn = '@ViewBag.DefaultSortBy';
             let currentSortState = '@(ViewBag.DefaultSortDescending ? "desc" : "asc")';
+            let typingTimer;
+            const debounceDelay = 0;
 
             function updateSortIcons() {
                 $(".sortable").each(function () {
                     const icon = $(this).find(".sort-icon");
                     const col = $(this).data("sort");
+
+                    $(this).removeClass("active-sort");
                     icon.removeClass("fa-sort-up fa-sort-down fa-sort text-muted");
+
                     if (col === currentSortColumn) {
+                        $(this).addClass("active-sort");
                         icon.addClass(currentSortState === "asc" ? "fa fa-sort-up" : "fa fa-sort-down");
-                    } else {
+                    } 
+                    else 
+                    {
                         icon.addClass("fa fa-sort text-muted");
                     }
                 });
             }
 
-            function getNameFilters() {
+            updateSortIcons();
+
+            function getFilters() {
                 return {
                     staffName: $("#StaffName").val(),
                     patientName: $("#PatientName").val()
@@ -108,7 +119,7 @@
             }
 
             function loadAppointments() {
-                const filters = getNameFilters();
+                const filters = getFilters();
                 $.ajax({
                     url: '@Url.Action("ViewAppointments", "Appointment")',
                     type: 'GET',
@@ -125,26 +136,35 @@
                         alert("Erro ao carregar os dados.");
                     }
                 });
-            }
-
-            $("#StaffName, #PatientName").on("input", function () {
-                loadAppointments();
-            });
+            }            
 
             $(document).on("click", ".sortable", function (e) {
                 e.preventDefault();
                 const sortBy = $(this).data("sort");
+
                 if (currentSortColumn === sortBy) {
                     currentSortState = currentSortState === "desc" ? "asc" : "desc";
-                } else {
+                } 
+                else 
+                {
                     currentSortColumn = sortBy;
                     currentSortState = "desc";
                 }
                 loadAppointments();
             });
 
+            $("#StaffName, #PatientName").on("keyup", function () {
+                clearTimeout(typingTimer);
+                typingTimer = setTimeout(loadUsers, debounceDelay);
+            });
+
+            $("#StaffName, #PatientName").on("input", function () {
+                loadAppointments();
+            });
+
             $("form").on("submit", function () {
-                return true;
+                e.preventDefault();
+                loadAppointments();
             });
         });
     </script>

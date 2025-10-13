@@ -106,7 +106,8 @@
                     if (col === currentSortColumn) {
                         $(this).addClass("active-sort");
                         icon.addClass(currentSortState === "asc" ? "fa fa-sort-up" : "fa fa-sort-down");
-                    } else {
+                    } 
+                    else {
                         icon.addClass("fa fa-sort text-muted");
                     }
                 });
@@ -149,7 +150,9 @@
 
                 if (currentSortColumn === sortBy) {
                     currentSortState = currentSortState === "desc" ? "asc" : "desc";
-                } else {
+                } 
+                else 
+                {
                     currentSortColumn = sortBy;
                     currentSortState = "desc"; 
                 }
