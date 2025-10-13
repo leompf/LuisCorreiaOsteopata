@@ -4,6 +4,7 @@ using LuisCorreiaOsteopata.WEB.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace LuisCorreiaOsteopata.Library.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20251013084839_AddPaymentEntities")]
+    partial class AddPaymentEntities
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -172,7 +175,7 @@ namespace LuisCorreiaOsteopata.Library.Migrations
                     b.ToTable("Invoices");
                 });
 
-            modelBuilder.Entity("LuisCorreiaOsteopata.WEB.Data.Entities.Order", b =>
+            modelBuilder.Entity("LuisCorreiaOsteopata.WEB.Data.Entities.InvoiceItem", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -180,80 +183,21 @@ namespace LuisCorreiaOsteopata.Library.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<DateTime>("DeliveryDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("OrderDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("Orders");
-                });
-
-            modelBuilder.Entity("LuisCorreiaOsteopata.WEB.Data.Entities.OrderDetail", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int?>("OrderId")
-                        .HasColumnType("int");
-
-                    b.Property<decimal>("Price")
+                    b.Property<decimal>("Amount")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<int>("ProductId")
-                        .HasColumnType("int");
-
-                    b.Property<double>("Quantity")
-                        .HasColumnType("float");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("OrderId");
-
-                    b.HasIndex("ProductId");
-
-                    b.ToTable("OrderDetails");
-                });
-
-            modelBuilder.Entity("LuisCorreiaOsteopata.WEB.Data.Entities.OrderDetailTemp", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<decimal>("Price")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<int>("ProductId")
-                        .HasColumnType("int");
-
-                    b.Property<double>("Quantity")
-                        .HasColumnType("float");
-
-                    b.Property<string>("UserId")
+                    b.Property<string>("Description")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("InvoiceId")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ProductId");
+                    b.HasIndex("InvoiceId");
 
-                    b.HasIndex("UserId");
-
-                    b.ToTable("OrderDetailsTemp");
+                    b.ToTable("InvoiceItems");
                 });
 
             modelBuilder.Entity("LuisCorreiaOsteopata.WEB.Data.Entities.Patient", b =>
@@ -336,50 +280,6 @@ namespace LuisCorreiaOsteopata.Library.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("Payments");
-                });
-
-            modelBuilder.Entity("LuisCorreiaOsteopata.WEB.Data.Entities.Product", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Description")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ImageUrl")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("IsAvailable")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTime?>("LastPurchase")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("LastSale")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<decimal>("Price")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<double>("Stock")
-                        .HasColumnType("float");
-
-                    b.Property<string>("UserId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("Products");
                 });
 
             modelBuilder.Entity("LuisCorreiaOsteopata.WEB.Data.Entities.Staff", b =>
@@ -698,49 +598,15 @@ namespace LuisCorreiaOsteopata.Library.Migrations
                     b.Navigation("Payment");
                 });
 
-            modelBuilder.Entity("LuisCorreiaOsteopata.WEB.Data.Entities.Order", b =>
+            modelBuilder.Entity("LuisCorreiaOsteopata.WEB.Data.Entities.InvoiceItem", b =>
                 {
-                    b.HasOne("LuisCorreiaOsteopata.WEB.Data.Entities.User", "User")
+                    b.HasOne("LuisCorreiaOsteopata.WEB.Data.Entities.Invoice", "Invoice")
                         .WithMany()
-                        .HasForeignKey("UserId")
+                        .HasForeignKey("InvoiceId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("LuisCorreiaOsteopata.WEB.Data.Entities.OrderDetail", b =>
-                {
-                    b.HasOne("LuisCorreiaOsteopata.WEB.Data.Entities.Order", null)
-                        .WithMany("Items")
-                        .HasForeignKey("OrderId");
-
-                    b.HasOne("LuisCorreiaOsteopata.WEB.Data.Entities.Product", "Product")
-                        .WithMany()
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Product");
-                });
-
-            modelBuilder.Entity("LuisCorreiaOsteopata.WEB.Data.Entities.OrderDetailTemp", b =>
-                {
-                    b.HasOne("LuisCorreiaOsteopata.WEB.Data.Entities.Product", "Product")
-                        .WithMany()
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("LuisCorreiaOsteopata.WEB.Data.Entities.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Product");
-
-                    b.Navigation("User");
+                    b.Navigation("Invoice");
                 });
 
             modelBuilder.Entity("LuisCorreiaOsteopata.WEB.Data.Entities.Patient", b =>
@@ -761,15 +627,6 @@ namespace LuisCorreiaOsteopata.Library.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("LuisCorreiaOsteopata.WEB.Data.Entities.Product", b =>
-                {
-                    b.HasOne("LuisCorreiaOsteopata.WEB.Data.Entities.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId");
 
                     b.Navigation("User");
                 });
@@ -839,11 +696,6 @@ namespace LuisCorreiaOsteopata.Library.Migrations
             modelBuilder.Entity("LuisCorreiaOsteopata.WEB.Data.Entities.AppointmentCredit", b =>
                 {
                     b.Navigation("Appointments");
-                });
-
-            modelBuilder.Entity("LuisCorreiaOsteopata.WEB.Data.Entities.Order", b =>
-                {
-                    b.Navigation("Items");
                 });
 
             modelBuilder.Entity("LuisCorreiaOsteopata.WEB.Data.Entities.Payment", b =>

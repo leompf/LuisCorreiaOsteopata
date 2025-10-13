@@ -1,6 +1,7 @@
 ﻿using LuisCorreiaOsteopata.WEB.Data.Entities;
 using LuisCorreiaOsteopata.WEB.Helpers;
 using Microsoft.AspNetCore.Identity;
+using System;
 
 namespace LuisCorreiaOsteopata.WEB.Data;
 
@@ -8,11 +9,13 @@ public class SeedDB
 {
     private readonly DataContext _context;
     private readonly IUserHelper _userHelper;
+    private Random _random;
 
     public SeedDB(DataContext context, IUserHelper userHelper)
     {
         _context = context;
         _userHelper = userHelper;
+        _random = new Random();
     }
 
     public async Task SeedAsync()
@@ -142,5 +145,24 @@ public class SeedDB
         }
 
         await _context.SaveChangesAsync();
+
+        if (!_context.Products.Any())
+        {
+            AddProduct("Consulta Individual", adminUser);
+            AddProduct("Pacote de 3 Consultas", adminUser);
+            await _context.SaveChangesAsync();
+        }
+    }
+
+    private void AddProduct(string name, User user)
+    {
+        _context.Products.Add(new Product
+        {
+            Name = name,
+            Price = _random.Next(1000),
+            IsAvailable = true,
+            Stock = _random.Next(100),
+            User = user
+        });
     }
 }

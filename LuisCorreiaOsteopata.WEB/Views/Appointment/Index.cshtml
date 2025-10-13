@@ -6,6 +6,13 @@
 }
 <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
 
+<style>
+    .thm-btn:disabled {
+        opacity: 0.5; /* visually indicate disabled */
+        cursor: not-allowed;
+    }
+</style>
+
 @section MainMenu
 {
     <partial name="_Menu"></partial>
@@ -79,7 +86,7 @@
                                     <input type="hidden" asp-for="Notes" id="Notes" />
                                 </div>
                                 <div class="appoinment-page__btn-box" style="margin-top: 70px">
-                                    <button type="submit" asp-action="Index" id="btnConfirm" class="thm-btn">
+                                    <button type="submit" asp-action="Index" id="btnConfirm" class="thm-btn" disabled="!@Model.HasAvailableCredits" title=@(Model.HasAvailableCredits ? "" : "Não tens consultas disponíveis. Por favor, compra consultas primeiro")>
                                         Marcar<span class="icon-plus"></span>
                                     </button>
                                 </div>

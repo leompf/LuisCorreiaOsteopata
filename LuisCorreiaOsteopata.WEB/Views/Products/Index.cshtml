@@ -1,0 +1,102 @@
+﻿@model IEnumerable<LuisCorreiaOsteopata.WEB.Data.Entities.Product>
+
+@{
+    ViewData["Title"] = "Index";
+    Layout = "~/Views/Shared/_Layout2.cshtml";
+}
+
+@section MainMenu
+{
+    <partial name="_Menu"></partial>
+}
+
+<section class="page-header">
+    <div class="page-header__bg" style="background-image: url(assets/images/backgrounds/page-header-bg.jpg);">
+    </div>
+    <div class="container">
+        <div class="page-header__inner">
+            <h3>Lista de Produtos</h3>
+            <div class="thm-breadcrumb__inner">
+                <ul class="thm-breadcrumb list-unstyled">
+                    <li><a asp-controller="Account" asp-action="Index">Home</a></li>
+                    <li><span class="icon-arrow-left"></span></li>
+                    <li>Lista de Produtos</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="appoinment-page" id="profile-section" style="margin-top: -100px">
+    <div class="container">
+        <div class="row">
+            <form method="get">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>
+                                @Html.DisplayNameFor(model => model.Name)
+                            </th>
+                            <th>
+                                
+                            </th>
+                            <th>
+                                @Html.DisplayNameFor(model => model.Price)
+                            </th>
+                            <th>
+                                @Html.DisplayNameFor(model => model.LastPurchase)
+                            </th>
+                            <th>
+                                @Html.DisplayNameFor(model => model.LastSale)
+                            </th>
+                            <th>
+                                @Html.DisplayNameFor(model => model.IsAvailable)
+                            </th>
+                            <th>
+                                @Html.DisplayNameFor(model => model.Stock)
+                            </th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>
+                                    @Html.DisplayFor(modelItem => item.Name)
+                                </td>
+                                <td>
+                                    @if (!string.IsNullOrEmpty(item.ImageUrl))
+                                    {
+                                        <img src="@Url.Content(item.ImageUrl)" alt="Image" style="width:100px;height: 150px;max-width:100%;height:auto" />
+                                    }
+                                </td>
+                                <td>
+                                    @Html.DisplayFor(modelItem => item.Price)
+                                </td>
+                                <td>
+                                    @Html.DisplayFor(modelItem => item.LastPurchase)
+                                </td>
+                                <td>
+                                    @Html.DisplayFor(modelItem => item.LastSale)
+                                </td>
+                                <td>
+                                    @Html.DisplayFor(modelItem => item.IsAvailable)
+                                </td>
+                                <td>
+                                    @Html.DisplayFor(modelItem => item.Stock)
+                                </td>
+                                <td>
+                                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-warning">Edit</a>
+                                    <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-info">Details</a>
+                                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-danger">Delete</a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </form>
+        </div>
+    </div>
+</section>
+

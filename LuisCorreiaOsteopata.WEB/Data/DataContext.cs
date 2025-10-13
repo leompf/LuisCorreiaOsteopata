@@ -13,7 +13,21 @@ public class DataContext : IdentityDbContext<User>
 
     public DbSet<Appointment> Appointments { get; set; }
 
+    public DbSet<AppointmentCredit> AppointmentCredits { get; set; }
+
     public DbSet<GoogleCalendar> GoogleCalendar { get; set; }
+
+    public DbSet<Product> Products { get; set; }
+
+    public DbSet<Order> Orders { get; set; }
+
+    public DbSet<OrderDetail> OrderDetails { get; set; }
+
+    public DbSet<OrderDetailTemp> OrderDetailsTemp { get; set; }
+
+    public DbSet<Invoice> Invoices { get; set; }
+
+    public DbSet<Payment> Payments { get; set; }
 
     public DataContext(DbContextOptions<DataContext> options) : base(options)
     {
@@ -39,6 +53,12 @@ public class DataContext : IdentityDbContext<User>
             .WithMany()  
             .HasForeignKey(a => a.StaffId)
             .IsRequired()
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelbuilder.Entity<AppointmentCredit>()
+            .HasOne(ac => ac.Payment)
+            .WithMany(p => p.AppointmentCredits)
+            .HasForeignKey(ac => ac.PaymentId)
             .OnDelete(DeleteBehavior.Restrict);
     }
 }

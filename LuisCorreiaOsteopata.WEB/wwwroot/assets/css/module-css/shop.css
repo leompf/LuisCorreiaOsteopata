@@ -2149,6 +2149,7 @@ Product Description
     font-weight: 700;
 }
 
+.cart-table .quantity-box a, 
 .cart-table .quantity-box button {
     width: 24px;
     height: 24px;
@@ -2168,6 +2169,7 @@ Product Description
     border-left: 1px solid #dddddd;
 }
 
+.cart-table .quantity-box a.sub,
 .cart-table .quantity-box button.sub {
     bottom: 1px;
     top: auto;

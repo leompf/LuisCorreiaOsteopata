@@ -1,0 +1,109 @@
+﻿using LuisCorreiaOsteopata.WEB.Data;
+using LuisCorreiaOsteopata.WEB.Data.Entities;
+using LuisCorreiaOsteopata.WEB.Helpers;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+
+namespace LuisCorreiaOsteopata.WEB.Controllers
+{
+    public class OrdersController : Controller
+    {
+        private readonly IOrderRepository _orderRepository;
+        private readonly IUserHelper _userHelper;
+        private readonly DataContext _context;
+
+        public OrdersController(IOrderRepository orderRepository,
+            IUserHelper userHelper,
+            DataContext context)
+        {
+            _orderRepository = orderRepository;
+            _userHelper = userHelper;
+            _context = context;
+        }
+
+        public IActionResult Index()
+        {
+            return View();
+        }
+
+        public async Task<IActionResult> Create()
+        {
+            var model = await _orderRepository.GetDetailTempsAsync(this.User.Identity.Name);
+            return View(model);
+        }
+
+        public async Task<IActionResult> AddProduct(int id)
+        {
+            var product = await _context.Products.FindAsync(id);
+            if (product == null)
+            {
+                return NotFound();
+            }
+
+            var user = await _userHelper.GetCurrentUserAsync();
+            if (user == null)
+            {
+                return Challenge(); // redirect to login
+            }
+
+            var cartItem = await _context.OrderDetailsTemp
+                .Include(o => o.Product)
+                .Include(o => o.User)
+                .FirstOrDefaultAsync(o => o.User.Id == user.Id && o.Product.Id == id);
+
+            if (cartItem == null)
+            {
+                cartItem = new OrderDetailTemp
+                {
+                    Product = product,
+                    Price = product.Price,
+                    Quantity = 1,
+                    User = user
+                };
+                _context.OrderDetailsTemp.Add(cartItem);
+            }
+            else
+            {
+                cartItem.Quantity++;
+                _context.OrderDetailsTemp.Update(cartItem);
+            }
+
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(Create));
+        }
+
+        public async Task<IActionResult> DeleteItem(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            await _orderRepository.DeleteDetailTempAsync(id.Value);
+            return RedirectToAction("Create");
+        }
+
+        public async Task<IActionResult> Increase(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            await _orderRepository.ModifyOrderDetailTempQuantityAsync(id.Value, 1);
+            return RedirectToAction("Create");
+        }
+
+        public async Task<IActionResult> Decrease(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            await _orderRepository.ModifyOrderDetailTempQuantityAsync(id.Value, -1);
+            return RedirectToAction("Create");
+        }
+    }
+}

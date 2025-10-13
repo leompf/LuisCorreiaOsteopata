@@ -1,0 +1,233 @@
+﻿@model IEnumerable<LuisCorreiaOsteopata.WEB.Data.Entities.OrderDetailTemp>
+
+@{
+    ViewData["Title"] = "Create";
+    Layout = "~/Views/Shared/_Layout2.cshtml";
+}
+
+@section MainMenu
+{
+    <partial name="_Menu"></partial>
+}
+
+<!--Page Header Start-->
+<section class="page-header">
+    <div class="page-header__bg" style="background-image: url(assets/images/backgrounds/page-header-bg.jpg);">
+    </div>
+    <div class="container">
+        <div class="page-header__inner">
+            <h3>Carrinho</h3>
+            <div class="thm-breadcrumb__inner">
+                <ul class="thm-breadcrumb list-unstyled">
+                    <li><a href="index.html">Home</a></li>
+                    <li><span class="icon-arrow-left"></span></li>
+                    <li>Carrinho</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+<!--Page Header End-->
+<!--Start Cart Page-->
+<section class="cart-page">
+    <div class="container">
+        <div class="row">
+            <div class="col-xl-8 col-lg-7">
+                <div class="cart-page__left">
+                    <div class="table-responsive">
+                        <table class="table cart-table">
+                            <thead>
+                                <tr>
+                                    <th>Item</th>
+                                    <th>Price</th>
+                                    <th>Quantity</th>
+                                    <th>Total</th>
+                                    <th>Remove</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model)
+                                {
+                                    <tr>
+                                        <td>
+                                            <div class="product-box">
+                                                <div class="img-box">
+                                                    <img src="@item.Product.ImageFullPath" alt="@item.Product.Name" style="width:80px; height:auto;" />
+                                                </div>
+                                                <h3>@item.Product.Name</h3>
+                                            </div>
+                                        </td>
+                                        <td>@item.Price.ToString("C2")</td>
+                                        <td>
+                                            <div class="quantity-box">
+                                                <a asp-action="Decrease" asp-route-id="@item.Id" class="sub"><i class="fas fa-minus"></i></a>
+                                                <input type="number" name="quantity" asp-for="@item.Quantity" class="form-control text-center" style="width:70px; display:inline-block;" />
+                                                <a asp-action="Increase" asp-route-id="@item.Id" class="add"><i class="fas fa-plus"></i></a>
+                                            </div>
+                                        </td>
+                                        <td>@item.Value.ToString("C2")</td>
+                                        <td id="@item.Id">
+                                            <a asp-action="DeleteItem" asp-route-id="@item.Id" class="cross-icon text-center text-danger" id="btnDeleteItem"><i class="fas fa-times"></i></a>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-4 col-lg-5">
+                <div class="cart-page__right">
+                    <div class="cart-page__sidebar">
+                        <div class="cart-page__shipping">
+                            <h3 class="cart-page__shipping-title">Calculated Shipping</h3>
+                            <form action="#" class="cart-page__shipping-form">
+                                <div class="row">
+                                    <div class="col-xl-12">
+                                        <div class="cart-page__shipping-input-box">
+                                            <div class="select-box">
+                                                <select class="wide">
+                                                    <option data-display="Country">Country</option>
+                                                    <option value="1">Ban</option>
+                                                    <option value="2">Ind</option>
+                                                    <option value="3">Pak</option>
+                                                    <option value="3">USA</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-xl-6 col-lg-6 col-md-6">
+                                        <div class="cart-page__shipping-input-box">
+                                            <div class="select-box">
+                                                <select class="wide">
+                                                    <option data-display="State/City">State/City</option>
+                                                    <option value="1">Ban</option>
+                                                    <option value="2">Ind</option>
+                                                    <option value="3">Pak</option>
+                                                    <option value="3">USA</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-xl-6 col-lg-6 col-md-6">
+                                        <div class="cart-page__shipping-input-box">
+                                            <input type="text" placeholder="zip code">
+                                        </div>
+                                    </div>
+                                    <div class="cart-page__btn-box">
+                                        <button type="submit" class="thm-btn">
+                                            Update <span class="icon-right-arrow"></span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="cart-page__coupon-code">
+                            <h3 class="cart-page__coupon-code-title">Coupon Code</h3>
+                            <p class="cart-page__coupon-code-text">
+                                I must explain to you how all this mistaken
+                                idea of denouncing pleasure and praising pain was born
+                            </p>
+                            <form action="#" class="default-form cart-page__coupon-code-form">
+                                <input type="text" placeholder="Enter Coupon Code">
+                                <button class="thm-btn" type="submit">
+                                    Apply Coupon <span class="icon-right-arrow"></span>
+                                </button>
+                            </form>
+                        </div>
+
+                        @{
+                            var subtotal = Model.Sum(i => i.Value);
+                        }
+
+                        <div class="cart-page__cart-total">
+                            <ul class="cart-total list-unstyled">
+                                <li>
+                                    <span>Cart Subtotal</span>
+                                    <span>@subtotal.ToString("C2")</span>
+                                </li>
+                                @* <li>
+                                    <span>Shipping Cost</span>
+                                    <span></span>
+                                </li>
+                                <li>
+                                    <span>Discount</span>
+                                    <span>$0.00 USD</span>
+                                </li> *@
+                                <li>
+                                    <span>Cart Total</span>
+                                    <span class="cart-total-amount">@subtotal.ToString("C2")</span>
+                                </li>
+                            </ul>
+                            <div class="cart-page__buttons">
+                                <div class="cart-page__buttons-1">
+                                    <a class="thm-btn" href="checkout.html">
+                                        Update
+                                        <span class="icon-right-arrow"></span>
+                                    </a>
+                                </div>
+                                <div class="cart-page__buttons-2">
+                                    <a href="checkout.html" class="thm-btn">
+                                        Checkout
+                                        <span class="icon-right-arrow"></span>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-xl-8 col-lg-7">
+            </div>
+            <div class="col-xl-4 col-lg-5">
+            </div>
+        </div>
+    </div>
+</section>
+<!--End Cart Page-->
+
+<div id="deleteDialog" class="modal fade">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">Apagar</h4>
+                <button type="button" class="close" data-dismiss="modal"><i class="fa fa-window-close"></i></button>
+            </div>
+            <div class="modal-body">
+                <p>Tens a certeza que queres apagar este item do carrinho?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" id="btnYesDelete">Sim</button>
+                <button type="button" class="btn btn-success" id="btnNoDelete">Não</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@section Scripts {
+    <script type="text/javascript">
+        $(document).ready(function(){
+
+            var id = 0;
+
+            $("a[id*=btnDeleteItem]").click(function() {
+                id=$(this).parent()[0].id;
+                $("#deleteDialog").modal("show");
+                return false;
+            });
+
+            $("#btnNoDelete").click(function() {
+                $("#deleteDialog").modal("hide");
+                return false;
+            });
+
+            $("#btnYesDelete").click(function() {
+                const baseUrl = '@Url.Action("DeleteItem", "Orders")';
+                window.location.href = baseUrl + "/" + id;
+            });
+        });
+    </script>
+}                                    

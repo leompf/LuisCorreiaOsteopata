@@ -18,6 +18,91 @@ public class AppointmentRepository : GenericRepository<Appointment>, IAppointmen
         _userHelper = userHelper;
     }
 
+    public async Task AddAppointmentCreditsAsync(string userId, int quantity)
+    {
+        var user = await _userHelper.GetUserByIdAsync(userId);
+        if (user == null)
+        {
+            throw new ArgumentException("User not found.", nameof(userId));
+        }
+
+        var credit = new AppointmentCredit
+        {
+            UserId = user.Id,
+            TotalAppointments = quantity,
+            UsedAppointments = 0,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        _context.AppointmentCredits.Add(credit);
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task<bool> ConsumeAppointmentCreditAsync(int patientId)
+    {
+        var patient = await _context.Patients
+            .AsNoTracking()
+            .FirstOrDefaultAsync(p => p.Id == patientId);
+
+        if (patient == null)
+            return false;
+
+        var credit = await _context.AppointmentCredits
+            .FirstOrDefaultAsync(c =>
+                c.UserId == patient.User.Id &&
+                c.UsedAppointments < c.TotalAppointments);
+
+        if (credit == null)
+            return false;
+
+        credit.UsedAppointments += 1;
+        _context.AppointmentCredits.Update(credit);
+        await _context.SaveChangesAsync();
+
+        return true;
+    }
+
+    public async Task<(bool Success, string? ErrorMessage)> CreateAppointmentAsync(Appointment appointment, int patientId)
+    {
+        using var transaction = await _context.Database.BeginTransactionAsync();
+
+        try
+        {
+            var patient = await _context.Patients
+                .AsNoTracking()
+                .FirstOrDefaultAsync(p => p.Id == patientId);
+
+            if (patient == null)
+                return (false, "Paciente inválido.");
+
+            var credit = await _context.AppointmentCredits
+                .FirstOrDefaultAsync(c =>
+                    c.UserId == patient.User.Id &&
+                    c.UsedAppointments < c.TotalAppointments);
+
+            if (credit == null)
+                return (false, "Sem créditos disponíveis para agendamento.");
+
+            credit.UsedAppointments += 1;
+            _context.AppointmentCredits.Update(credit);
+
+            appointment.CreatedDate = DateTime.UtcNow;
+            appointment.AppointmentStatus = "Marcada";
+
+            _context.Appointments.Add(appointment);
+            await _context.SaveChangesAsync();
+
+            await transaction.CommitAsync();
+            return (true, null);
+        }
+        catch (Exception ex)
+        {
+            await transaction.RollbackAsync();
+            return (false, $"Erro ao criar a consulta: {ex.Message}");
+        }
+    }
+    
+
     public async Task<List<Appointment>> GetAllAppointmentsAsync()
     {
         return await _context.Appointments
@@ -192,5 +277,13 @@ public class AppointmentRepository : GenericRepository<Appointment>, IAppointmen
             StaffNotes = a.StaffNotes,
             IsPaid = a.IsPaid,
         }).ToList();
+    }
+
+    public async Task<bool> HasAvailableCreditsAsync(string userId)
+    {
+        var hasCredits = await _context.AppointmentCredits
+            .AnyAsync(a => a.UserId == userId && a.UsedAppointments < a.TotalAppointments);
+
+        return hasCredits;
     }
 }

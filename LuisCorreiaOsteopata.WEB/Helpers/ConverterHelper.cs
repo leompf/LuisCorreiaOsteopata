@@ -40,6 +40,22 @@ public class ConverterHelper : IConverterHelper
         };
     }
 
+    public Product ToProduct(ProductViewModel model, string path, bool isNew)
+    {
+        return new Product
+        {
+            Id = isNew ? 0 : model.Id,
+            Name = model.Name,
+            IsAvailable = model.IsAvailable,
+            LastPurchase = model.LastPurchase,
+            LastSale = model.LastSale,
+            ImageUrl = path,
+            Price = model.Price,
+            Stock = model.Stock,
+            User = model.User
+        };
+    }
+
     public UserViewModel ToUserViewModel(User user, string role)
     {
         return new UserViewModel

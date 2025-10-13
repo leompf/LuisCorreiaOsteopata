@@ -32,6 +32,9 @@ public class BookAppointmentViewModel
     public int PatientId { get; set; }
 
 
+    public bool HasAvailableCredits { get; set; }
+
+
     [ValidateNever]
     public IEnumerable<SelectListItem> Staff { get; set; }
 

@@ -1,5 +1,5 @@
 ﻿<li>
-    <a asp-controller="Home" asp-action="Index">Home </a>
+    <a asp-controller="Home" asp-action="Index"><i style="margin-right: 5px" class="fas fa-home"></i>Home </a>
 </li>
 @if (User.IsInRole("Administrador"))
 {
@@ -18,6 +18,13 @@
                 <ul>
                     <li><a asp-controller="Appointment" asp-action="ViewAppointments">Ver Todas as Consultas</a></li>
                     <li><a asp-controller="Appointment" asp-action="Index"><i style="margin-right: 5px" class="far fa-calendar-plus align-content-center"></i>Marcar Consulta</a></li>
+                </ul>
+            </li>
+            <li class="dropdown">
+                <a><i style="margin-right: 5px" class="fas fa-shopping-bag align-content-center"></i>Gestão de Produtos</a>
+                <ul>
+                    <li><a asp-controller="Products" asp-action="Index">Ver Produtos</a></li>
+                    <li><a asp-controller="Products" asp-action="Create">Criar Produto</a></li>
                 </ul>
             </li>
         </ul>
@@ -42,6 +49,15 @@
                 </ul>
             </li>
         </ul>
+    </li>
+}
+@if (User.Identity.IsAuthenticated && User.IsInRole("Utente"))
+{
+    <li>
+        <a asp-controller="Products" asp-action="ViewProducts"><i style="margin-right: 5px" class="fas fa-shopping-bag align-content-center"></i>Ver Produtos</a>
+    </li>
+    <li>
+        <a asp-controller="Orders" asp-action="Create"><i style="margin-right: 5px" class="fas fa-shopping-cart"></i>Carrinho</a>
     </li>
 }
 @if (User.Identity.IsAuthenticated)

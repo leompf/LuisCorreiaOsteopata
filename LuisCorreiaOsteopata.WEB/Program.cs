@@ -43,14 +43,19 @@ public class Program
         builder.Services.AddScoped<IConverterHelper, ConverterHelper>();
         builder.Services.AddScoped<HtmlSanitizer>();
         builder.Services.AddScoped<IGoogleHelper, GoogleHelper>();
+        builder.Services.AddScoped<IImageHelper, ImageHelper>();
 
 
         builder.Services.AddScoped<IPatientRepository, PatientRepository>();
         builder.Services.AddScoped<IStaffRepository, StaffRepository>();
         builder.Services.AddScoped<IAppointmentRepository, AppointmentRepository>();
+        builder.Services.AddScoped<IProductRepository, ProductRepository>();
+        builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 
         builder.Services.Configure<AuthMessageSenderOptions>(builder.Configuration);
         builder.Services.Configure<GoogleSettings>(builder.Configuration.GetSection("GoogleSettings"));
+        builder.Services.Configure<StripeSettings>(builder.Configuration.GetSection("Stripe"));
+        Stripe.StripeConfiguration.ApiKey = builder.Configuration["Stripe:SecretKey"];
 
         builder.Services.AddAuthentication()
             .AddGoogle(options =>
