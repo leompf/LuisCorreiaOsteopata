@@ -3,6 +3,7 @@ using LuisCorreiaOsteopata.WEB.Data.Entities;
 using LuisCorreiaOsteopata.WEB.Helpers;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Globalization;
 
 namespace LuisCorreiaOsteopata.WEB.Controllers
 {
@@ -84,26 +85,22 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
             return RedirectToAction("Create");
         }
 
-        public async Task<IActionResult> Increase(int? id)
+        [HttpPost]
+        public async Task<IActionResult> ModifyQuantity(int id, double quantityChange)
         {
-            if (id == null)
-            {
+            var result = await _orderRepository.ModifyOrderDetailTempQuantityAsync(id, quantityChange);
+
+            if (result == null)
                 return NotFound();
-            }
 
-            await _orderRepository.ModifyOrderDetailTempQuantityAsync(id.Value, 1);
-            return RedirectToAction("Create");
-        }
+            var (itemTotal, cartTotal, newQuantity) = result.Value;
 
-        public async Task<IActionResult> Decrease(int? id)
-        {
-            if (id == null)
+            return Json(new
             {
-                return NotFound();
-            }
-
-            await _orderRepository.ModifyOrderDetailTempQuantityAsync(id.Value, -1);
-            return RedirectToAction("Create");
+                itemTotal = itemTotal.ToString("C2"),
+                cartTotal = cartTotal.ToString("C2"),
+                newQuantity
+            });
         }
     }
 }

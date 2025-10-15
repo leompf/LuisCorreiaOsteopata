@@ -13,7 +13,7 @@ public interface IOrderRepository :IGenericRepository<Order>
     //Task AddItemtoOrderAsync(AddItemViewModel model, string username);
 
 
-    Task ModifyOrderDetailTempQuantityAsync(int id, double quantity);
+    Task<(double itemTotal, double cartTotal, double newQuantity)?> ModifyOrderDetailTempQuantityAsync(int id, double quantity);
 
 
     Task DeleteDetailTempAsync(int id);

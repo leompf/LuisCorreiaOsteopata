@@ -54,19 +54,27 @@ public class OrderRepository : GenericRepository<Order>, IOrderRepository
         throw new NotImplementedException();
     }
 
-    public async Task ModifyOrderDetailTempQuantityAsync(int id, double quantity)
+    public async Task<(double itemTotal, double cartTotal, double newQuantity)?> ModifyOrderDetailTempQuantityAsync(int id, double quantity)
     {
-        var orderDetailTemp = await _context.OrderDetailsTemp.FindAsync(id);
-        if (orderDetailTemp == null)
-        {
-            return;
-        }
+        var orderDetail = await _context.OrderDetailsTemp
+       .Include(o => o.Product)
+       .FirstOrDefaultAsync(o => o.Id == id);
 
-        orderDetailTemp.Quantity += quantity;
-        if (orderDetailTemp.Quantity > 0)
-        {
-            _context.OrderDetailsTemp.Update(orderDetailTemp);
-            await _context.SaveChangesAsync();
-        }
+        if (orderDetail == null)
+            return null;
+
+        orderDetail.Quantity += quantity;
+        if (orderDetail.Quantity < 1)
+            orderDetail.Quantity = 1;
+
+        _context.OrderDetailsTemp.Update(orderDetail);
+        await _context.SaveChangesAsync();
+
+        var cartTotal = await _context.OrderDetailsTemp
+            .SumAsync(i => (double)i.Price * i.Quantity);
+
+        var itemTotal = (double)orderDetail.Price * orderDetail.Quantity;
+
+        return (itemTotal, cartTotal, orderDetail.Quantity);
     }
 }

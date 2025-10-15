@@ -71,7 +71,7 @@
 
     <label style="font-size: 1.2rem" class="col-auto col-form-label pe-1"><strong>Disponível:</strong></label>
     <div class="col-auto ps-1 align-content-center">
-        <input class="form-check-input" asp-for="IsAvailable" checked />
+        <input class="form-check-input" asp-for="IsAvailable" checked="@(Model != null ? Model.IsAvailable : true)" />
         <span asp-validation-for="IsAvailable" class="text-danger"></span>
     </div>
 

@@ -39,10 +39,10 @@
                             <thead>
                                 <tr>
                                     <th>Item</th>
-                                    <th>Price</th>
-                                    <th>Quantity</th>
+                                    <th>Preço</th>
+                                    <th>Quantidade</th>
                                     <th>Total</th>
-                                    <th>Remove</th>
+                                    <th>Remover</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -60,9 +60,9 @@
                                         <td>@item.Price.ToString("C2")</td>
                                         <td>
                                             <div class="quantity-box">
-                                                <a asp-action="Decrease" asp-route-id="@item.Id" class="sub"><i class="fas fa-minus"></i></a>
-                                                <input type="number" name="quantity" asp-for="@item.Quantity" class="form-control text-center" style="width:70px; display:inline-block;" />
-                                                <a asp-action="Increase" asp-route-id="@item.Id" class="add"><i class="fas fa-plus"></i></a>
+                                                <a href="#" data-id="@item.Id" class="sub"><i class="fas fa-minus"></i></a>
+                                                <input type="number" name="quantity" value="@item.Quantity" data-id="@item.Id" class="form-control text-center" style="width:70px; display:inline-block;" />
+                                                <a href="#" data-id="@item.Id" class="add"><i class="fas fa-plus"></i></a>
                                             </div>
                                         </td>
                                         <td>@item.Value.ToString("C2")</td>
@@ -79,7 +79,7 @@
             <div class="col-xl-4 col-lg-5">
                 <div class="cart-page__right">
                     <div class="cart-page__sidebar">
-                        <div class="cart-page__shipping">
+                       @*  <div class="cart-page__shipping">
                             <h3 class="cart-page__shipping-title">Calculated Shipping</h3>
                             <form action="#" class="cart-page__shipping-form">
                                 <div class="row">
@@ -121,17 +121,16 @@
                                     </div>
                                 </div>
                             </form>
-                        </div>
+                        </div> *@
                         <div class="cart-page__coupon-code">
-                            <h3 class="cart-page__coupon-code-title">Coupon Code</h3>
+                            <h3 class="cart-page__coupon-code-title">Cupão</h3>
                             <p class="cart-page__coupon-code-text">
-                                I must explain to you how all this mistaken
-                                idea of denouncing pleasure and praising pain was born
+                                Se tiveres algum código, podes usá-lo aqui.
                             </p>
                             <form action="#" class="default-form cart-page__coupon-code-form">
                                 <input type="text" placeholder="Enter Coupon Code">
                                 <button class="thm-btn" type="submit">
-                                    Apply Coupon <span class="icon-right-arrow"></span>
+                                    Aplicar Cupão <span class="icon-right-arrow"></span>
                                 </button>
                             </form>
                         </div>
@@ -143,8 +142,8 @@
                         <div class="cart-page__cart-total">
                             <ul class="cart-total list-unstyled">
                                 <li>
-                                    <span>Cart Subtotal</span>
-                                    <span>@subtotal.ToString("C2")</span>
+                                    <span>Subtotal</span>
+                                    <span id="cart-subtotal">@subtotal.ToString("C2")</span>
                                 </li>
                                 @* <li>
                                     <span>Shipping Cost</span>
@@ -155,7 +154,7 @@
                                     <span>$0.00 USD</span>
                                 </li> *@
                                 <li>
-                                    <span>Cart Total</span>
+                                    <span>Total</span>
                                     <span class="cart-total-amount">@subtotal.ToString("C2")</span>
                                 </li>
                             </ul>
@@ -228,6 +227,32 @@
                 const baseUrl = '@Url.Action("DeleteItem", "Orders")';
                 window.location.href = baseUrl + "/" + id;
             });
-        });
+
+            $(document).on("click", ".add, .sub", function (e) {
+                e.preventDefault();
+
+                const id = $(this).data("id");
+                const input = $("input[data-id='" + id + "']");
+                let quantityChange = $(this).hasClass("add") ? 1 : -1;
+
+                $.ajax({
+                    url: '@Url.Action("ModifyQuantity", "Orders")',
+                    type: 'POST',
+                    data: { id: id, quantityChange: quantityChange },
+                    success: function (response) {
+                        input.val(response.newQuantity);
+
+                        const row = input.closest("tr");
+                        row.find("td:nth-child(4)").text(response.itemTotal);
+
+                        $(".cart-total-amount").text(response.cartTotal);
+                        $("#cart-subtotal").text(response.cartTotal);
+                    },
+                    error: function () {
+                        alert("Erro ao atualizar a quantidade. Tenta novamente.");
+                    }
+                });
+            });
+        });       
     </script>
 }                                    
