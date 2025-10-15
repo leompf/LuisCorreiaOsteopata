@@ -1,7 +1,6 @@
 ﻿using Ganss.Xss;
 using LuisCorreiaOsteopata.WEB.Data.Entities;
 using LuisCorreiaOsteopata.WEB.Models;
-using System.Data;
 
 namespace LuisCorreiaOsteopata.WEB.Helpers;
 
@@ -36,7 +35,7 @@ public class ConverterHelper : IConverterHelper
             AppointmentStatus = appointment.AppointmentStatus,
             PatientNotes = _sanitizer.Sanitize(appointment.PatientNotes),
             StaffNotes = _sanitizer.Sanitize(appointment.StaffNotes),
-            IsPaid = appointment.IsPaid          
+            IsPaid = appointment.IsPaid
         };
     }
 
@@ -46,6 +45,7 @@ public class ConverterHelper : IConverterHelper
         {
             Id = isNew ? 0 : model.Id,
             Name = model.Name,
+            Description = _sanitizer.Sanitize(model.Description),
             IsAvailable = model.IsAvailable,
             LastPurchase = model.LastPurchase,
             LastSale = model.LastSale,
@@ -53,6 +53,23 @@ public class ConverterHelper : IConverterHelper
             Price = model.Price,
             Stock = model.Stock,
             User = model.User
+        };
+    }
+
+    public ProductViewModel ToProductViewModel(Product product)
+    {
+        return new ProductViewModel
+        {
+            Id = product.Id,
+            Name = product.Name,
+            Description = product.Description,
+            IsAvailable = product.IsAvailable,
+            LastPurchase = product.LastPurchase,
+            LastSale = product.LastSale,
+            ImageUrl = product.ImageUrl,
+            Price = product.Price,
+            Stock = product.Stock,
+            User = product.User
         };
     }
 

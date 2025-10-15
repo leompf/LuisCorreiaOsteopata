@@ -11,6 +11,8 @@ namespace LuisCorreiaOsteopata.WEB.Helpers
 
         Product ToProduct(ProductViewModel model, string path, bool isNew);
 
+        ProductViewModel ToProductViewModel(Product product);
+
         string Sanitize(string html);
     }
 }

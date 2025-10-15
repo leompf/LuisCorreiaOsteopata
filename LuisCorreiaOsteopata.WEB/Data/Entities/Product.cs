@@ -8,13 +8,14 @@ public class Product : IEntity
 
     [Required]
     [MaxLength(50, ErrorMessage = "The field {0} can contain {1} characters length.")]
+    [Display(Name = "Nome")]
     public string Name { get; set; }
 
 
     public string? Description { get; set; }
 
 
-    [DisplayFormat(DataFormatString = "{0:C2}", ApplyFormatInEditMode = false)]
+    [DisplayFormat(DataFormatString = "{0:C2}", ApplyFormatInEditMode = true)]
     public decimal Price { get; set; }
 
 

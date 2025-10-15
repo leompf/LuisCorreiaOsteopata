@@ -1,9 +1,10 @@
 ﻿@model LuisCorreiaOsteopata.WEB.Models.ProductViewModel
 
 @{
-    ViewData["Title"] = "Create";
+    ViewData["Title"] = "Edit";
     Layout = "~/Views/Shared/_Layout2.cshtml";
 }
+
 <link href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css" rel="stylesheet" />
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" />
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css" />
@@ -18,12 +19,12 @@
     </div>
     <div class="container">
         <div class="page-header__inner">
-            <h3>Criar Produto</h3>
+            <h3>Editar Produto</h3>
             <div class="thm-breadcrumb__inner">
                 <ul class="thm-breadcrumb list-unstyled">
                     <li><a href="index.html">Home</a></li>
                     <li><span class="icon-arrow-left"></span></li>
-                    <li>Criar Produto</li>
+                    <li>Editar Produto</li>
                 </ul>
             </div>
         </div>
@@ -34,21 +35,23 @@
     <div class="container">
         <div class="row">
             <div class="col-xl-8 col-lg-7">
-                <form asp-action="Create" enctype="multipart/form-data">
+                <form asp-action="Edit" enctype="multipart/form-data">
                     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                     <div class="row">
+                        <input type="hidden" asp-for="Id" />
+                        <input type="hidden" asp-for="ImageUrl" />
 
                         <partial name="_Products" />
 
                         <div class="form-group">
-                            <button type="submit" class="thm-btn"><i style="margin: 5px" class="fa fa-save"></i>Criar</button>
+                            <button type="submit" class="thm-btn"><i style="margin: 5px" class="fa fa-save"></i>Guardar</button>
                             <a asp-action="Index" class="cancel-btn"><i style="margin: 5px" class="fa fa-chevron-left"></i>Cancelar</a>
                         </div>
                     </div>
                 </form>
             </div>
             <div class="col-xl-4">
-                <img src="#" alt="Pré-visualização" id="image-preview" style="max-width: 600px; max-height: 600px; object-fit: contain; margin-left: 20px; border: 1px solid #ccc; border-radius: 5px;" />
+                <img src="@Model.ImageFullPath" style="max-width: 600px; max-height: 600px; object-fit: contain; margin-left: 20px; border: 1px solid #ccc; border-radius: 5px;" />
             </div>
         </div>
     </div>
@@ -83,25 +86,10 @@
             }
         });
 
-        const imageInput = document.getElementById('ImageFileInput');
-        const imagePreview = document.getElementById('image-preview');
-
-        imageInput.addEventListener('change', function() {
-            const file = this.files[0];
-            if (file) {
-                const reader = new FileReader();
-
-                reader.onload = function(e) {
-                    imagePreview.src = e.target.result;
-                    imagePreview.style.display = 'block';
-                }
-
-                reader.readAsDataURL(file);
-            } else {
-                imagePreview.src = '#';
-                imagePreview.style.display = 'none';
-            }
-        });
+        const descriptionInput = document.getElementById('Description');
+        if (descriptionInput.value) {
+            quill.root.innerHTML = descriptionInput.value;
+        }
 
         const form = document.querySelector('form');
 

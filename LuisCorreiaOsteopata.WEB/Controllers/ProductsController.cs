@@ -3,7 +3,7 @@ using LuisCorreiaOsteopata.WEB.Helpers;
 using LuisCorreiaOsteopata.WEB.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 
 namespace LuisCorreiaOsteopata.WEB.Controllers;
 
@@ -14,7 +14,7 @@ public class ProductsController : Controller
     private readonly IConverterHelper _converterHelper;
     private readonly IImageHelper _imageHelper;
 
-    public ProductsController(IProductRepository productRepository, 
+    public ProductsController(IProductRepository productRepository,
         IUserHelper userHelper,
         IConverterHelper converterHelper,
         IImageHelper imageHelper)
@@ -47,7 +47,7 @@ public class ProductsController : Controller
         var product = await _productRepository.GetByIdAsync(id.Value);
         if (product == null)
         {
-            return NotFound(); 
+            return NotFound();
         }
 
         return View(product);
@@ -79,11 +79,78 @@ public class ProductsController : Controller
             return RedirectToAction(nameof(Index));
         }
 
-        foreach (var error in ModelState.Values.SelectMany(v => v.Errors))
+        return View(model);
+    }
+
+    [Authorize]
+    public async Task<IActionResult> Edit(int? id)
+    {
+        if (id == null)
         {
-            Console.WriteLine(error.ErrorMessage);
+            return NotFound();
         }
 
+        var product = await _productRepository.GetByIdAsync(id.Value);
+        if (product == null)
+        {
+            return NotFound();
+        }
+
+        var model = _converterHelper.ToProductViewModel(product);
         return View(model);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Edit(ProductViewModel model)
+    {
+
+        if (ModelState.IsValid)
+        {
+            try
+            {
+                var path = model.ImageUrl;
+
+                if (model.ImageFile != null && model.ImageFile.Length > 0)
+                {
+                    path = await _imageHelper.UploadImageAsync(model.ImageFile, "products");
+                }
+
+                var product = _converterHelper.ToProduct(model, path, false);
+
+
+                product.User = await _userHelper.GetUserByEmailAsync(this.User.Identity.Name);
+                await _productRepository.UpdateAsync(product);
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!await _productRepository.ExistAsync(model.Id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+            return RedirectToAction(nameof(Index));
+        }
+        return View(model);
+    }
+
+    public async Task<IActionResult> Delete(int? id)
+    {
+        if (id == null)
+        {
+            return NotFound();
+        }
+
+        var product = await _productRepository.GetByIdAsync(id.Value);
+        if (product == null)
+        {
+            return NotFound();
+        }
+
+        return View(product);
     }
 }

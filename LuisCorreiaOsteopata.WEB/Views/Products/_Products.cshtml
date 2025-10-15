@@ -1,38 +1,92 @@
 ﻿@model LuisCorreiaOsteopata.WEB.Models.ProductViewModel
 
 
-<div class="form-group">
-    <label asp-for="Name" class="control-label"></label>
-    <input asp-for="Name" class="form-control" />
-    <span asp-validation-for="Name" class="text-danger"></span>
+<div class="form-group row mb-2 align-items-center">
+    <label style="font-size: 1.2rem" class="col-auto col-form-label pe-1"><strong>Nome:</strong></label>
+    <div class="col-auto align-items-center ps-1">
+        <input asp-for="Name" class="form-control" />
+        <span asp-validation-for="Name" class="text-danger"></span>
+    </div>
+   
 </div>
-<div class="form-group">
-    <label asp-for="Price" class="control-label"></label>
-    <input asp-for="Price" class="form-control" />
-    <span asp-validation-for="Price" class="text-danger"></span>
+<div class="form-group row">
+    <label style="font-size: 1.2rem" class="col-auto col-form-label"><strong>Descrição do Produto:</strong></label>
 </div>
-<div class="form-group">
-    <label asp-for="ImageFile" class="control-label"></label>
-    <input asp-for="ImageFile" class="form-control" type="file" />
-    <span asp-validation-for="ImageFile" class="text-danger"></span>
+<div class="quill-container" id="toolbar-container">
+    <span class="ql-formats">
+        <select class="ql-font"></select>
+        <select class="ql-size"></select>
+    </span>
+    <span class="ql-formats">
+        <button class="ql-bold"></button>
+        <button class="ql-italic"></button>
+        <button class="ql-underline"></button>
+        <button class="ql-strike"></button>
+    </span>
+    <span class="ql-formats">
+        <select class="ql-color"></select>
+        <select class="ql-background"></select>
+    </span>
+    <span class="ql-formats">
+        <button class="ql-script" value="sub"></button>
+        <button class="ql-script" value="super"></button>
+    </span>
+    <span class="ql-formats">
+        <button class="ql-header" value="1"></button>
+        <button class="ql-header" value="2"></button>
+        <button class="ql-blockquote"></button>
+        <button class="ql-code-block"></button>
+    </span>
+    <span class="ql-formats">
+        <button class="ql-list" value="ordered"></button>
+        <button class="ql-list" value="bullet"></button>
+        <button class="ql-indent" value="-1"></button>
+        <button class="ql-indent" value="+1"></button>
+    </span>
+    <span class="ql-formats">
+        <button class="ql-direction" value="rtl"></button>
+        <select class="ql-align"></select>
+    </span>
+    <span class="ql-formats">
+        <button class="ql-link"></button>
+        <button class="ql-image"></button>
+        <button class="ql-video"></button>
+        <button class="ql-formula"></button>
+    </span>
+    <span class="ql-formats">
+        <button class="ql-clean"></button>
+    </span>
 </div>
-<div class="form-group">
-    <label asp-for="LastPurchase" class="control-label"></label>
-    <input asp-for="LastPurchase" class="form-control" />
-    <span asp-validation-for="LastPurchase" class="text-danger"></span>
+
+<div class="quill-container" id="editor"></div>
+<input type="hidden" asp-for="Description" id="Description" />
+
+
+<div class="form-group row mt-3 mb-3">
+    <label style="font-size: 1.2rem" class="col-auto col-form-label pe-1"><strong>Preço:</strong></label>
+    <div class="col-auto ps-1 align-content-center">
+        <input asp-for="Price" type="number" step="0,01" lang="pt-pt" value="@(Model != null ? Model.Price : "")" class="form-control" placeholder="00,00..." />
+        <span asp-validation-for="Price" class="text-danger"></span>
+    </div>
+
+    <label style="font-size: 1.2rem" class="col-auto col-form-label pe-1"><strong>Disponível:</strong></label>
+    <div class="col-auto ps-1 align-content-center">
+        <input class="form-check-input" asp-for="IsAvailable" checked />
+        <span asp-validation-for="IsAvailable" class="text-danger"></span>
+    </div>
+
+    <label style="font-size: 1.2rem" class="col-auto col-form-label pe-1"><strong>Stock:</strong></label>
+    <div class="col-auto ps-1 align-content-center">
+        <input type="number" asp-for="Stock" class="form-control" placeholder="0..." />
+        <span asp-validation-for="Stock" class="text-danger"></span>
+    </div>
 </div>
-<div class="form-group">
-    <label asp-for="LastSale" class="control-label"></label>
-    <input asp-for="LastSale" class="form-control" />
-    <span asp-validation-for="LastSale" class="text-danger"></span>
+<div class="form-group row mb-3">
+    <label style="font-size: 1.2rem" class="col-auto col-form-label pe-1"><strong>Imagem:</strong></label>
+    <div class="col-4 ps-1">
+        <input asp-for="ImageFile" class="form-control" id="ImageFileInput"/>
+        <span asp-validation-for="ImageFile" class="text-danger"></span>
+    </div>
 </div>
-<div class="form-group form-check">
-    <label class="form-check-label">
-        <input class="form-check-input" asp-for="IsAvailable" /> @Html.DisplayNameFor(model => model.IsAvailable)
-    </label>
-</div>
-<div class="form-group">
-    <label asp-for="Stock" class="control-label"></label>
-    <input asp-for="Stock" class="form-control" />
-    <span asp-validation-for="Stock" class="text-danger"></span>
-</div>
+
+

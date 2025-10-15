@@ -40,17 +40,17 @@
                                 <div class="swiper-wrapper">
                                     <div class="swiper-slide">
                                         <div class="product-details__img">
-                                            <img src="assets/images/shop/product-details-img-1.jpg" alt="">
+                                            <img src="@Model.ImageFullPath" alt="">
                                         </div>
                                     </div><!-- /.swiper-slide -->
                                     <div class="swiper-slide">
                                         <div class="product-details__img">
-                                            <img src="assets/images/shop/product-details-img-2.jpg" alt="">
+                                            <img src="@Model.ImageFullPath" alt="">
                                         </div>
                                     </div><!-- /.swiper-slide -->
                                     <div class="swiper-slide">
                                         <div class="product-details__img">
-                                            <img src="assets/images/shop/product-details-img-3.jpg" alt="">
+                                            <img src="@Model.ImageFullPath" alt="">
                                         </div>
                                     </div><!-- /.swiper-slide -->
                                 </div>
@@ -69,19 +69,19 @@
                                 <div class="swiper-wrapper">
                                     <div class="swiper-slide">
                                         <div class="product-details__thumb-img">
-                                            <img src="assets/images/shop/product-details-thumb-img-1.jpg"
+                                            <img src="~/assets/images/shop/product-details-thumb-img-1.jpg"
                                                  alt="">
                                         </div>
                                     </div><!-- /.swiper-slide -->
                                     <div class="swiper-slide">
                                         <div class="product-details__thumb-img">
-                                            <img src="assets/images/shop/product-details-thumb-img-2.jpg"
+                                            <img src="~/assets/images/shop/product-details-thumb-img-2.jpg"
                                                  alt="">
                                         </div>
                                     </div><!-- /.swiper-slide -->
                                     <div class="swiper-slide">
                                         <div class="product-details__thumb-img">
-                                            <img src="assets/images/shop/product-details-thumb-img-3.jpg"
+                                            <img src="~/assets/images/shop/product-details-thumb-img-3.jpg"
                                                  alt="">
                                         </div>
                                     </div><!-- /.swiper-slide -->
@@ -109,7 +109,7 @@
                     </div> *@
                     <div class="product-details__content">
                         <p>
-                            @Model.Description
+                            @Html.Raw(Model.Description)
                         </p>
                     </div>
                     <div class="product-details__select">
@@ -154,7 +154,7 @@
                         <div class="product-details__tab-content-inner">
                             <div class="product-details__description-content">
                                 <p class="product-details__description-text-1">
-                                    @Model.Description
+                                    @Html.Raw(Model.Description)
                                 </p>
                             </div>
                         </div>

@@ -5,6 +5,7 @@ using LuisCorreiaOsteopata.WEB.Helpers;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
+using System.Globalization;
 
 
 namespace LuisCorreiaOsteopata.WEB;
@@ -80,6 +81,16 @@ public class Program
             });
 
         var app = builder.Build();
+
+        var defaultCulture = new CultureInfo("pt-PT");
+        var localizationOptions = new RequestLocalizationOptions
+        {
+            DefaultRequestCulture = new Microsoft.AspNetCore.Localization.RequestCulture(defaultCulture),
+            SupportedCultures = new List<CultureInfo> { defaultCulture },
+            SupportedUICultures = new List<CultureInfo> { defaultCulture }
+        };
+
+        app.UseRequestLocalization(localizationOptions);
 
         // Configure the HTTP request pipeline.
         if (!app.Environment.IsDevelopment())
