@@ -136,5 +136,4 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
 }
 
 //TODO: Recuperar carrinho depois de uma Order ser criada se o utilizador nunca acabar a Order.
-//TODO: Criar Tabela de dados de faturação
 //TODO: Criar Faturação

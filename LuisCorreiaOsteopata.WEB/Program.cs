@@ -1,4 +1,5 @@
 using Ganss.Xss;
+using Hangfire;
 using LuisCorreiaOsteopata.WEB.Data;
 using LuisCorreiaOsteopata.WEB.Data.Entities;
 using LuisCorreiaOsteopata.WEB.Helpers;
@@ -39,8 +40,17 @@ public class Program
             .EnableSensitiveDataLogging();
         });
 
+        builder.Services.AddHangfire(cfg =>
+            cfg.SetDataCompatibilityLevel(CompatibilityLevel.Version_170)
+                .UseSimpleAssemblyNameTypeSerializer()
+                .UseRecommendedSerializerSettings()
+                .UseSqlServerStorage(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+        builder.Services.AddHangfireServer();
+
         builder.Services.AddTransient<SeedDB>();
         builder.Services.AddTransient<IEmailSender, EmailSender>();
+        builder.Services.AddScoped<IReminderHelper, ReminderHelper>();
         builder.Services.AddScoped<IUserHelper, UserHelper>();
         builder.Services.AddScoped<IConverterHelper, ConverterHelper>();
         builder.Services.AddScoped<HtmlSanitizer>();
@@ -108,6 +118,18 @@ public class Program
 
         app.UseAuthentication();
         app.UseAuthorization();
+
+        app.UseHangfireDashboard("/hangfire");
+        using (var scope = app.Services.CreateScope())
+        {
+            var reminderService = scope.ServiceProvider.GetRequiredService<IReminderHelper>();
+
+            RecurringJob.AddOrUpdate(
+                "appointment-reminders",
+                () => reminderService.SendAppointmentReminderAsync(),
+                Cron.Hourly 
+            );
+        }
 
         app.MapControllerRoute(
             name: "default",
