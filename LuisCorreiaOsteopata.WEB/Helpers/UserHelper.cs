@@ -157,6 +157,11 @@ public class UserHelper : IUserHelper
             .ToListAsync();
     }
 
+    public async Task<string> GetAuthenticatorKeyAsync(User user)
+    {
+        return await _userManager.GetAuthenticatorKeyAsync(user);
+    }
+
     public async Task<User> GetCurrentUserAsync()
     {
         var email = _httpContextAccessor.HttpContext.User?.FindFirst(ClaimTypes.Email)?.Value;
@@ -220,6 +225,16 @@ public class UserHelper : IUserHelper
         await _signInManager.SignOutAsync();
     }
 
+    public async Task ResetAuthenticatorKeyAsync(User user)
+    {
+        await _userManager.ResetAuthenticatorKeyAsync(user);
+    }
+
+    public async Task SetTwoFactorEnabledAsync(User user, bool enabled)
+    {
+        await _userManager.SetTwoFactorEnabledAsync(user, enabled);
+    }
+
     public List<UserViewModel> SortUsers(IEnumerable<UserViewModel> users, string? sortBy, bool sortDescending)
     {
         return sortBy switch
@@ -246,4 +261,9 @@ public class UserHelper : IUserHelper
         return await _userManager.UpdateAsync(user);
     }
 
+    public async Task<bool> VerifyTwoFactorTokenAsync(User user, string code)
+    {
+        return await _userManager.VerifyTwoFactorTokenAsync(
+            user, _userManager.Options.Tokens.AuthenticatorTokenProvider, code);      
+    }
 }

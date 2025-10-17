@@ -1,5 +1,4 @@
-﻿using AngleSharp.Dom;
-using LuisCorreiaOsteopata.WEB.Data;
+﻿using LuisCorreiaOsteopata.WEB.Data;
 using LuisCorreiaOsteopata.WEB.Data.Entities;
 using LuisCorreiaOsteopata.WEB.Helpers;
 using LuisCorreiaOsteopata.WEB.Models;
@@ -10,7 +9,9 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using QRCoder;
 using System.Security.Claims;
+using System.Text.RegularExpressions;
 
 
 namespace LuisCorreiaOsteopata.WEB.Controllers
@@ -187,6 +188,10 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
                 {
                     ModelState.AddModelError(string.Empty, "Por favor confirma o teu email antes de fazer login.");
                     return View(model);
+                }
+                else if (result.RequiresTwoFactor)
+                {
+                    return RedirectToAction(nameof(LoginWith2fa), new { RememberMe = model.RememberMe });
                 }
             }
 
@@ -418,6 +423,23 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
             return View(model);
         }
 
+        public async Task<IActionResult> Security()
+        {
+            var user = await _userHelper.GetCurrentUserAsync();
+            if (user == null)
+                return RedirectToAction("Login");
+
+            var is2faEnabled = user.TwoFactorEnabled;
+
+            var model = new SecurityViewModel
+            {
+                Is2faEnabled = is2faEnabled
+            };
+
+            return View(model);
+        }
+
+
         [HttpPost]
         public async Task<IActionResult> UpdateUser(ProfileViewModel model)
         {
@@ -454,7 +476,6 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
 
             userList = _userHelper.FilterUsers(userList, name, email, phone, nif);
 
-            // Use the helper for sorting
             userList = _userHelper.SortUsers(userList, sortBy, sortDescending);
 
             if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
@@ -480,6 +501,122 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
             ViewBag.DefaultSortDescending = sortDescending;
 
             return View(model);
+        }
+
+        [Authorize]
+        [HttpGet]
+        public async Task<IActionResult> Enable2fa()
+        {
+            var user = await _userHelper.GetCurrentUserAsync();
+            var key = await _userHelper.GetAuthenticatorKeyAsync(user);
+
+            if (string.IsNullOrEmpty(key))
+            {
+                await _userHelper.ResetAuthenticatorKeyAsync(user);
+                key = await _userHelper.GetAuthenticatorKeyAsync(user);
+            }
+
+            var authenticatorUri = $"otpauth://totp/{Uri.EscapeDataString("LuisCorreiaOsteopata")}:{Uri.EscapeDataString(user.Email)}?secret={key}&issuer={Uri.EscapeDataString("LuisCorreiaOsteopata")}&digits=6";
+
+            using var qrGenerator = new QRCodeGenerator();
+            using var qrCodeData = qrGenerator.CreateQrCode(authenticatorUri, QRCodeGenerator.ECCLevel.Q);
+            using var qrCode = new PngByteQRCode(qrCodeData);
+            var qrCodeImage = Convert.ToBase64String(qrCode.GetGraphic(20));
+
+            var model = new Enable2faViewModel
+            {
+                SharedKey = FormatKey(key),
+                QrCodeImage = $"data:image/png;base64,{qrCodeImage}"
+            };
+
+            return View(model);
+        }
+
+
+        [Authorize]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Enable2fa(Enable2faViewModel model)
+        {
+            var user = await _userHelper.GetCurrentUserAsync();
+            if (user == null)
+                return RedirectToAction("Login");
+
+            var isValid = await _userHelper.VerifyTwoFactorTokenAsync(user, model.Code);
+            if (!isValid)
+            {
+                ModelState.AddModelError("Code", "Código inválido. Tenta novamente.");
+                return View(model);
+            }
+
+            await _userHelper.SetTwoFactorEnabledAsync(user, true);
+            return RedirectToAction("Security");
+        }
+
+        [Authorize]
+        public async Task<IActionResult> Disable2fa()
+        {
+            var user = await _userHelper.GetCurrentUserAsync();
+            if (user == null)
+                return RedirectToAction("Login");
+
+            await _userHelper.SetTwoFactorEnabledAsync(user, false);
+            await _signInManager.ForgetTwoFactorClientAsync();
+            await _userHelper.ResetAuthenticatorKeyAsync(user);
+
+            return RedirectToAction("Security");
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> LoginWith2fa(bool rememberMe, string? returnUrl = null)
+        {
+            var user = await _signInManager.GetTwoFactorAuthenticationUserAsync();
+            if (user == null)
+                throw new InvalidOperationException("Unable to load 2FA user.");
+
+            var model = new LoginWith2faViewModel { RememberMe = rememberMe };
+            return View(model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> LoginWith2fa(LoginWith2faViewModel model)
+        {
+            if (!ModelState.IsValid)
+                return View(model);
+
+            var user = await _signInManager.GetTwoFactorAuthenticationUserAsync();
+            if (user == null)
+                throw new InvalidOperationException("Unable to load two-factor authentication user.");
+
+            var authenticatorCode = model.TwoFactorCode.Replace(" ", string.Empty).Replace("-", string.Empty);
+
+            var result = await _signInManager.TwoFactorAuthenticatorSignInAsync(
+                authenticatorCode, model.RememberMe, model.RememberDevice);
+
+            if (result.Succeeded)
+            {
+                if (this.Request.Query.Keys.Contains("ReturnUrl"))
+                {
+                    return Redirect(this.Request.Query["ReturnUrl"].First());
+                }
+
+                return this.RedirectToAction("Index", "Account");
+            }
+
+            if (result.IsLockedOut)
+            {
+                ModelState.AddModelError(string.Empty, "Conta bloqueada.");
+                return View(model);
+            }
+
+            ModelState.AddModelError(string.Empty, "Código inválido.");
+            return View(model);
+        }
+
+        private string FormatKey(string key)
+        {
+            return Regex.Replace(key.ToUpperInvariant(), ".{4}", "$0 ").Trim();
         }
     }
 }

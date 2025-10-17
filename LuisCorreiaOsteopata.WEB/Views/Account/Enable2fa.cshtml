@@ -1,0 +1,63 @@
+﻿@model LuisCorreiaOsteopata.WEB.Models.Enable2faViewModel
+
+@{
+    ViewData["Title"] = "Enable2fa";
+    Layout = "~/Views/Shared/_Layout2.cshtml";
+}
+
+<style>
+    .qr-code-img {
+        width: 250px;
+        height: 250px;
+        margin: 10px auto;
+        display: block;
+        border: 6px solid #f7f7f7;
+        border-radius: 12px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+</style>
+
+<section class="page-header">
+    <div class="page-header__bg" style="background-image: url(assets/images/backgrounds/page-header-bg.jpg);">
+    </div>
+    <div class="container">
+        <div class="page-header__inner">
+            <h3>Ativar 2FA</h3>
+            <div class="thm-breadcrumb__inner">
+                <ul class="thm-breadcrumb list-unstyled">
+                    <li><a asp-controller="Home" asp-action="Index">Home</a></li>
+                    <li><span class="icon-arrow-left"></span></li>
+                    <li>Ativar 2FA</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="login-one">
+    <div class="container">
+        <div class="login-one__form">
+            <div class="inner-title text-center">
+                <h2>Ativar 2FA</h2>
+                <p>Digitaliza este código QR com o Google Authenticator ou insere a chave manualmente.</p>
+            </div>
+
+            <div class="text-center mb-4">
+                <img src="@Model.QrCodeImage" alt="QR Code" class="qr-code-img" />
+                <p><strong>Chave:</strong> @Model.SharedKey</p>
+            </div>
+
+            <form method="post">
+                <div asp-validation-summary="ModelOnly"></div>
+                <div class="form-group">
+                    <div class="input-box">
+                        <span asp-validation-for="Code"></span>
+                        <input asp-for="Code" type="text" placeholder="Insere o código de 6 dígitos" />
+                    </div>
+                </div>
+                <button class="thm-btn" type="submit">Ativar</button>
+            </form>
+        </div>
+    </div>
+</section>
+

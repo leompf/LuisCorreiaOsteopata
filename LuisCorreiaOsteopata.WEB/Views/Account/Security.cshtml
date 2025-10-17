@@ -1,0 +1,71 @@
+﻿@{
+    ViewData["Title"] = "Security";
+    Layout = "~/Views/Shared/_Layout2.cshtml";
+}
+
+@section MainMenu
+{
+    <partial name="_Menu"></partial>
+}
+
+<section class="page-header">
+    <div class="page-header__bg" style="background-image: url(assets/images/backgrounds/page-header-bg.jpg);">
+    </div>
+    <div class="container">
+        <div class="page-header__inner">
+            <h3>Privacidade e Segurança</h3>
+            <div class="thm-breadcrumb__inner">
+                <ul class="thm-breadcrumb list-unstyled">
+                    <li><a asp-controller="Account" asp-action="Index">Home</a></li>
+                    <li><span class="icon-arrow-left"></span></li>
+                    <li>Privacidade e Segurança</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="appoinment-page" id="profile-section" style="margin-top: -100px">
+    <div class="container">
+        <div class="row">
+            <div class="col-xl-12 col-lg-7">
+                <div class="appoinment-page__left">
+                    <h3 class="appoinment-page__title">Privacidade e Segurança</h3>
+
+                    <div class="alert @(Model.Is2faEnabled ? "alert-success" : "alert-warning")">
+                        @if (Model.Is2faEnabled)
+                        {
+                            <p><strong>Autenticação de dois fatores está ativa.</strong></p>
+                        }
+                        else
+                        {
+                            <p><strong>Autenticação de dois fatores não está ativa.</strong></p>
+                        }
+                    </div>
+
+                    <form method="get">
+                        <div class="row">
+                            <div class="form-group row mb-3">
+                                @if (!Model.Is2faEnabled)
+                                {
+                                    <button type="submit" asp-action="Enable2fa" class="col-auto thm-btn">
+                                        Habilitar Autenticação de 2 Fatores
+                                        <span class="icon-right-arrow"></span>
+                                    </button>
+                                }
+                                else
+                                {
+                                    <button type="submit" asp-action="Disable2fa" class="col-auto cancel-btn" style="background-color: #dc3545;">
+                                        Desativar Autenticação de 2 Fatores
+                                        <span class="icon-right-arrow"></span>
+                                    </button>
+                                }
+                            </div>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

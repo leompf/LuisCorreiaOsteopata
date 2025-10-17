@@ -22,6 +22,11 @@ public interface IUserHelper
     Task StoreUserTokenAsync(User user, string loginProvider, string name, string value);
     Task<string> GetUserTokenAsync(User user, string loginProvider, string tokenName);
     Task<IdentityResult> ConfirmEmailAsync(User user, string token);
+    Task<string> GetAuthenticatorKeyAsync(User user);
+    Task ResetAuthenticatorKeyAsync(User user);
+    Task<bool> VerifyTwoFactorTokenAsync(User user, string code);
+    Task SetTwoFactorEnabledAsync(User user, bool enabled);
+
     #endregion
 
     #region CRUD Users

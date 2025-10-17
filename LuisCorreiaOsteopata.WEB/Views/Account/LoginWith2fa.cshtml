@@ -1,0 +1,93 @@
+﻿@model LuisCorreiaOsteopata.WEB.Models.LoginWith2faViewModel
+
+@{
+    ViewData["Title"] = "LoginWith2fa";
+    Layout = "~/Views/Shared/_Layout2.cshtml";
+}
+
+@section MainMenu
+{
+    <partial name="_Menu"></partial>
+}
+
+<section class="page-header">
+    <div class="page-header__bg" style="background-image: url(assets/images/backgrounds/page-header-bg.jpg);">
+    </div>
+    <div class="container">
+        <div class="page-header__inner">
+            <h3>Login</h3>
+            <div class="thm-breadcrumb__inner">
+                <ul class="thm-breadcrumb list-unstyled">
+                    <li><a asp-controller="Home" asp-action="Index">Home</a></li>
+                    <li><span class="icon-arrow-left"></span></li>
+                    <li>Login</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="login-one" id="login-section">
+    <div class="container">
+        <div class="login-one__form">
+            <div class="inner-title text-center">
+                <h2>Verificação de 2 Fatores</h2>
+                <p>Insere o código da tua aplicação de autenticação (ex: Google Authenticator).</p>
+            </div>
+            <form method="post">
+                <div asp-validation-summary="ModelOnly"></div>
+                <div class="row">
+
+                    <div class="form-group">
+                        <div class="input-box">
+                            <span asp-validation-for="TwoFactorCode"></span>
+                            <input asp-for="TwoFactorCode" type="text" autocomplete="off" placeholder="Código de 6 dígitos" />
+                        </div>
+                    </div>
+
+                    <div class="col-xl-6">
+                        <div class="remember-forget">
+                            <div class="checked-box1">
+                                <input type="checkbox" asp-for="RememberDevice" />
+                                <label asp-for="RememberDevice">
+                                    <span asp-validation-for="RememberDevice"></span>
+                                    Lembrar este dispositivo
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <input type="hidden" asp-for="RememberMe" />
+
+
+                    <div class="col-xl-6">
+                        <div class="form-group">
+                            <button class="thm-btn" type="submit" data-loading-text="Por favor aguarda...">
+                                Verificar
+                                <span class="icon-right-arrow"></span>
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script type="text/javascript">
+        document.addEventListener("DOMContentLoaded", function ()
+        {
+            const loginSection = document.getElementById("login-section");
+            if (loginSection)
+            {
+                loginSection.scrollIntoView({ behavior: "smooth" });
+            }
+        });
+    </script>
+}
+
