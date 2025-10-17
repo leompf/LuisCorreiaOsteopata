@@ -1427,23 +1427,37 @@
 
 
   // ===Checkout Payment===
-  if ($(".checkout__payment__title").length) {
+if ($(".checkout__payment__title").length) {
+    // Initially hide all contents except active one
     $(".checkout__payment__item").find(".checkout__payment__content").hide();
     $(".checkout__payment__item--active").find(".checkout__payment__content").show();
 
     $(".checkout__payment__title").on("click", function (e) {
-      e.preventDefault();
+        e.preventDefault(); // keep this for controlled behavior
 
-      $(this)
-        .parents(".checkout__payment")
-        .find(".checkout__payment__item")
-        .removeClass("checkout__payment__item--active");
-      $(this).parents(".checkout__payment").find(".checkout__payment__content").slideUp();
+        const $parent = $(this).closest(".checkout__payment__item");
+        const $container = $(this).closest(".checkout__payment");
+        const $radio = $parent.find('input[type="radio"]');
 
-      $(this).parent().addClass("checkout__payment__item--active");
-      $(this).parent().find(".checkout__payment__content").slideDown();
+        // If it's already checked, do nothing
+        if ($radio.is(":checked")) return;
+
+        //  Set radio and let change handler handle UI update
+        $radio.prop("checked", true).trigger("change");
     });
-  }
+
+    //  Handle visual update only once, from change event
+    $('input[name="PaymentMethod"]').on("change", function () {
+        const $parent = $(this).closest(".checkout__payment__item");
+        const $container = $(this).closest(".checkout__payment");
+
+        $container.find(".checkout__payment__item").removeClass("checkout__payment__item--active");
+        $container.find(".checkout__payment__content").slideUp();
+
+        $parent.addClass("checkout__payment__item--active");
+        $parent.find(".checkout__payment__content").slideDown();
+    });
+}
 
 
 

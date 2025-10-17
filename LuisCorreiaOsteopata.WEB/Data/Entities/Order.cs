@@ -7,6 +7,10 @@ public class Order : IEntity
     public int Id { get; set; }
 
 
+    [Display(Name = "Order Number")]
+    public string OrderNumber { get; set; } = string.Empty;
+
+
     [Required]
     [Display(Name = "Order Date")]
     [DisplayFormat(DataFormatString = "{0:yyyy/MM/dd hh:mm tt}", ApplyFormatInEditMode = false)]
@@ -18,9 +22,28 @@ public class Order : IEntity
     [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy hh:mm tt}", ApplyFormatInEditMode = false)]
     public DateTime DeliveryDate { get; set; }
 
+    [Display(Name = "Payment Date")]
+    [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy hh:mm tt}", ApplyFormatInEditMode = false)]
+    public DateTime? PaymentDate { get; set; }
+
+
+    [Display(Name = "Dados de Faturação")]
+    public BillingDetail? BillingDetail { get; set; }
+
 
     [Required]
     public User User { get; set; }
+
+
+    public bool IsPaid { get; set; } = false;
+
+
+    public string? StripeSessionId { get; set; }
+
+
+    public string? PaymentIntentId { get; set; }
+
+
 
 
     public IEnumerable<OrderDetail> Items { get; set; }

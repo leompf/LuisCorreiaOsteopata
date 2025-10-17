@@ -4,6 +4,7 @@ using LuisCorreiaOsteopata.WEB.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace LuisCorreiaOsteopata.Library.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20251016201554_UpdateOrderEntity-OrderNumber")]
+    partial class UpdateOrderEntityOrderNumber
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -30,6 +33,9 @@ namespace LuisCorreiaOsteopata.Library.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<int?>("AppointmentCreditId")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("AppointmentDate")
                         .HasColumnType("datetime2");
 
@@ -37,14 +43,14 @@ namespace LuisCorreiaOsteopata.Library.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
                     b.Property<DateTime>("EndTime")
                         .HasColumnType("datetime2");
 
                     b.Property<bool>("IsPaid")
                         .HasColumnType("bit");
-
-                    b.Property<int?>("OrderDetailId")
-                        .HasColumnType("int");
 
                     b.Property<int>("PatientId")
                         .HasColumnType("int");
@@ -64,13 +70,49 @@ namespace LuisCorreiaOsteopata.Library.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("OrderDetailId");
+                    b.HasIndex("AppointmentCreditId");
 
                     b.HasIndex("PatientId");
 
                     b.HasIndex("StaffId");
 
                     b.ToTable("Appointments");
+                });
+
+            modelBuilder.Entity("LuisCorreiaOsteopata.WEB.Data.Entities.AppointmentCredit", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("PaymentId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TotalAppointments")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UsedAppointments")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PaymentId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("AppointmentCredits");
                 });
 
             modelBuilder.Entity("LuisCorreiaOsteopata.WEB.Data.Entities.BillingDetail", b =>
@@ -250,7 +292,7 @@ namespace LuisCorreiaOsteopata.Library.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("OrderId")
+                    b.Property<int?>("OrderId")
                         .HasColumnType("int");
 
                     b.Property<decimal>("Price")
@@ -261,9 +303,6 @@ namespace LuisCorreiaOsteopata.Library.Migrations
 
                     b.Property<double>("Quantity")
                         .HasColumnType("float");
-
-                    b.Property<int>("RemainingUses")
-                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -397,6 +436,9 @@ namespace LuisCorreiaOsteopata.Library.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<int>("CreditQuantity")
+                        .HasColumnType("int");
+
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
@@ -404,6 +446,9 @@ namespace LuisCorreiaOsteopata.Library.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("IsAvailable")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsCreditProduct")
                         .HasColumnType("bit");
 
                     b.Property<DateTime?>("LastPurchase")
@@ -419,9 +464,6 @@ namespace LuisCorreiaOsteopata.Library.Migrations
 
                     b.Property<decimal>("Price")
                         .HasColumnType("decimal(18,2)");
-
-                    b.Property<int>("ProductType")
-                        .HasColumnType("int");
 
                     b.Property<double>("Stock")
                         .HasColumnType("float");
@@ -704,9 +746,9 @@ namespace LuisCorreiaOsteopata.Library.Migrations
 
             modelBuilder.Entity("LuisCorreiaOsteopata.WEB.Data.Entities.Appointment", b =>
                 {
-                    b.HasOne("LuisCorreiaOsteopata.WEB.Data.Entities.OrderDetail", "OrderDetail")
+                    b.HasOne("LuisCorreiaOsteopata.WEB.Data.Entities.AppointmentCredit", null)
                         .WithMany("Appointments")
-                        .HasForeignKey("OrderDetailId");
+                        .HasForeignKey("AppointmentCreditId");
 
                     b.HasOne("LuisCorreiaOsteopata.WEB.Data.Entities.Patient", "Patient")
                         .WithMany()
@@ -720,11 +762,28 @@ namespace LuisCorreiaOsteopata.Library.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("OrderDetail");
-
                     b.Navigation("Patient");
 
                     b.Navigation("Staff");
+                });
+
+            modelBuilder.Entity("LuisCorreiaOsteopata.WEB.Data.Entities.AppointmentCredit", b =>
+                {
+                    b.HasOne("LuisCorreiaOsteopata.WEB.Data.Entities.Payment", "Payment")
+                        .WithMany("AppointmentCredits")
+                        .HasForeignKey("PaymentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("LuisCorreiaOsteopata.WEB.Data.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Payment");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("LuisCorreiaOsteopata.WEB.Data.Entities.BillingDetail", b =>
@@ -766,19 +825,15 @@ namespace LuisCorreiaOsteopata.Library.Migrations
 
             modelBuilder.Entity("LuisCorreiaOsteopata.WEB.Data.Entities.OrderDetail", b =>
                 {
-                    b.HasOne("LuisCorreiaOsteopata.WEB.Data.Entities.Order", "Order")
+                    b.HasOne("LuisCorreiaOsteopata.WEB.Data.Entities.Order", null)
                         .WithMany("Items")
-                        .HasForeignKey("OrderId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("OrderId");
 
                     b.HasOne("LuisCorreiaOsteopata.WEB.Data.Entities.Product", "Product")
                         .WithMany()
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Order");
 
                     b.Navigation("Product");
                 });
@@ -895,18 +950,20 @@ namespace LuisCorreiaOsteopata.Library.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("LuisCorreiaOsteopata.WEB.Data.Entities.AppointmentCredit", b =>
+                {
+                    b.Navigation("Appointments");
+                });
+
             modelBuilder.Entity("LuisCorreiaOsteopata.WEB.Data.Entities.Order", b =>
                 {
                     b.Navigation("Items");
                 });
 
-            modelBuilder.Entity("LuisCorreiaOsteopata.WEB.Data.Entities.OrderDetail", b =>
-                {
-                    b.Navigation("Appointments");
-                });
-
             modelBuilder.Entity("LuisCorreiaOsteopata.WEB.Data.Entities.Payment", b =>
                 {
+                    b.Navigation("AppointmentCredits");
+
                     b.Navigation("Invoices");
                 });
 

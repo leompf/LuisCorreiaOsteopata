@@ -18,12 +18,7 @@ public interface IAppointmentRepository : IGenericRepository<Appointment>
 
     Task<(bool Success, string? ErrorMessage)> CreateAppointmentAsync(Appointment appointment, int patientId);
 
-    Task<bool> ConsumeAppointmentCreditAsync(int patientId);
-
-    Task<bool> HasAvailableCreditsAsync(string userId);
 
     IEnumerable<SelectListItem> GetAvailableTimeSlotsCombo(DateTime date);
-
-    Task AddAppointmentCreditsAsync(string userId, int quantity);
 
 }

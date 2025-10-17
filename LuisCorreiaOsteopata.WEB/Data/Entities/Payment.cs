@@ -4,19 +4,17 @@ public class Payment : IEntity
 {
     public int Id { get; set; }
 
-    public string PaymentReference { get; set; } = null!;
+    public string StripePaymentIntentId { get; set; } = null!;
+    public string? StripeCustomerId { get; set; }
 
     public string PaymentMethod { get; set; } = null!;
-
     public decimal Amount { get; set; }
-
     public string Currency { get; set; } = "EUR";
+    public string Status { get; set; } = "Pendente";
 
     public DateTime CreatedAt { get; set; }
-
     public DateTime? ConfirmedAt { get; set; }
-
-    public string Status { get; set; } = "Pendente";
+   
 
     //FK
     public string UserId { get; set; } = null!;
@@ -24,5 +22,4 @@ public class Payment : IEntity
 
 
     public ICollection<Invoice> Invoices { get; set; } = new List<Invoice>();
-    public ICollection<AppointmentCredit> AppointmentCredits { get; set; } = new List<AppointmentCredit>();
 }

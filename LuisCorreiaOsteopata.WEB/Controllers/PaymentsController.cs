@@ -1,7 +1,9 @@
 ﻿using LuisCorreiaOsteopata.WEB.Data;
 using LuisCorreiaOsteopata.WEB.Data.Entities;
 using LuisCorreiaOsteopata.WEB.Helpers;
+using LuisCorreiaOsteopata.WEB.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Stripe.Checkout;
 
 namespace LuisCorreiaOsteopata.WEB.Controllers;
@@ -9,84 +11,108 @@ namespace LuisCorreiaOsteopata.WEB.Controllers;
 public class PaymentsController : Controller
 {
     private readonly DataContext _context;
-    private readonly IConfiguration _configuration;
     private readonly IUserHelper _userHelper;
 
-    public PaymentsController(DataContext context, 
+    public PaymentsController(DataContext context,
         IConfiguration configuration,
-        IUserHelper userHelper)
+        IUserHelper userHelper,
+        ILogger<PaymentsController> logger)
     {
         _context = context;
-        _configuration = configuration;
         _userHelper = userHelper;
     }
 
-    [HttpGet]
-    public IActionResult Buy()
-    {
-        return View();
-    }
-
     [HttpPost]
-    public IActionResult CreateCheckoutSession(int credits)
+    public async Task<IActionResult> CreateCheckoutSession(CheckoutViewModel model)
     {
-        var domain = $"{Request.Scheme}://{Request.Host}";
+        var user = await _userHelper.GetCurrentUserAsync();
+
+        var order = await _context.Orders
+            .Include(o => o.Items)
+                .ThenInclude(i => i.Product)
+            .Include(o => o.User)
+            .Where(o => o.User.Id == user.Id && !o.IsPaid)
+            .OrderByDescending(o => o.OrderDate)
+            .FirstOrDefaultAsync();
+
+        if (order == null)
+        {
+            return RedirectToAction("Create", "Orders");
+        }
+
+
+        var lineItems = order.Items.Select(item => new SessionLineItemOptions
+        {
+            PriceData = new SessionLineItemPriceDataOptions
+            {
+                UnitAmount = (long)(item.Price * 100),
+                Currency = "eur",
+                ProductData = new SessionLineItemPriceDataProductDataOptions
+                {
+                    Name = item.Product.Name,
+                },
+            },
+            Quantity = (long)item.Quantity
+        }).ToList();
+
         var options = new SessionCreateOptions
         {
-            PaymentMethodTypes = new List<string> { "card" },
-            LineItems = new List<SessionLineItemOptions>
-            {
-                new SessionLineItemOptions
-                {
-                    PriceData = new SessionLineItemPriceDataOptions
-                    {
-                        UnitAmount = credits * 2000, 
-                        Currency = "eur",
-                        ProductData = new SessionLineItemPriceDataProductDataOptions
-                        {
-                            Name = $"{credits} Prepaid Appointment Credits"
-                        }
-                    },
-                    Quantity = 1
-                }
-            },
+            PaymentMethodTypes = new List<string> { model.PaymentMethod },
+            LineItems = lineItems,
             Mode = "payment",
-            SuccessUrl = domain + "/Payments/Success?session_id={CHECKOUT_SESSION_ID}",
-            CancelUrl = domain + "/Payments/Cancel",
+            SuccessUrl = $"{Request.Scheme}://{Request.Host}/Payments/Success?session_id={{CHECKOUT_SESSION_ID}}",
+            CancelUrl = Url.Action("Cancel", "Payments", null, Request.Scheme)
         };
 
         var service = new SessionService();
         Session session = service.Create(options);
+
+        order.StripeSessionId = session.Id;
+        order.PaymentIntentId = session.PaymentIntentId;
+        _context.Orders.Update(order);
+        await _context.SaveChangesAsync();
 
         return Redirect(session.Url);
     }
 
     public async Task<IActionResult> Success(string session_id)
     {
-        if (string.IsNullOrEmpty(session_id))
-            return BadRequest("Invalid session ID");
+        var service = new SessionService();
+        var session = await service.GetAsync(session_id);
 
-        var sessionService = new SessionService();
-        var session = await sessionService.GetAsync(session_id);
-
-        // Fetch line items (products purchased)
-        var lineItemService = new SessionLineItemService();
-        var lineItems = await lineItemService.ListAsync(session.Id, new SessionLineItemListOptions
+        if (session.PaymentStatus == "paid")
         {
-            Limit = 100
-        });
+            var order = await _context.Orders
+                .Include(o => o.Items)
+                    .ThenInclude(i => i.Product)
+                .FirstOrDefaultAsync(o => o.StripeSessionId == session.Id);
 
-        foreach (var item in lineItems.Data)
-        {
-            // item.Description, item.Quantity, item.AmountTotal
-            Console.WriteLine($"Product: {item.Description}, Quantity: {item.Quantity}, Total: {item.AmountTotal}");
+            if (order != null)
+            {
+                order.IsPaid = true;
+                order.PaymentDate = DateTime.UtcNow;
+                order.OrderNumber = $"LC#00{order.Id}{DateTime.UtcNow:ddMMyyyy}";
+                order.PaymentIntentId = session.PaymentIntentId;
 
-            // TODO: Credit the user with pre-paid appointments based on item.Quantity
-            // Example:
-            // await _appointmentRepository.AddAppointmentCreditsAsync(userId, item.Quantity);
+                foreach (var item in order.Items)
+                {
+                    if (item.Product.ProductType == ProductType.Consulta)
+                    {
+                        item.RemainingUses = 1;
+                    }
+                    else if (item.Product.ProductType == ProductType.Pacote)
+                    {
+                        item.RemainingUses = 3;
+                    }
+                }
+
+                _context.Update(order);
+                await _context.SaveChangesAsync();
+            }
+
+            return View(order);
         }
 
-        ViewBag.Message = "Pagamento realizado com sucesso!";
         return View();
     }
 
@@ -95,3 +121,10 @@ public class PaymentsController : Controller
         return View();
     }
 }
+
+
+//TODO: REFACTORING DOS CRÉDITOS
+//TODO: AUTENTICAÇÃO DE DOIS FATORES
+//TODO: AUTENTICAÇÃO DE BIOMETRIA NA APP Móvel
+//TODO: ALERTAS POR SMS E EMAIL
+//TODO: DOWNLOAD DA FICHA DE CLIENTE PARA PDF E WORD

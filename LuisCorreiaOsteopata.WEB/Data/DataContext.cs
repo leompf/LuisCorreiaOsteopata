@@ -1,7 +1,6 @@
 ﻿using LuisCorreiaOsteopata.WEB.Data.Entities;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using System.Reflection.Emit;
 
 namespace LuisCorreiaOsteopata.WEB.Data;
 
@@ -13,8 +12,6 @@ public class DataContext : IdentityDbContext<User>
 
     public DbSet<Appointment> Appointments { get; set; }
 
-    public DbSet<AppointmentCredit> AppointmentCredits { get; set; }
-
     public DbSet<GoogleCalendar> GoogleCalendar { get; set; }
 
     public DbSet<Product> Products { get; set; }
@@ -24,6 +21,8 @@ public class DataContext : IdentityDbContext<User>
     public DbSet<OrderDetail> OrderDetails { get; set; }
 
     public DbSet<OrderDetailTemp> OrderDetailsTemp { get; set; }
+
+    public DbSet<BillingDetail> BillingDetails { get; set; }
 
     public DbSet<Invoice> Invoices { get; set; }
 
@@ -43,22 +42,16 @@ public class DataContext : IdentityDbContext<User>
 
         modelbuilder.Entity<Appointment>()
             .HasOne(a => a.Patient)
-            .WithMany()  
+            .WithMany()
             .HasForeignKey(a => a.PatientId)
             .IsRequired()
             .OnDelete(DeleteBehavior.Restrict);
 
         modelbuilder.Entity<Appointment>()
             .HasOne(a => a.Staff)
-            .WithMany()  
+            .WithMany()
             .HasForeignKey(a => a.StaffId)
             .IsRequired()
-            .OnDelete(DeleteBehavior.Restrict);
-
-        modelbuilder.Entity<AppointmentCredit>()
-            .HasOne(ac => ac.Payment)
-            .WithMany(p => p.AppointmentCredits)
-            .HasForeignKey(ac => ac.PaymentId)
             .OnDelete(DeleteBehavior.Restrict);
     }
 }

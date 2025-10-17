@@ -20,4 +20,14 @@ public class OrderDetail : IEntity
 
 
     public decimal Value => Price * (decimal)Quantity;
+
+
+    public int RemainingUses { get; set; }
+
+
+    public int OrderId { get; set; }
+    public Order Order { get; set; }
+
+
+    public ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();
 }

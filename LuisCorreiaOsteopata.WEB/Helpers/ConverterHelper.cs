@@ -28,7 +28,6 @@ public class ConverterHelper : IConverterHelper
             StaffId = appointment.StaffId,
             StaffUserId = appointment.Staff.User.Id,
             StaffName = appointment.Staff.FullName,
-            CreatedDate = appointment.CreatedDate,
             AppointmentDate = appointment.AppointmentDate,
             StartTime = appointment.StartTime,
             EndTime = appointment.EndTime,
@@ -45,6 +44,7 @@ public class ConverterHelper : IConverterHelper
         {
             Id = isNew ? 0 : model.Id,
             Name = model.Name,
+            ProductType = model.ProductType,
             Description = _sanitizer.Sanitize(model.Description),
             IsAvailable = model.IsAvailable,
             LastPurchase = model.LastPurchase,
@@ -62,6 +62,7 @@ public class ConverterHelper : IConverterHelper
         {
             Id = product.Id,
             Name = product.Name,
+            ProductType = product.ProductType,
             Description = product.Description,
             IsAvailable = product.IsAvailable,
             LastPurchase = product.LastPurchase,

@@ -1,0 +1,376 @@
+﻿@model LuisCorreiaOsteopata.WEB.Models.CheckoutViewModel
+
+
+@{
+    ViewData["Title"] = "Checkout";
+    Layout = "~/Views/Shared/_Layout2.cshtml";
+}
+
+@section MainMenu
+{
+    <partial name="_Menu"></partial>
+}
+
+<!--Page Header Start-->
+<section class="page-header">
+    <div class="page-header__bg" style="background-image: url(assets/images/backgrounds/page-header-bg.jpg);">
+    </div>
+    <div class="container">
+        <div class="page-header__inner">
+            <h3>Checkout</h3>
+            <div class="thm-breadcrumb__inner">
+                <ul class="thm-breadcrumb list-unstyled">
+                    <li><a href="index.html">Home</a></li>
+                    <li><span class="icon-arrow-left"></span></li>
+                    <li>Checkout</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+<!--Page Header End-->
+<!--Start Checkout Page-->
+<section class="checkout-page">
+    <div class="container">
+        <form method="post">
+            <div class="row">
+                <div class="col-xl-8 col-lg-6">
+                    <div class="billing_details">
+                        <div class="billing_title">
+                            <h2>Dados de Faturação</h2>
+                        </div>
+                        <div class="billing_details_form">
+                            <div asp-validation-summary="ModelOnly"></div>
+                            <div class="row">
+                                <div class="col-xl-12">
+                                    <div class="billing_input_box">
+                                        <div class="floating-label">
+                                            <input type="text" asp-for="BillingDetail.Name" placeholder="Nome">
+                                            <span asp-validation-for="BillingDetail.Name" class="text-danger"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-xl-12">
+                                    <div class="billing_input_box">
+                                        <input type="text" name="company_name" value="" placeholder="Company">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-xl-12">
+                                    <div class="billing_input_box">
+                                        <input type="text" asp-for="BillingDetail.Address" placeholder="Morada">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row bs-gutter-x-20">
+                                <div class="col-xl-6">
+                                    <div class="billing_input_box">
+                                        <input type="text" asp-for="BillingDetail.ZipCode" pattern="\d{4}-\d{3}" placeholder="Código Postal">
+                                    </div>
+                                </div>
+                                <div class="col-xl-6">
+                                    <div class="billing_input_box">
+                                        <input type="text" asp-for="BillingDetail.City" placeholder="Localidade" required="">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row bs-gutter-x-20">
+                                <div class="col-xl-6">
+                                    <div class="billing_input_box">
+                                        <input type="text" asp-for="BillingDetail.State" placeholder="Distrito"
+                                               required="">
+                                    </div>
+                                </div>
+                                <div class="col-xl-6">
+                                    <div class="billing_input_box">
+                                        <input type="email" asp-for="BillingDetail.Email" placeholder="Email">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row bs-gutter-x-20">
+                                <div class="col-xl-6">
+                                    <div class="billing_input_box">
+                                        <input type="tel" id="phone" asp-for="BillingDetail.Phone"
+                                               required="" placeholder="Telemóvel">
+                                    </div>
+                                </div>
+                                <div class="col-xl-6">
+                                    <div class="billing_input_box">
+                                        <input type="text" id="nif" asp-for="BillingDetail.NIF"
+                                               placeholder="NIF">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-xl-12">
+                                    <div class="billing_input_box">
+                                        <textarea placeholder="Type your note" name="form_order_notes"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-xl-12">
+                                    <div class="billing_details_form-btns">
+                                        <div class="billing_details_form-btn-1">
+                                            <button type="submit" class="thm-btn">
+                                                Continuar a Comprar
+                                                <span class="icon-right-arrow"></span>
+                                            </button>
+                                        </div>
+                                        <div class="billing_details_form-btn-2">
+                                            <button type="submit" class="thm-btn">
+                                                Voltar ao Carrinho
+                                                <span class="icon-right-arrow"></span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-4 col-lg-6">
+                    <div class="sidebar-order-summary">
+                        <div class="title-box">
+                            <h3>A Tua Encomenda</h3>
+                        </div>
+
+                        <ul class="sidebar-order-summary__list list-unstyled">
+                            @foreach (var item in Model.Order.Items)
+                            {
+                                <li>
+                                    <div class="left-text">
+                                        <p>@item.Product.Name</p>
+                                    </div>
+
+                                    <div class="right-text">
+                                        <p>@item.Value.ToString("C2")</p>
+                                    </div>
+                                </li>
+                            }
+
+                            <li>
+                                <div class="left-text">
+                                    <p>Subtotal</p>
+                                </div>
+
+                                <div class="right-text">
+                                    <p>@Model.Order.Value.ToString("C2")</p>
+                                </div>
+                            </li>
+
+                            @* <li>
+                            <div class="left-text">
+                                <p>Shipping</p>
+                            </div>
+
+                            <div class="right-text">
+                                <ul>
+                                    <li>
+                                        <input type="radio" id="flat" name="rating" checked="checked">
+                                        <label for="flat">
+                                            <i></i>
+                                            Flat Rate: $9.00
+                                        </label>
+                                    </li>
+
+                                    <li>
+                                        <input type="radio" id="free" name="rating">
+                                        <label for="free">
+                                            <i></i>
+                                            Free Shipping
+                                        </label>
+                                    </li>
+
+                                    <li>
+                                        <input type="radio" id="local" name="rating">
+                                        <label for="local">
+                                            <i></i>
+                                            Local Pickup
+                                        </label>
+                                    </li>
+                                </ul>
+                            </div>
+                        </li> *@
+
+                            <li>
+                                <div class="left-text">
+                                    <p>Total</p>
+                                </div>
+
+                                <div class="right-text">
+                                    <p>@Model.Order.Value.ToString("C2")</p>
+                                </div>
+                            </li>
+                        </ul>
+
+                        <div class="sidebar-order-summary__Payment">
+                            <div class="title-box">
+                                <h3>Payment Method</h3>
+                            </div>
+
+                            <div class="checkout__payment">
+                                <div class="checkout__payment__item checkout__payment__item--active">  
+                                    <input type="radio" asp-for="PaymentMethod" value="mb_way" id="mbway" checked hidden/>
+                                    <label class="checkout__payment__title" for="mbway" >MB Way</label>
+                                    <div class="checkout__payment__content">
+                                        A Direct Bank Transfer is a method of sending money from one
+                                        bank account to another without using cash, checks, or third-party payment
+                                        services.
+                                    </div>
+                                </div>
+                                <div class="checkout__payment__item">
+                                    <input type="radio" asp-for="PaymentMethod" value="paypal" id="paypal" hidden />
+                                    <label class="checkout__payment__title" for="paypal" >Paypal</label>
+                                    <div class="checkout__payment__content">
+                                        PayPal is an online payment system that allows users to send and receive
+                                        money securely. It supports personal and business transactions, including
+                                        shopping, invoicing, and international transfers.
+                                    </div>
+                                </div>                                
+                            </div>
+                        </div>
+
+                        <div class="sidebar-order-summary__bottom">
+                            <p class="text1">
+                                your personal data will be used to process your order your support
+                                experience throughout this website and for other purposes described in our <a href="#">privacy policy</a>
+                            </p>
+
+                            <div class="sidebar-order-summary__checked">
+                                <input type="checkbox" name="skipper1" id="skipper2" checked="">
+                                <label for="skipper2">
+                                    <span></span>I have read and agree to the website <a href="#">terms and conditions</a>
+                                </label>
+                            </div>
+
+                            <div class="sidebar-order-summary__btn">
+                                <button type="submit" class="thm-btn" asp-controller="Payments" asp-action="CreateCheckoutSession">
+                                    Place your order
+                                    <span class="icon-right-arrow"></span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</section>
+<!--End Checkout Page-->
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+        <script type="text/javascript">
+            document.addEventListener("DOMContentLoaded", function ()
+            {
+
+                // Scroll to register section
+                const registerSection = document.getElementById("register-section");
+                if (registerSection)
+                {
+                    registerSection.scrollIntoView({ behavior: "smooth" });
+                }
+
+                const phoneInput = document.querySelector("#phone");
+                const nifInput = document.querySelector("#nif");
+
+                const iti = window.intlTelInput(phoneInput,
+                {
+                    initialCountry: "pt",
+                    separateDialCode: false,
+                    formatOnDisplay: true
+                });
+
+                const form = phoneInput.closest("form");
+
+                function ensureErrorSpan(input)
+                {
+                    let span = input.nextElementSibling;
+                    if (!span || !span.classList.contains("inline-error"))
+                    {
+                        span = document.createElement("span");
+                        span.classList.add("inline-error");
+                        span.style.color = "red";
+                        span.style.fontSize = "0.9rem";
+                        input.parentNode.appendChild(span);
+                    }
+                    span.textContent = "";
+                    return span;
+                }
+
+                form.addEventListener("submit", function (event)
+                {
+                    let hasErrors = false;
+
+                    const phoneError = ensureErrorSpan(phoneInput);
+                    if (!iti.isValidNumber())
+                    {
+                        phoneError.textContent = "Número de telefone inválido.";
+                        phoneInput.classList.add("is-invalid");
+                        hasErrors = true;
+                    }
+                    else
+                    {
+                        phoneInput.value = iti.getNumber();
+                        phoneInput.classList.remove("is-invalid");
+                    }
+
+                    // NIF validation
+                    const nifError = ensureErrorSpan(nifInput);
+                    if (!validaContribuinte(nifInput.value))
+                    {
+                        nifError.textContent = "Número de contribuinte inválido.";
+                        nifInput.classList.add("is-invalid");
+                        hasErrors = true;
+                    }
+                    else
+                    {
+                        nifInput.classList.remove("is-invalid");
+                    }
+
+                    if (hasErrors)
+                    {
+                        event.preventDefault();
+                    }
+                });
+
+                // NIF validation function
+                function validaContribuinte(contribuinte)
+                {
+                    if (!/^\d{9}$/.test(contribuinte)) return false;
+
+                    const prefix = parseInt(contribuinte.substr(0, 2));
+                    const firstDigit = parseInt(contribuinte.charAt(0));
+                    const invalidPrefixes = [45, 70, 71, 72, 77, 79, 90, 91, 98, 99];
+                    const validFirstDigits = [1, 2, 3, 5, 6, 8];
+
+                    if (!validFirstDigits.includes(firstDigit) && !invalidPrefixes.includes(prefix)) return false;
+
+                    let total = 0;
+                    for (let i = 0, j = 9; i < 8; i++, j--)
+                    {
+                        total += parseInt(contribuinte.charAt(i)) * j;
+                    }
+
+                    let modulo11 = total % 11;
+                    let comparador = (modulo11 === 0 || modulo11 === 1) ? 0 : 11 - modulo11;
+                    const ultimoDigito = parseInt(contribuinte.charAt(8));
+
+                    return ultimoDigito === comparador;
+                }
+
+            });
+        </script>
+    }
+}

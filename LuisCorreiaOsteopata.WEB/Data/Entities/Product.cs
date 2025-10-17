@@ -19,6 +19,11 @@ public class Product : IEntity
     public decimal Price { get; set; }
 
 
+    [Required]
+    [Display(Name = "Product Type")]
+    public ProductType ProductType { get; set; }
+
+
     [Display(Name = "Image")]
     public string? ImageUrl { get; set; }
 

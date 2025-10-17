@@ -32,6 +32,9 @@ public class BookAppointmentViewModel
     public int PatientId { get; set; }
 
 
+    public int? RemainingCredits { get; set; }
+
+
     public bool HasAvailableCredits { get; set; }
 
 

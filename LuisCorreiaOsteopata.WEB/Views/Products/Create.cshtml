@@ -109,6 +109,18 @@
           const descriptionInput = document.getElementById('Description');
           descriptionInput.value = quill.root.innerHTML;
         });
+
+        const checkbox = document.getElementById('IsCreditProductCheckbox');
+        const quantityContainer = document.getElementById('creditQuantity');
+        const labelQuantityContainer = document.getElementById('labelCreditsQuantity');
+
+        quantityContainer.style.display = 'none';
+        labelQuantityContainer.style.display = 'none';
+
+        checkbox.addEventListener('change', () => {
+            quantityContainer.style.display = checkbox.checked ? 'block' : 'none';
+            labelQuantityContainer.style.display = checkbox.checked ? 'block' : 'none';
+        });
     </script>
 }
 

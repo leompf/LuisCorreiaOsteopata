@@ -1,7 +1,6 @@
 ﻿using LuisCorreiaOsteopata.WEB.Data.Entities;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using System.Threading.Tasks;
 
 namespace LuisCorreiaOsteopata.WEB.Data;
 
@@ -43,6 +42,18 @@ public class ProductRepository : GenericRepository<Product>, IProductRepository
         });
 
         return list;
+    }
+
+    public IEnumerable<SelectListItem> GetComboProductCategory()
+    {
+        return Enum.GetValues(typeof(ProductType))
+            .Cast<ProductType>()
+            .Select(pt => new SelectListItem
+            {
+                Value = ((int)pt).ToString(),
+                Text = pt.ToString()
+            })
+            .ToList();
     }
 }
 

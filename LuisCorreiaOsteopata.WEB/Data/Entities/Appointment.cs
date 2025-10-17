@@ -19,17 +19,8 @@ public class Appointment : IEntity
 
     [Required]
     [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy}", ApplyFormatInEditMode = false)]
-    [Display(Name = "Created Date")]
-    public DateTime CreatedDate { get; set; }
-
-
-    [Required]
-    [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy}", ApplyFormatInEditMode = false)]
     [Display(Name = "Appointment Date")]
     public DateTime AppointmentDate { get; set; }
-
-
-    public DateTime? AppointmentDateLocal => AppointmentDate == null ? null : AppointmentDate.ToLocalTime();
 
 
     [Required]
@@ -54,6 +45,9 @@ public class Appointment : IEntity
     [Required]
     public string AppointmentStatus {  get; set; }
 
+
+    public int? OrderDetailId { get; set; }
+    public OrderDetail? OrderDetail { get; set; }
 
     [Required]
     public bool IsPaid { get; set; }

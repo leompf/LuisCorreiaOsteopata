@@ -5,9 +5,11 @@ namespace LuisCorreiaOsteopata.WEB.Data;
 
 public interface IProductRepository : IGenericRepository<Product>
 {
-    public IQueryable GetAllWithUsers();
+    IQueryable GetAllWithUsers();
 
-    public Task<ICollection<Product>> GetAvailableProducts();
+    Task<ICollection<Product>> GetAvailableProducts();
 
     IEnumerable<SelectListItem> GetComboProducts();
+
+    IEnumerable<SelectListItem> GetComboProductCategory();
 }

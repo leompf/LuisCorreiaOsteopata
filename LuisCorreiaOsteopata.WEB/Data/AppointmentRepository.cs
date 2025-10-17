@@ -18,49 +18,6 @@ public class AppointmentRepository : GenericRepository<Appointment>, IAppointmen
         _userHelper = userHelper;
     }
 
-    public async Task AddAppointmentCreditsAsync(string userId, int quantity)
-    {
-        var user = await _userHelper.GetUserByIdAsync(userId);
-        if (user == null)
-        {
-            throw new ArgumentException("User not found.", nameof(userId));
-        }
-
-        var credit = new AppointmentCredit
-        {
-            UserId = user.Id,
-            TotalAppointments = quantity,
-            UsedAppointments = 0,
-            CreatedAt = DateTime.UtcNow
-        };
-
-        _context.AppointmentCredits.Add(credit);
-        await _context.SaveChangesAsync();
-    }
-
-    public async Task<bool> ConsumeAppointmentCreditAsync(int patientId)
-    {
-        var patient = await _context.Patients
-            .AsNoTracking()
-            .FirstOrDefaultAsync(p => p.Id == patientId);
-
-        if (patient == null)
-            return false;
-
-        var credit = await _context.AppointmentCredits
-            .FirstOrDefaultAsync(c =>
-                c.UserId == patient.User.Id &&
-                c.UsedAppointments < c.TotalAppointments);
-
-        if (credit == null)
-            return false;
-
-        credit.UsedAppointments += 1;
-        _context.AppointmentCredits.Update(credit);
-        await _context.SaveChangesAsync();
-
-        return true;
-    }
 
     public async Task<(bool Success, string? ErrorMessage)> CreateAppointmentAsync(Appointment appointment, int patientId)
     {
@@ -69,24 +26,30 @@ public class AppointmentRepository : GenericRepository<Appointment>, IAppointmen
         try
         {
             var patient = await _context.Patients
-                .AsNoTracking()
+                .Include(p => p.User)
                 .FirstOrDefaultAsync(p => p.Id == patientId);
 
             if (patient == null)
                 return (false, "Paciente inválido.");
 
-            var credit = await _context.AppointmentCredits
-                .FirstOrDefaultAsync(c =>
-                    c.UserId == patient.User.Id &&
-                    c.UsedAppointments < c.TotalAppointments);
+            if (appointment.PatientId == patientId)
+            {
+                var orderDetail = await _context.Orders
+                    .Where(o => o.User.Id == patient.User.Id && o.IsPaid)
+                    .SelectMany(o => o.Items)
+                    .Where(i => i.RemainingUses > 0)
+                    .OrderBy(i => i.Id) 
+                    .FirstOrDefaultAsync();
 
-            if (credit == null)
-                return (false, "Sem créditos disponíveis para agendamento.");
+                if (orderDetail == null)
+                    return (false, "Não tem consultas disponíveis. Por favor, adquira novas consultas.");
 
-            credit.UsedAppointments += 1;
-            _context.AppointmentCredits.Update(credit);
+                orderDetail.RemainingUses--;
+                appointment.OrderDetailId = orderDetail.Id;
 
-            appointment.CreatedDate = DateTime.UtcNow;
+                _context.Update(orderDetail);
+            }
+
             appointment.AppointmentStatus = "Marcada";
 
             _context.Appointments.Add(appointment);
@@ -268,7 +231,6 @@ public class AppointmentRepository : GenericRepository<Appointment>, IAppointmen
             StaffId = a.StaffId,
             StaffName = a.Staff.FullName,
             StaffUserId = a.Staff.User.Id,
-            CreatedDate = a.CreatedDate,
             AppointmentStatus = a.AppointmentStatus,
             AppointmentDate = a.AppointmentDate,
             StartTime = a.StartTime,
@@ -277,13 +239,5 @@ public class AppointmentRepository : GenericRepository<Appointment>, IAppointmen
             StaffNotes = a.StaffNotes,
             IsPaid = a.IsPaid,
         }).ToList();
-    }
-
-    public async Task<bool> HasAvailableCreditsAsync(string userId)
-    {
-        var hasCredits = await _context.AppointmentCredits
-            .AnyAsync(a => a.UserId == userId && a.UsedAppointments < a.TotalAppointments);
-
-        return hasCredits;
     }
 }

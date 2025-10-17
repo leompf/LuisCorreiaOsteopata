@@ -35,7 +35,8 @@ public class Program
 
         builder.Services.AddDbContext<DataContext>(cfg =>
         {
-            cfg.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
+            cfg.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
+            .EnableSensitiveDataLogging();
         });
 
         builder.Services.AddTransient<SeedDB>();

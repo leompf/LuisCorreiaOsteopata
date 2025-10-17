@@ -86,7 +86,7 @@
                                     <input type="hidden" asp-for="Notes" id="Notes" />
                                 </div>
                                 <div class="appoinment-page__btn-box" style="margin-top: 70px">
-                                    <button type="submit" asp-action="Index" id="btnConfirm" class="thm-btn" disabled="!@Model.HasAvailableCredits" title=@(Model.HasAvailableCredits ? "" : "Não tens consultas disponíveis. Por favor, compra consultas primeiro")>
+                                    <button type="submit" asp-action="Index" id="btnConfirm" class="thm-btn" disabled="@(Model.HasAvailableCredits ? null : "disabled")" title=@(Model.HasAvailableCredits ? "" : "Não tens consultas disponíveis. Por favor, adquire uma consulta antes de marcar.")>
                                         Marcar<span class="icon-plus"></span>
                                     </button>
                                 </div>

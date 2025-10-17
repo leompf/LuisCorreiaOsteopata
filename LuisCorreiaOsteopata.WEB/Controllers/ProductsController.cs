@@ -56,7 +56,12 @@ public class ProductsController : Controller
     [Authorize(Roles = "Administrador")]
     public IActionResult Create()
     {
-        return View();
+        var model = new ProductViewModel
+        {
+            ProductCategories = _productRepository.GetComboProductCategory()
+        };
+
+        return View(model);
     }
 
     [HttpPost]
@@ -79,6 +84,7 @@ public class ProductsController : Controller
             return RedirectToAction(nameof(Index));
         }
 
+        model.ProductCategories = _productRepository.GetComboProductCategory();
         return View(model);
     }
 
@@ -97,6 +103,7 @@ public class ProductsController : Controller
         }
 
         var model = _converterHelper.ToProductViewModel(product);
+        model.ProductCategories = _productRepository.GetComboProductCategory();
         return View(model);
     }
 

@@ -60,14 +60,15 @@ public class AppointmentController : Controller
             if (patient != null)
             {
                 model.PatientId = patient.Id;
-
-                model.HasAvailableCredits = await _context.AppointmentCredits
-                    .AnyAsync(a => a.UserId == currentUser.Id && a.UsedAppointments < a.TotalAppointments);
             }
-        }
-        else if (User.IsInRole("Colaborador"))
-        {
-            model.HasAvailableCredits = false;
+
+            var remainingCredits = await _context.Orders
+                .Where(o => o.User.Id == currentUser.Id && o.IsPaid)
+                .SelectMany(o => o.Items)
+                .SumAsync(i => i.RemainingUses);
+
+            model.HasAvailableCredits = remainingCredits > 0;
+            model.RemainingCredits = remainingCredits;
         }
 
         return View(model);
@@ -122,23 +123,12 @@ public class AppointmentController : Controller
                           .AddHours(endTime.Hour)
                           .AddMinutes(endTime.Minute);
 
-        if (User.IsInRole("Utente"))
-        {
-            var hasCredits = await _appointmentRepository.HasAvailableCreditsAsync(patientUser.Id);
-            if (!hasCredits)
-            {
-                ModelState.AddModelError(string.Empty, "Não tem consultas disponíveis. Por favor, adquira novas consultas.");
-                return View(model);
-            }
-        }
-
         var appointment = new Appointment
         {
             PatientId = patientId,
             StaffId = staff.Id,
             PatientNotes = model.Notes,
             AppointmentDate = model.AppointmentDate.Date,
-            CreatedDate = DateTime.Now,
             AppointmentStatus = "Marcada",
             IsPaid = false,
             StartTime = startDateTime,

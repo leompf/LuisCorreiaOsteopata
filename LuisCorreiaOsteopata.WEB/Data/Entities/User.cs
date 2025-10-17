@@ -26,4 +26,8 @@ public class User : IdentityUser
     public Guid ImageId { get; set; }
 
     public string? CalendarId { get; set; }
+
+    public string? StripeCustomerId { get; set; }
+
+    public ICollection<Payment>? Payments { get; set; } 
 }

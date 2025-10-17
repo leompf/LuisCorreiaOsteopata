@@ -1,0 +1,40 @@
+﻿@model LuisCorreiaOsteopata.WEB.Data.Entities.Order
+
+@{
+    ViewData["Title"] = "Success";
+    Layout = "~/Views/Shared/_Layout2.cshtml";
+}
+
+<section class="page-header">
+    <div class="container">
+        <div class="page-header__inner">
+            <h3>Obrigado!</h3>
+            <p>O teu pagamento foi bem sucedido.</p>
+        </div>
+    </div>
+</section>
+
+<section class="checkout-success" style="margin-top: -100px">
+    <div class="container">
+        <div class="success-box">
+            <h4>Detalhes do Pedido</h4>
+            <ul>
+                <li><strong>Nº do Pedido:</strong> @Model.OrderNumber</li>
+                <li><strong>Data:</strong> @Model.OrderDate.ToString("dd/MM/yyyy HH:mm")</li>
+                <li><strong>Total:</strong> @Model.Value.ToString("C2")</li>
+            </ul>
+
+            <h4>Items</h4>
+            <ul>
+                @foreach (var item in Model.Items)
+                {
+                    <li>@item.Product.Name — @item.Quantity x @item.Price.ToString("C2")</li>
+                }
+            </ul>
+
+            <a  asp-controller="Home" asp-action="Index" class="thm-btn mt-3">Voltar à Página Inicial</a>
+            <a href="/Orders/Details/@Model.Id" class="thm-btn mt-3">View Order</a>
+        </div>
+    </div>
+</section>
+

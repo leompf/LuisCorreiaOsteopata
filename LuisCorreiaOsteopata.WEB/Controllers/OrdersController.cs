@@ -1,6 +1,7 @@
 ﻿using LuisCorreiaOsteopata.WEB.Data;
 using LuisCorreiaOsteopata.WEB.Data.Entities;
 using LuisCorreiaOsteopata.WEB.Helpers;
+using LuisCorreiaOsteopata.WEB.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Globalization;
@@ -44,7 +45,7 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
             var user = await _userHelper.GetCurrentUserAsync();
             if (user == null)
             {
-                return Challenge(); // redirect to login
+                return Challenge();
             }
 
             var cartItem = await _context.OrderDetailsTemp
@@ -102,5 +103,38 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
                 newQuantity
             });
         }
+
+        public async Task<IActionResult> ConfirmOrder()
+        {
+            var response = await _orderRepository.ConfirmOrderAsync(this.User.Identity.Name);
+
+            if (response)
+            {
+                return RedirectToAction("Checkout");
+            }
+
+            return RedirectToAction("Create");
+        }
+
+        public async Task<IActionResult> Checkout()
+        {
+            var orders = await _orderRepository.GetOrderAsync(this.User.Identity.Name);
+            var lastOrder = await orders.FirstOrDefaultAsync();
+
+            if (lastOrder == null)
+                return RedirectToAction("Create");
+
+            var model = new CheckoutViewModel
+            {
+                Order = lastOrder,
+                BillingDetail = new BillingDetail()
+            };
+
+            return View(model);
+        }
     }
 }
+
+//TODO: Recuperar carrinho depois de uma Order ser criada se o utilizador nunca acabar a Order.
+//TODO: Criar Tabela de dados de faturação
+//TODO: Criar Faturação

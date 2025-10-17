@@ -1,7 +1,8 @@
-﻿using Google.Apis.Calendar.v3.Data;
-using LuisCorreiaOsteopata.WEB.Data;
-using LuisCorreiaOsteopata.WEB.Helpers;
+﻿using LuisCorreiaOsteopata.WEB.Data;
+using LuisCorreiaOsteopata.WEB.Data.Entities;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 using Stripe;
 using Stripe.Checkout;
 
@@ -9,67 +10,90 @@ namespace LuisCorreiaOsteopata.WEB.Controllers.API;
 
 [Route("api/[controller]")]
 [ApiController]
-public class PaymentsController : Controller
+public class PaymentsController : ControllerBase
 {
-    private readonly IAppointmentRepository _appointmentRepository;
-    private readonly IUserHelper _userHelper;
     private readonly ILogger<PaymentsController> _logger;
-    private readonly IConfiguration _configuration;
+    private readonly DataContext _context;
 
     public PaymentsController(IAppointmentRepository appointmentRepository,
-        IUserHelper userHelper,
         ILogger<PaymentsController> logger,
-        IConfiguration configuration)
+        IConfiguration configuration,
+        DataContext context)
     {
-        _appointmentRepository = appointmentRepository;
-        _userHelper = userHelper;
         _logger = logger;
-        _configuration = configuration;
+        _context = context;
     }
 
-    [HttpPost("webhook")]
-    public async Task <IActionResult> Webhook()
+
+    [HttpPost("Webhook")]
+    public async Task<IActionResult> Webhook()
     {
         var json = await new StreamReader(HttpContext.Request.Body).ReadToEndAsync();
 
-        // Get the Stripe webhook secret from your configuration
-        const string endpointSecret = "whsec_7ade6c049580c8f0a9281c5a4132c9415a569974c410d553c51c0c449e59022f";
-
+        // Deserialize the event
+        Event stripeEvent;
         try
         {
-            var stripeSignature = Request.Headers["Stripe-Signature"];
-
-            // Validate signature and construct event
-            var stripeEvent = EventUtility.ConstructEvent(json, stripeSignature, endpointSecret);
-
-            // Handle Checkout Session Completed
-            if (stripeEvent.Type == EventTypes.CheckoutSessionCompleted)
-            {
-                var session = stripeEvent.Data.Object as Session;
-                if (session != null && session.Metadata != null)
-                {
-                    // Read userId and package quantity from metadata
-                    var userId = session.Metadata["UserId"];
-                    var packageQuantity = int.Parse(session.Metadata["Quantity"]);
-
-                    // Credit the user with pre-paid appointments
-                    await _appointmentRepository.AddAppointmentCreditsAsync(userId, packageQuantity);
-                }
-            }
-
-            // You can handle other events if needed
-            return Ok();
+            stripeEvent = JsonConvert.DeserializeObject<Event>(json);
         }
-        catch (StripeException ex)
+        catch (Exception e)
         {
-            // Stripe validation failed
-            Console.WriteLine($"Stripe error: {ex.Message}");
+            _logger.LogError("Failed to deserialize Stripe event: {Message}", e.Message);
             return BadRequest();
         }
-        catch
+
+        _logger.LogInformation("Received Stripe event: {Type}", stripeEvent.Type);
+
+        if (stripeEvent.Type == "checkout.session.completed")
         {
-            return StatusCode(500);
+            var session = stripeEvent.Data.Object as Session;
+            if (session == null) return BadRequest();
+
+            // Retrieve order ID from metadata
+            if (!int.TryParse(session.Metadata["order_id"], out var orderId))
+            {
+                _logger.LogWarning("Invalid order ID in metadata for session {SessionId}", session.Id);
+                return BadRequest();
+            }
+
+            var order = await _context.Orders
+                .Include(o => o.Items)
+                .ThenInclude(i => i.Product)
+                .Include(o => o.User)
+                .FirstOrDefaultAsync(o => o.Id == orderId);
+
+            if (order == null)
+            {
+                _logger.LogWarning("Order not found for session {SessionId}", session.Id);
+                return NotFound();
+            }
+
+            // Mark order as paid
+            order.IsPaid = true;
+            order.PaymentIntentId = session.PaymentIntentId;
+            order.PaymentDate = DateTime.UtcNow;
+
+            // Update the payment record if exists
+            var payment = await _context.Payments
+                .FirstOrDefaultAsync(p => p.StripePaymentIntentId == session.PaymentIntentId);
+
+            if (payment != null)
+            {
+                payment.Status = "Succeeded";
+                payment.ConfirmedAt = DateTime.UtcNow;
+            }
+            else
+            {
+                _logger.LogWarning("Payment not found for session {SessionId}", session.Id);
+            }
+          
+
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation("Order {OrderId} processed successfully.", order.Id);
         }
+
+        return Ok();
     }
 }
 
