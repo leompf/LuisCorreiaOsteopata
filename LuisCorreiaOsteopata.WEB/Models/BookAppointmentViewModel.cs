@@ -7,6 +7,8 @@ namespace LuisCorreiaOsteopata.WEB.Models;
 
 public class BookAppointmentViewModel
 {
+    public int? Id {  get; set; }
+
     [Required]
     [Display(Name = "Appointment Date")]
     [DisplayFormat(DataFormatString = "{0:MM-dd-yyyy}", ApplyFormatInEditMode = false)]
@@ -15,7 +17,7 @@ public class BookAppointmentViewModel
 
     [Required(ErrorMessage = "Selecione uma hora")]
     [Display(Name = "Start Time")]
-    public string StartTime { get; set; }
+    public TimeOnly StartTime { get; set; }
 
     
     public string? Notes { get; set; }

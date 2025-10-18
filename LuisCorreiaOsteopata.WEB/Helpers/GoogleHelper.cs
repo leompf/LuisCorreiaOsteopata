@@ -25,6 +25,136 @@ public class GoogleHelper : IGoogleHelper
         _logger = logger;
     }
 
+
+    #region Calendar Service
+    public async Task<CalendarService?> GetCalendarServiceAsync(User user, CancellationToken cancellationToken)
+    {
+        _logger.LogInformation("Initializing Google Calendar service for user {Email}.", user.Email);
+
+        var credential = await GetCredentialAsync(user, cancellationToken);
+        if (credential == null)
+        {
+            _logger.LogWarning("Cannot create CalendarService for user {Email} because credential is null.", user.Email);
+            return null;
+        }
+
+        var service = new CalendarService(new BaseClientService.Initializer
+        {
+            HttpClientInitializer = credential,
+            ApplicationName = _settings.Value.ApplicationName
+        });
+
+        _logger.LogInformation("Google Calendar service initialized successfully for user {Email}.", user.Email);
+        return service;
+    }
+
+    public async Task<IList<CalendarListEntry>> GetUserCalendarsAsync(User user, CancellationToken cancellationToken)
+    {
+        _logger.LogInformation("Fetching Google calendars for user {Email}.", user.Email);
+
+        var service = await GetCalendarServiceAsync(user, cancellationToken);
+        var list = await service.CalendarList.List().ExecuteAsync(cancellationToken);
+
+        return list.Items;
+    }
+
+    #region CRUD Events
+    public async Task<Event?> CreateEventAsync(User user, string calendarId, string title, string description, DateTime start, DateTime end, CancellationToken cancellationToken)
+    {
+        _logger.LogInformation("Creating event '{Title}' in calendar {CalendarId} for user {Email}.", title, calendarId, user.Email);
+
+        try
+        {
+            var service = await GetCalendarServiceAsync(user, cancellationToken);
+
+            var newEvent = new Event
+            {
+                Summary = title,
+                Description = description,
+                Start = new EventDateTime { DateTimeDateTimeOffset = new DateTimeOffset(start), TimeZone = "Europe/Lisbon" },
+                End = new EventDateTime { DateTimeDateTimeOffset = new DateTimeOffset(end), TimeZone = "Europe/Lisbon" }
+            };
+
+            var createdEvent = await service.Events.Insert(newEvent, calendarId).ExecuteAsync(cancellationToken);
+
+            _logger.LogInformation("Event '{Title}' created successfully with ID {EventId} for user {Email}.", title, createdEvent.Id, user.Email);
+
+            return createdEvent;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to create event '{Title}' in calendar {CalendarId} for user {Email}.", title, calendarId, user.Email);
+            throw;
+        }
+    }
+
+    public async Task DeleteEventAsync(User user, string calendarId, string eventId, CancellationToken cancellationToken)
+    {
+        var service = await GetCalendarServiceAsync(user, cancellationToken);
+        _logger.LogInformation("Deleting event {EventId} in calendar {CalendarId} for user {Email}.", eventId, calendarId, user.Email);
+
+        try
+        {
+            await service.Events.Delete(calendarId, eventId).ExecuteAsync(cancellationToken);
+            _logger.LogInformation("Event {EventId} deleted successfully for user {Email}.", eventId, user.Email);
+        }
+        catch (Google.GoogleApiException ex) when (ex.HttpStatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            _logger.LogWarning("Event {EventId} not found for user {Email}, nothing to delete.", eventId, user.Email);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to delete event {EventId} for user {Email}.", eventId, user.Email);
+            throw;
+        }
+    }
+
+    public async Task<Event?> UpdateEventAsync(User user, string calendarId, string eventId, string title, string description, DateTime start, DateTime end, CancellationToken cancellationToken)
+    {
+        _logger.LogInformation("Starting update for event {EventId} in calendar {CalendarId} for user {Email}.", eventId, calendarId, user.Email);
+
+        var service = await GetCalendarServiceAsync(user, cancellationToken);
+        if (service == null)
+        {
+            _logger.LogWarning("Cannot update event {EventId} because CalendarService is null for user {Email}.", eventId, user.Email);
+            return null;
+        }
+
+        try
+        {
+            var existingEvent = await service.Events.Get(calendarId, eventId).ExecuteAsync(cancellationToken);
+            if (existingEvent == null)
+            {
+                _logger.LogWarning("Event {EventId} not found in calendar {CalendarId} for user {Email}.", eventId, calendarId, user.Email);
+                return null;
+            }
+
+            existingEvent.Summary = title;
+            existingEvent.Description = description;
+            existingEvent.Start = new EventDateTime { DateTimeDateTimeOffset = new DateTimeOffset(start), TimeZone = "Europe/Lisbon" };
+            existingEvent.End = new EventDateTime { DateTimeDateTimeOffset = new DateTimeOffset(end), TimeZone = "Europe/Lisbon" };
+
+            var updatedEvent = await service.Events.Update(existingEvent, calendarId, eventId).ExecuteAsync(cancellationToken);
+            _logger.LogInformation("Event {EventId} updated successfully in calendar {CalendarId} for user {Email}.", eventId, calendarId, user.Email);
+
+            return updatedEvent;
+        }
+        catch (Google.GoogleApiException ex) when (ex.HttpStatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            _logger.LogWarning("Event {EventId} not found for user {Email}, nothing to update.", eventId, user.Email);
+            return null;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to update event {EventId} in calendar {CalendarId} for user {Email}.", eventId, calendarId, user.Email);
+            throw;
+        }
+    }
+    #endregion
+
+    #endregion
+
+    #region Credentials
     private async Task<UserCredential> GetCredentialAsync(User user, CancellationToken cancellationToken)
     {
         var accessToken = await _userManager.GetAuthenticationTokenAsync(user, "Google", "access_token");
@@ -43,7 +173,7 @@ public class GoogleHelper : IGoogleHelper
         if (!parsed || expiry < DateTime.UtcNow.AddYears(-1) || expiry > DateTime.UtcNow.AddYears(10))
         {
             _logger.LogWarning("Invalid or missing expiry token for {Email}, using fallback.", user.Email);
-            expiry = DateTime.UtcNow.AddHours(-1); 
+            expiry = DateTime.UtcNow.AddHours(-1);
         }
 
         double totalSeconds = (expiry - DateTime.UtcNow).TotalSeconds;
@@ -85,29 +215,6 @@ public class GoogleHelper : IGoogleHelper
         return credential;
     }
 
-
-
-    public async Task<Event> CreateEventAsync(User user, string calendarId, string title, string description, DateTime start, DateTime end, CancellationToken cancellationToken)
-    {
-        var service = await GetCalendarServiceAsync(user, cancellationToken);
-
-        var newEvent = new Event
-        {
-            Summary = title,
-            Description = description,
-            Start = new EventDateTime { DateTimeDateTimeOffset = new DateTimeOffset(start), TimeZone = "Europe/Lisbon" },
-            End = new EventDateTime { DateTimeDateTimeOffset = new DateTimeOffset(end), TimeZone = "Europe/Lisbon" }
-        };
-
-        return await service.Events.Insert(newEvent, calendarId).ExecuteAsync(cancellationToken);
-    }
-
-    public async Task DeleteEventAsync(User user, string calendarId, string eventId, CancellationToken cancellationToken)
-    {
-        var service = await GetCalendarServiceAsync(user, cancellationToken);
-        await service.Events.Delete(calendarId, eventId).ExecuteAsync(cancellationToken);
-    }
-
     public async Task<bool> EnsureValidTokenAsync(User user, CancellationToken cancellationToken)
     {
         try
@@ -121,22 +228,5 @@ public class GoogleHelper : IGoogleHelper
             return false;
         }
     }
-
-    public async Task<CalendarService> GetCalendarServiceAsync(User user, CancellationToken cancellationToken)
-    {
-        var credential = await GetCredentialAsync(user, cancellationToken);
-        return new CalendarService(new BaseClientService.Initializer
-        {
-            HttpClientInitializer = credential,
-            ApplicationName = _settings.Value.ApplicationName
-        });
-    }
-
-    public async Task<IList<CalendarListEntry>> GetUserCalendarsAsync(User user, CancellationToken cancellationToken)
-    {
-        var service = await GetCalendarServiceAsync(user, cancellationToken);
-        var list = await service.CalendarList.List().ExecuteAsync(cancellationToken);
-
-        return list.Items;
-    }
+    #endregion
 }

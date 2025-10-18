@@ -6,6 +6,7 @@ using LuisCorreiaOsteopata.WEB.Helpers;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
+using Serilog;
 using System.Globalization;
 
 
@@ -16,6 +17,23 @@ public class Program
     public static void Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
+
+        //Logger
+        Log.Logger = new LoggerConfiguration()
+            .MinimumLevel.Information()
+            .MinimumLevel.Override("Microsoft", Serilog.Events.LogEventLevel.Warning)
+            .Enrich.FromLogContext()
+            .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj} {Properties:j}{NewLine}{Exception}")
+            .WriteTo.File(
+                path: "Logs/LuisCorreiaOsteopata-.log",
+                rollingInterval: RollingInterval.Day,
+                retainedFileCountLimit: 7,
+                shared: true,
+                outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj}{NewLine}{Exception}"
+            )
+            .CreateLogger();
+
+        builder.Host.UseSerilog();
 
         // Add services to the container.
         builder.Services.AddControllersWithViews();
@@ -119,17 +137,10 @@ public class Program
         app.UseAuthentication();
         app.UseAuthorization();
 
-        app.UseHangfireDashboard("/hangfire");
-        using (var scope = app.Services.CreateScope())
+        app.UseSerilogRequestLogging(opts =>
         {
-            var reminderService = scope.ServiceProvider.GetRequiredService<IReminderHelper>();
-
-            RecurringJob.AddOrUpdate(
-                "appointment-reminders",
-                () => reminderService.SendAppointmentReminderAsync(),
-                Cron.Hourly 
-            );
-        }
+            opts.MessageTemplate = "Handled {RequestMethod} {RequestPath} responded {StatusCode} in {Elapsed:0.0000} ms";
+        });
 
         app.MapControllerRoute(
             name: "default",
@@ -139,6 +150,18 @@ public class Program
         {
             var seeder = scope.ServiceProvider.GetRequiredService<SeedDB>();
             seeder.SeedAsync().Wait();
+        }
+
+        app.UseHangfireDashboard("/hangfire");
+        using (var scope = app.Services.CreateScope())
+        {
+            var reminderService = scope.ServiceProvider.GetRequiredService<IReminderHelper>();
+
+            RecurringJob.AddOrUpdate(
+                "appointment-reminders",
+                () => reminderService.SendAppointmentReminderAsync(),
+                Cron.Hourly
+            );
         }
 
         app.Run();

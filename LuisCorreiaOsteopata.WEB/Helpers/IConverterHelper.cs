@@ -7,6 +7,8 @@ namespace LuisCorreiaOsteopata.WEB.Helpers
     {
         AppointmentViewModel ToAppointmentViewModel(Appointment appointment);
 
+        Appointment ToAppointment(AppointmentViewModel model);
+
         UserViewModel ToUserViewModel(User user, string role);
 
         Product ToProduct(ProductViewModel model, string path, bool isNew);

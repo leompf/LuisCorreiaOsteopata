@@ -560,6 +560,10 @@
     background-color: var(--careon-primary);
 }
 
+.appoinment-page__btn-box .cancel-btn {
+    border: none;
+}
+
 .appoinment-page__btn-box .unbook-btn {
         border: none;
         color: var(--careon-black);

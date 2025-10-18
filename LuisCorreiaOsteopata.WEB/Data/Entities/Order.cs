@@ -59,9 +59,4 @@ public class Order : IEntity
 
     [DisplayFormat(DataFormatString = "{0:C2}")]
     public decimal Value => Items == null ? 0 : Items.Sum(i => i.Value);
-
-
-    [Display(Name = "Order date")]
-    [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy hh:mm tt}", ApplyFormatInEditMode = false)]
-    public DateTime? OrderDateLocal => this.OrderDate == null ? null : this.OrderDate.ToLocalTime();
 }

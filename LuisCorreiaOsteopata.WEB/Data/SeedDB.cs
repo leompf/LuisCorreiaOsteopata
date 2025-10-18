@@ -162,7 +162,7 @@ public class SeedDB
             Price = _random.Next(1000),
             IsAvailable = true,
             Stock = _random.Next(100),
-            User = user
+            User = user           
         });
     }
 }

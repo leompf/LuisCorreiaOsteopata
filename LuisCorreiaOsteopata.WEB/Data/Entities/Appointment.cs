@@ -26,13 +26,13 @@ public class Appointment : IEntity
     [Required]
     [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy hh:mm}", ApplyFormatInEditMode = false)]
     [Display(Name = "Start Time")]
-    public DateTime StartTime { get; set; }
+    public TimeOnly StartTime { get; set; }
 
 
     [Required]
     [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy hh:mm}", ApplyFormatInEditMode = false)]
     [Display(Name = "End Time")]
-    public DateTime EndTime { get; set; }
+    public TimeOnly EndTime { get; set; }
 
 
     [MaxLength(1000)]
@@ -49,7 +49,7 @@ public class Appointment : IEntity
     public int? OrderDetailId { get; set; }
     public OrderDetail? OrderDetail { get; set; }
 
-    [Required]
-    public bool IsPaid { get; set; }
+    
+    public bool ReminderSent { get; set; }
 }
 

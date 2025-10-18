@@ -18,6 +18,11 @@ public class ConverterHelper : IConverterHelper
         return _sanitizer.Sanitize(html);
     }
 
+    public Appointment ToAppointment(AppointmentViewModel model)
+    {
+        throw new NotImplementedException();
+    }
+
     public AppointmentViewModel ToAppointmentViewModel(Appointment appointment)
     {
         return new AppointmentViewModel
@@ -33,8 +38,7 @@ public class ConverterHelper : IConverterHelper
             EndTime = appointment.EndTime,
             AppointmentStatus = appointment.AppointmentStatus,
             PatientNotes = _sanitizer.Sanitize(appointment.PatientNotes),
-            StaffNotes = _sanitizer.Sanitize(appointment.StaffNotes),
-            IsPaid = appointment.IsPaid
+            StaffNotes = _sanitizer.Sanitize(appointment.StaffNotes)
         };
     }
 

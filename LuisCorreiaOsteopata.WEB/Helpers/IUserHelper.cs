@@ -7,35 +7,18 @@ namespace LuisCorreiaOsteopata.WEB.Helpers;
 
 public interface IUserHelper
 {
-    #region Find Users
+    #region CRUD Users
     Task<User> GetUserByEmailAsync(string email);
     Task<User> GetUserByNifAsync(string nif);
     Task<User> GetUserByIdAsync(string id);
     Task<User> GetCurrentUserAsync();
     Task<List<User>> GetAllUsersAsync();
-    #endregion
-
-    #region Authentication Users
-    Task<SignInResult> LoginAsync(string username, string password, bool rememberMe);
-    Task LogoutAsync();
-    Task<string> GenerateEmailConfirmationTokenAsync(User user);
-    Task StoreUserTokenAsync(User user, string loginProvider, string name, string value);
-    Task<string> GetUserTokenAsync(User user, string loginProvider, string tokenName);
-    Task<IdentityResult> ConfirmEmailAsync(User user, string token);
-    Task<string> GetAuthenticatorKeyAsync(User user);
-    Task ResetAuthenticatorKeyAsync(User user);
-    Task<bool> VerifyTwoFactorTokenAsync(User user, string code);
-    Task SetTwoFactorEnabledAsync(User user, bool enabled);
-
-    #endregion
-
-    #region CRUD Users
     Task<IdentityResult> AddUserAsync(User user, string password);
     Task<IdentityResult> UpdateUserAsync(User user);
 
     #endregion
 
-    #region Roles
+    #region CRUD Roles
     Task CheckRoleAsync(string roleName);
     Task AddUserToRoleAsync(User user, string rolename);
     Task<bool> IsUserInRoleAsync(User user, string rolename);
@@ -43,10 +26,28 @@ public interface IUserHelper
     IEnumerable<SelectListItem> GetAllRolesAsync();
     #endregion
 
-    #region User Helpers   
-    string GenerateRandomPassword(PasswordOptions options = null);
-    List<UserViewModel> SortUsers(IEnumerable<UserViewModel> users, string? sortBy, bool sortDescending);
+    #region 2FA Authentication
+    Task<string?> GetAuthenticatorKeyAsync(User user);
+    Task ResetAuthenticatorKeyAsync(User user);
+    Task<bool> VerifyTwoFactorTokenAsync(User user, string code);
+    Task SetTwoFactorEnabledAsync(User user, bool enabled);
+    #endregion
 
+    #region Login
+    Task<SignInResult> LoginAsync(string username, string password, bool rememberMe);
+    Task LogoutAsync();
+    #endregion
+
+    #region External
+    Task StoreUserTokenAsync(User user, string loginProvider, string name, string value);
+    Task<string?> GetUserTokenAsync(User user, string loginProvider, string tokenName);
+    #endregion
+
+    #region Helpers   
+    string GenerateRandomPassword(PasswordOptions options);
+    List<UserViewModel> SortUsers(IEnumerable<UserViewModel> users, string? sortBy, bool sortDescending);
+    Task<string> GenerateEmailConfirmationTokenAsync(User user);
+    Task<IdentityResult> ConfirmEmailAsync(User user, string token);
     List<UserViewModel> FilterUsers(IEnumerable<UserViewModel> users, string? nameFilter, string? emailFilter, string? phoneFilter, string? nifFilter);
     #endregion
 }

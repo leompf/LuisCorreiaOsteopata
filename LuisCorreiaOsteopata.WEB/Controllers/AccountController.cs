@@ -1,4 +1,6 @@
-﻿using LuisCorreiaOsteopata.WEB.Data;
+﻿using System.Security.Claims;
+using System.Text.RegularExpressions;
+using LuisCorreiaOsteopata.WEB.Data;
 using LuisCorreiaOsteopata.WEB.Data.Entities;
 using LuisCorreiaOsteopata.WEB.Helpers;
 using LuisCorreiaOsteopata.WEB.Models;
@@ -10,9 +12,6 @@ using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using QRCoder;
-using System.Security.Claims;
-using System.Text.RegularExpressions;
-
 
 namespace LuisCorreiaOsteopata.WEB.Controllers
 {
@@ -49,37 +48,50 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
             _logger = logger;
         }
 
+        #region Homepage
         public async Task<IActionResult> Index()
         {
-            if (User.Identity.IsAuthenticated)
+            _logger.LogInformation("Homepage accessed by user {User}", User.Identity?.Name ?? "Anonymous");
+
+            if (User.Identity?.IsAuthenticated == true)
             {
                 var user = await _userHelper.GetCurrentUserAsync();
+                if (user == null)
+                {
+                    _logger.LogWarning("Authenticated user could not be retrieved from UserHelper.");
+                    return RedirectToAction("Login", "Account");
+                }
 
                 var appointments = await _appointmentRepository.GetAppointmentsByUserAsync(user);
+                _logger.LogInformation("Fetched {AppointmentCount} appointments for user {UserId}", appointments.Count, user.Id);
 
                 var events = appointments.Select(a => new
                 {
                     id = a.Id,
                     title = $"Consulta com {a.Staff.FullName}",
-                    start = a.StartTime.ToString("s"),
-                    end = a.EndTime.ToString("s"),
+                    start = a.AppointmentDate.Add(a.StartTime.ToTimeSpan()).ToString("s"),
+                    end = a.AppointmentDate.Add(a.EndTime.ToTimeSpan()).ToString("s"),
                     allDay = false
                 }).ToList();
+
+                _logger.LogDebug("Mapped {EventCount} events for calendar display for user {UserId}", events.Count, user.Id);
 
                 ViewBag.Appointments = events;
 
                 return View();
             }
 
+            _logger.LogInformation("User is not authenticated, redirecting to Login page.");
             return RedirectToAction("Login", "Account");
         }
+        #endregion
 
-
+        #region Account Creation
+        [HttpGet]
         public IActionResult SignUp()
         {
             return View();
         }
-
 
         [HttpPost]
         public async Task<IActionResult> SignUp(SignUpViewModel model)
@@ -139,7 +151,7 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
             return View();
         }
 
-
+        [HttpGet]
         public async Task<IActionResult> ConfirmEmail(string userId, string token)
         {
             if (userId == null || token == null)
@@ -162,136 +174,30 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
             return View("ConfirmEmailFailure");
         }
 
-
-        public IActionResult Login()
-        {
-            return View();
-        }
-
-
-        [HttpPost]
-        public async Task<IActionResult> Login(LoginViewModel model)
-        {
-            if (ModelState.IsValid)
-            {
-                var result = await _userHelper.LoginAsync(model.Username, model.Password, model.RememberMe);
-                if (result.Succeeded)
-                {
-                    if (this.Request.Query.Keys.Contains("ReturnUrl"))
-                    {
-                        return Redirect(this.Request.Query["ReturnUrl"].First());
-                    }
-
-                    return this.RedirectToAction("Index", "Account");
-                }
-                else if (result.IsNotAllowed)
-                {
-                    ModelState.AddModelError(string.Empty, "Por favor confirma o teu email antes de fazer login.");
-                    return View(model);
-                }
-                else if (result.RequiresTwoFactor)
-                {
-                    return RedirectToAction(nameof(LoginWith2fa), new { RememberMe = model.RememberMe });
-                }
-            }
-
-            this.ModelState.AddModelError(string.Empty, "Erro ao fazer login");
-            return View(model);
-        }
-
-
-        public IActionResult LoginGoogle()
-        {
-            var redirectUrl = Url.Action("Response", "Account");
-            var properties = _signInManager.ConfigureExternalAuthenticationProperties(GoogleDefaults.AuthenticationScheme, redirectUrl);
-            return Challenge(properties, GoogleDefaults.AuthenticationScheme);
-        }
-
-
-        public async Task<IActionResult> Response()
-        {
-            var loginInfo = await _signInManager.GetExternalLoginInfoAsync();
-            if (loginInfo == null)
-                return RedirectToAction("Login");
-
-            var result = await _signInManager.ExternalLoginSignInAsync(
-                loginInfo.LoginProvider,
-                loginInfo.ProviderKey,
-                isPersistent: true,
-                bypassTwoFactor: true
-            );
-
-            if (result.Succeeded)
-                return RedirectToAction("Index", "Account");
-
-            var claims = loginInfo.Principal.Identities.FirstOrDefault()?.Claims;
-            var email = claims?.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value;
-            var name = claims?.FirstOrDefault(c => c.Type == ClaimTypes.Name)?.Value;
-            var googleId = claims?.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
-
-            var user = await _userHelper.GetUserByEmailAsync(email);
-            if (user == null)
-            {
-                user = new User
-                {
-                    Email = email,
-                    UserName = email,
-                    Names = name.Split(' ')[0],
-                    LastName = name.Contains(" ") ? name.Substring(name.IndexOf(" ") + 1) : "",
-                    EmailConfirmed = true
-                };
-
-                await _userHelper.AddUserAsync(user, Guid.NewGuid().ToString());
-                await _userHelper.AddUserToRoleAsync(user, "Utente");
-
-                var patient = await _patientRepository.CreatePatientAsync(user, "Utente");
-                if (patient != null)
-                {
-                    await _patientRepository.CreateAsync(patient);
-                }
-            }
-
-            var accessToken = loginInfo.AuthenticationTokens.FirstOrDefault(t => t.Name == "access_token")?.Value;
-            var refreshToken = loginInfo.AuthenticationTokens.FirstOrDefault(t => t.Name == "refresh_token")?.Value;
-            var expiresAt = loginInfo.AuthenticationTokens.FirstOrDefault(t => t.Name == "expires_at")?.Value;
-
-            if (!string.IsNullOrEmpty(accessToken))
-                await _userHelper.StoreUserTokenAsync(user, "Google", "access_token", accessToken);
-            if (!string.IsNullOrEmpty(refreshToken))
-                await _userHelper.StoreUserTokenAsync(user, "Google", "refresh_token", refreshToken);
-            if (!string.IsNullOrEmpty(expiresAt))
-                await _userHelper.StoreUserTokenAsync(user, "Google", "expires_at", expiresAt);
-
-            await _signInManager.SignInAsync(user, isPersistent: true);
-
-            return RedirectToAction("Index", "Account");
-        }
-
-
-        public async Task<IActionResult> Logout()
-        {
-            await _userHelper.LogoutAsync();
-            await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
-
-            return RedirectToAction("Index", "Home");
-        }
-
-
+        [HttpGet]
         [Authorize(Roles = "Administrador")]
         public IActionResult AddStaff()
         {
             return View();
         }
 
-
-        [Authorize(Roles = "Administrador")]
         [HttpPost]
+        [Authorize(Roles = "Administrador")]
         public async Task<IActionResult> AddStaff(AddNewStaffViewModel model)
         {
             if (ModelState.IsValid)
             {
                 var user = await _userHelper.GetUserByEmailAsync(model.Email);
-                var password = _userHelper.GenerateRandomPassword();
+                var password = _userHelper.GenerateRandomPassword(new PasswordOptions()
+                {
+                    RequiredLength = 6,
+                    RequiredUniqueChars = 4,
+                    RequireDigit = true,
+                    RequireLowercase = true,
+                    RequireNonAlphanumeric = true,
+                    RequireUppercase = true
+                });
+
 
                 if (user == null)
                 {
@@ -344,11 +250,231 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
             ModelState.AddModelError(string.Empty, "Já existe um utilizador com esse email.");
             return View(model);
         }
+        #endregion
 
+        #region Login & Logout
+        [HttpGet]
+        public IActionResult Login()
+        {
+            return View();
+        }
 
+        [HttpPost]
+        public async Task<IActionResult> Login(LoginViewModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                var result = await _userHelper.LoginAsync(model.Username, model.Password, model.RememberMe);
+                if (result.Succeeded)
+                {
+                    if (Request.Query.TryGetValue("ReturnUrl", out var returnUrl) && !string.IsNullOrEmpty(returnUrl))
+                    {
+                        _logger.LogInformation("Redirecting user {Username} to ReturnUrl {ReturnUrl}", model.Username, returnUrl);
+                        return Redirect(returnUrl!);
+                    }
+
+                    return this.RedirectToAction("Index", "Account");
+                }
+                else if (result.IsNotAllowed)
+                {
+                    ModelState.AddModelError(string.Empty, "Por favor confirma o teu email antes de fazer login.");
+                    return View(model);
+                }
+                else if (result.RequiresTwoFactor)
+                {
+                    return RedirectToAction(nameof(LoginWith2fa), new { RememberMe = model.RememberMe });
+                }
+                else
+                {
+                    ModelState.AddModelError(string.Empty, "Erro ao fazer login");
+                }
+            }
+            else
+            {
+                _logger.LogWarning("Login attempt failed due to invalid model state for user {Username}", model.Username);
+            }
+
+            return View(model);
+        }
+
+        [HttpGet]
+        public IActionResult LoginGoogle()
+        {
+            _logger.LogInformation("Initiating Google login flow.");
+
+            var redirectUrl = Url.Action("GoogleResponse", "Account");
+            var properties = _signInManager.ConfigureExternalAuthenticationProperties(GoogleDefaults.AuthenticationScheme, redirectUrl);
+
+            _logger.LogInformation("Redirecting user to Google for authentication.");
+            return Challenge(properties, GoogleDefaults.AuthenticationScheme);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GoogleResponse()
+        {
+            _logger.LogInformation("Received Google authentication response.");
+
+            var loginInfo = await _signInManager.GetExternalLoginInfoAsync();
+            if (loginInfo == null)
+            {
+                _logger.LogWarning("Google login info is null. Redirecting to login page.");
+                return RedirectToAction("Login");
+            }
+                
+            var result = await _signInManager.ExternalLoginSignInAsync(
+                loginInfo.LoginProvider,
+                loginInfo.ProviderKey,
+                isPersistent: true,
+                bypassTwoFactor: true
+            );
+
+            if (result.Succeeded)
+            {
+                _logger.LogInformation("User successfully signed in with Google provider {Provider}.", loginInfo.LoginProvider);
+                return RedirectToAction("Index", "Account");
+            }                
+
+            var claims = loginInfo.Principal.Identities.FirstOrDefault()?.Claims;
+
+            var email = claims?.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value;
+            var name = claims?.FirstOrDefault(c => c.Type == ClaimTypes.Name)?.Value;
+            var googleId = claims?.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(email))
+            {
+                _logger.LogWarning("Google login failed: email claim not found. Redirecting to login page.");
+                return RedirectToAction("Login");
+            }
+
+            _logger.LogInformation("Handling first-time Google login for user {Email}.", email);
+
+            var user = await _userHelper.GetUserByEmailAsync(email);
+            if (user == null)
+            {
+                _logger.LogInformation("Creating new user for Google login: {Email}", email);
+
+                user = new User
+                {
+                    Email = email,
+                    UserName = email,
+                    Names = name!.Split(' ')[0],
+                    LastName = name.Contains(" ") ? name.Substring(name.IndexOf(" ") + 1) : "",
+                    EmailConfirmed = true
+                };
+
+                await _userHelper.AddUserAsync(user, Guid.NewGuid().ToString());
+                await _userHelper.AddUserToRoleAsync(user, "Utente");
+
+                var patient = await _patientRepository.CreatePatientAsync(user, "Utente");
+                if (patient != null)
+                {
+                    await _patientRepository.CreateAsync(patient);
+                }
+            }
+
+            var tokens = loginInfo.AuthenticationTokens?
+               .Where(t => t.Value != null)
+               .ToDictionary(t => t.Name, t => t.Value!) ?? new Dictionary<string, string>();
+
+            if (tokens.TryGetValue("access_token", out var accessToken))
+            {
+                await _userHelper.StoreUserTokenAsync(user, "Google", "access_token", accessToken);
+            }
+            if (tokens.TryGetValue("refresh_token", out var refreshToken))
+            {
+                await _userHelper.StoreUserTokenAsync(user, "Google", "refresh_token", refreshToken);
+            }
+            if (tokens.TryGetValue("expires_at", out var expiresAt))
+            {
+                await _userHelper.StoreUserTokenAsync(user, "Google", "expires_at", expiresAt);
+            }
+
+            _logger.LogInformation("Signing in user {UserId} after Google login.", user.Id);
+            await _signInManager.SignInAsync(user, isPersistent: true);
+
+            return RedirectToAction("Index", "Account");
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> LoginWith2fa(bool rememberMe, string? returnUrl = null)
+        {
+            var user = await _signInManager.GetTwoFactorAuthenticationUserAsync();
+            if (user == null)
+            {
+                _logger.LogError("Unable to load 2FA user for request");
+                throw new InvalidOperationException("Unable to load 2FA user.");
+            }
+
+            _logger.LogInformation("Displaying 2FA login page for user {UserId} ({Email})", user.Id, user.Email);
+
+            var model = new LoginWith2faViewModel { RememberMe = rememberMe };
+            return View(model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> LoginWith2fa(LoginWith2faViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                _logger.LogWarning("2FA login attempt with invalid model state.");
+                return View(model);
+            }                
+
+            var user = await _signInManager.GetTwoFactorAuthenticationUserAsync();
+            if (user == null)
+            {
+                _logger.LogError("Unable to load 2FA user during POST login attempt.");
+                throw new InvalidOperationException("Unable to load two-factor authentication user.");
+            }
+                
+            var authenticatorCode = model.TwoFactorCode.Replace(" ", string.Empty).Replace("-", string.Empty);
+            _logger.LogInformation("User {UserId} attempting 2FA login.", user.Id);
+
+            var result = await _signInManager.TwoFactorAuthenticatorSignInAsync(
+                authenticatorCode, model.RememberMe, model.RememberDevice);
+
+            if (result.Succeeded)
+            {
+                _logger.LogInformation("User {UserId} successfully logged in via 2FA.", user.Id);
+
+                if (this.Request.Query.Keys.Contains("ReturnUrl"))
+                {
+                    var returnUrl = this.Request.Query["ReturnUrl"].First();
+                    _logger.LogInformation("Redirecting 2FA user {UserId} to ReturnUrl {ReturnUrl}.", user.Id, returnUrl);
+                    return Redirect(returnUrl!);
+                }
+
+                return this.RedirectToAction("Index", "Account");
+            }
+
+            if (result.IsLockedOut)
+            {
+                _logger.LogWarning("2FA login attempt failed: user {UserId} is locked out.", user.Id);
+                ModelState.AddModelError(string.Empty, "Conta bloqueada.");
+                return View(model);
+            }
+
+            _logger.LogWarning("Invalid 2FA code entered by user {UserId}.", user.Id);
+            ModelState.AddModelError(string.Empty, "Código inválido.");
+            return View(model);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Logout()
+        {
+            await _userHelper.LogoutAsync();
+            await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
+
+            return RedirectToAction("Index", "Home");
+        }
+        #endregion
+
+        #region CRUD
+        [HttpGet]
         public async Task<IActionResult> Profile(string? id)
         {
-            User user;
+            User? user;
 
             if (string.IsNullOrEmpty(id))
             {
@@ -359,7 +485,9 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
             else
             {
                 if (User.IsInRole("Utente"))
+                {
                     return Forbid();
+                }
 
                 user = await _userHelper.GetUserByIdAsync(id);
                 if (user == null)
@@ -423,6 +551,7 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
             return View(model);
         }
 
+        [HttpGet]
         public async Task<IActionResult> Security()
         {
             var user = await _userHelper.GetCurrentUserAsync();
@@ -438,7 +567,6 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
 
             return View(model);
         }
-
 
         [HttpPost]
         public async Task<IActionResult> UpdateUser(ProfileViewModel model)
@@ -463,6 +591,7 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
             return RedirectToAction("Profile");
         }
 
+        [HttpGet]
         public async Task<IActionResult> ViewAllUsers(string? name, string? email, string? phone, string? nif, string? role, string? sortBy, bool sortDescending = true)
         {
             var users = await _userHelper.GetAllUsersAsync();
@@ -502,7 +631,9 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
 
             return View(model);
         }
+        #endregion
 
+        #region 2FA Authentication
         [Authorize]
         [HttpGet]
         public async Task<IActionResult> Enable2fa()
@@ -531,7 +662,6 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
 
             return View(model);
         }
-
 
         [Authorize]
         [HttpPost]
@@ -566,57 +696,13 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
 
             return RedirectToAction("Security");
         }
+        #endregion
 
-        [HttpGet]
-        public async Task<IActionResult> LoginWith2fa(bool rememberMe, string? returnUrl = null)
-        {
-            var user = await _signInManager.GetTwoFactorAuthenticationUserAsync();
-            if (user == null)
-                throw new InvalidOperationException("Unable to load 2FA user.");
-
-            var model = new LoginWith2faViewModel { RememberMe = rememberMe };
-            return View(model);
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> LoginWith2fa(LoginWith2faViewModel model)
-        {
-            if (!ModelState.IsValid)
-                return View(model);
-
-            var user = await _signInManager.GetTwoFactorAuthenticationUserAsync();
-            if (user == null)
-                throw new InvalidOperationException("Unable to load two-factor authentication user.");
-
-            var authenticatorCode = model.TwoFactorCode.Replace(" ", string.Empty).Replace("-", string.Empty);
-
-            var result = await _signInManager.TwoFactorAuthenticatorSignInAsync(
-                authenticatorCode, model.RememberMe, model.RememberDevice);
-
-            if (result.Succeeded)
-            {
-                if (this.Request.Query.Keys.Contains("ReturnUrl"))
-                {
-                    return Redirect(this.Request.Query["ReturnUrl"].First());
-                }
-
-                return this.RedirectToAction("Index", "Account");
-            }
-
-            if (result.IsLockedOut)
-            {
-                ModelState.AddModelError(string.Empty, "Conta bloqueada.");
-                return View(model);
-            }
-
-            ModelState.AddModelError(string.Empty, "Código inválido.");
-            return View(model);
-        }
-
+        #region Helper Methods
         private string FormatKey(string key)
         {
             return Regex.Replace(key.ToUpperInvariant(), ".{4}", "$0 ").Trim();
         }
+        #endregion
     }
 }

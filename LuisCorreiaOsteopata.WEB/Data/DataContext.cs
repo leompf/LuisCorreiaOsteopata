@@ -1,5 +1,7 @@
 ﻿using LuisCorreiaOsteopata.WEB.Data.Entities;
+using LuisCorreiaOsteopata.WEB.Helpers;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 
 namespace LuisCorreiaOsteopata.WEB.Data;
@@ -53,5 +55,9 @@ public class DataContext : IdentityDbContext<User>
             .HasForeignKey(a => a.StaffId)
             .IsRequired()
             .OnDelete(DeleteBehavior.Restrict);
+
+        modelbuilder.HasSequence<int>("OrderNumberSequence", "dbo")
+            .StartsAt(1)
+            .IncrementsBy(1);
     }
 }

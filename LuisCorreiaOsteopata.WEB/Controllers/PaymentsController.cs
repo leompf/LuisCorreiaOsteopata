@@ -2,7 +2,9 @@
 using LuisCorreiaOsteopata.WEB.Data.Entities;
 using LuisCorreiaOsteopata.WEB.Helpers;
 using LuisCorreiaOsteopata.WEB.Models;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Stripe.Checkout;
 
@@ -12,14 +14,17 @@ public class PaymentsController : Controller
 {
     private readonly DataContext _context;
     private readonly IUserHelper _userHelper;
+    private readonly IEmailSender _emailSender;
 
     public PaymentsController(DataContext context,
         IConfiguration configuration,
         IUserHelper userHelper,
+        IEmailSender emailSender,
         ILogger<PaymentsController> logger)
     {
         _context = context;
         _userHelper = userHelper;
+        _emailSender = emailSender;
     }
 
     [HttpPost]
@@ -83,15 +88,18 @@ public class PaymentsController : Controller
         if (session.PaymentStatus == "paid")
         {
             var order = await _context.Orders
+                .Include(o => o.User)
                 .Include(o => o.Items)
                     .ThenInclude(i => i.Product)
                 .FirstOrDefaultAsync(o => o.StripeSessionId == session.Id);
 
             if (order != null)
             {
+                //TODO: VERIFICAR ORDER NUMBER PORQUE A QUERY NAO FUNCIONA                
+
                 order.IsPaid = true;
                 order.PaymentDate = DateTime.UtcNow;
-                order.OrderNumber = $"LC#00{order.Id}{DateTime.UtcNow:ddMMyyyy}";
+                order.OrderNumber = $"LC-{DateTime.Today.Year}-{order.Id:D4}";
                 order.PaymentIntentId = session.PaymentIntentId;
 
                 foreach (var item in order.Items)
@@ -105,11 +113,22 @@ public class PaymentsController : Controller
                         item.RemainingUses = 3;
                     }
                 }
-
+             
                 _context.Update(order);
                 await _context.SaveChangesAsync();
-            }
 
+                var productList = string.Join(", ", order.Items.Select(i => i.Product.Name));
+
+                var mail = $@"
+                        <p>Olá {order.User.Names.Split(' ')[0]},</p>
+                        <p>Recebemos o teu pedido e vamos processá-lo dentro de instantes. Os detalhes do pedido encontram-se em baixo:</p>
+                        <p>Nº do Pedido: <b>{order.OrderNumber}</b></p
+                        <p>Produto/Serviço: {productList}</p>
+                        <p>Com os melhores cumprimentos,<br />
+                        Luís Correia, Osteopata</p>";
+
+                await _emailSender.SendEmailAsync(order.User.Email, $"Pedido Confirmado - ID {order.OrderNumber}", mail);
+            }
             return View(order);
         }
 
