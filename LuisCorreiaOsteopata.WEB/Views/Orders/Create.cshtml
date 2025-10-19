@@ -67,7 +67,11 @@
                                         </td>
                                         <td>@item.Value.ToString("C2")</td>
                                         <td id="@item.Id">
-                                            <a asp-action="DeleteItem" asp-route-id="@item.Id" class="cross-icon text-center text-danger" id="btnDeleteItem"><i class="fas fa-times"></i></a>
+                                            <form method="post">
+                                                <button asp-action="DeleteCartItem" asp-route-id="@item.Id" class="cross-icon text-center text-danger" style="border: none; background-color: white" id="btnDeleteItem">
+                                                    <i class="fas fa-times"></i>
+                                                </button>
+                                            </form>                                            
                                         </td>
                                     </tr>
                                 }
@@ -166,10 +170,12 @@
                                     </a>
                                 </div>
                                 <div class="cart-page__buttons-2">
-                                    <a asp-action="ConfirmOrder" class="thm-btn">
-                                        Checkout
-                                        <span class="icon-right-arrow"></span>
-                                    </a>
+                                    <form method="post">
+                                        <button asp-action="ConfirmOrder" class="thm-btn">
+                                            Checkout
+                                            <span class="icon-right-arrow"></span>
+                                        </button>
+                                    </form>
                                 </div>
                             </div>
                         </div>
@@ -236,7 +242,7 @@
                 let quantityChange = $(this).hasClass("add") ? 1 : -1;
 
                 $.ajax({
-                    url: '@Url.Action("ModifyQuantity", "Orders")',
+                    url: '@Url.Action("UpdateCartQuantity", "Orders")',
                     type: 'POST',
                     data: { id: id, quantityChange: quantityChange },
                     success: function (response) {

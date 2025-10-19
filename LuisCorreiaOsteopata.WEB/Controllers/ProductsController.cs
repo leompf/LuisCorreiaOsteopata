@@ -25,11 +25,13 @@ public class ProductsController : Controller
         _imageHelper = imageHelper;
     }
 
+    [HttpGet]
     public IActionResult Index()
     {
         return View(_productRepository.GetAll().OrderBy(p => p.Name));
     }
 
+    [HttpGet]
     public async Task<IActionResult> ViewProducts()
     {
         var products = await _productRepository.GetAvailableProducts();
@@ -37,6 +39,7 @@ public class ProductsController : Controller
         return View(products);
     }
 
+    [HttpGet]
     public async Task<IActionResult> Details(int? id)
     {
         if (id == null)

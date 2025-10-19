@@ -199,7 +199,7 @@ public class AppointmentRepository : GenericRepository<Appointment>, IAppointmen
 
     #endregion
 
-    #region Helper
+    #region Helper Methods
     public IEnumerable<SelectListItem> GetAvailableTimeSlotsCombo(DateTime date)
     {
         var now = DateTime.Now;

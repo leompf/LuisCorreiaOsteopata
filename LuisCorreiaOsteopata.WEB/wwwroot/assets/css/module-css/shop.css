@@ -804,7 +804,8 @@ Product
     margin-left: 8px;
 }
 
-.single-product-style1__info li a {
+.single-product-style1__info li a,
+.single-product-style1__info li button {
     position: relative;
     display: flex;
     align-items: center;
@@ -821,7 +822,8 @@ Product
     transition-delay: 0.1s;
 }
 
-.single-product-style1__info li a:hover {
+.single-product-style1__info li a:hover,
+.single-product-style1__info li button:hover {
     color: var(--careon-white);
     background-color: var(--careon-base);
 }

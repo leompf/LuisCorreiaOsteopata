@@ -4,7 +4,6 @@ using LuisCorreiaOsteopata.WEB.Helpers;
 using LuisCorreiaOsteopata.WEB.Models;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Stripe.Checkout;
 
@@ -113,7 +112,7 @@ public class PaymentsController : Controller
                         item.RemainingUses = 3;
                     }
                 }
-             
+
                 _context.Update(order);
                 await _context.SaveChangesAsync();
 

@@ -109,9 +109,11 @@
                                                                         </a>
                                                                     </li>
                                                                     <li>
-                                                                        <a asp-controller="Orders" asp-action="AddProduct" asp-route-id="@product.Id" title="Add to Cart">
-                                                                            <i class="fa fa-solid fa-cart-plus"></i>
-                                                                        </a>
+                                                                        <form method="post">
+                                                                            <button asp-controller="Orders" asp-action="AddItemToCart" asp-route-id="@product.Id" title="Add to Cart">
+                                                                                <i class="fa fa-solid fa-cart-plus"></i>
+                                                                            </button>
+                                                                        </form>
                                                                     </li>
                                                                     <li>
                                                                         <a asp-controller="Products" asp-action="Details" asp-route-id="@product.Id" title="Quick View">
@@ -198,7 +200,7 @@
                                                                             <li>
                                                                                 <a href="#" title="Add to Wishlist"><i class="fa fa-regular fa-heart"></i></a>
                                                                             </li>
-                                                                            <li>
+                                                                            <li>                                                                                
                                                                                 <a asp-controller="Cart" asp-action="Add" asp-route-id="@product.Id" title="Add to cart">
                                                                                     <i class="fa fa-solid fa-cart-plus"></i>
                                                                                 </a>
@@ -268,7 +270,7 @@
                                 <input type="submit" value="Filter">
                             </div>
                         </div>
-                    </div>                                                     
+                    </div>
 
                     <!--Start Products Style1 Single Sidear -->
                     <div class="shop-product-tags product__sidebar-single style">
