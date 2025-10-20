@@ -27,6 +27,12 @@
                     <li><a asp-controller="Products" asp-action="Create">Criar Produto</a></li>
                 </ul>
             </li>
+            <li class="dropdown">
+                <a><i style="margin-right: 5px" class="fas fa-barcode align-content-center"></i>Gestão de Pedidos</a>
+                <ul>
+                    <li><a asp-controller="Orders" asp-action="ViewAllOrders">Ver Pedidos</a></li>
+                </ul>
+            </li>
         </ul>
     </li>
 }
@@ -57,7 +63,11 @@
         <a asp-controller="Products" asp-action="ViewProducts"><i style="margin-right: 5px" class="fas fa-shopping-bag align-content-center"></i>Ver Produtos</a>
     </li>
     <li>
-        <a asp-controller="Orders" asp-action="Create"><i style="margin-right: 5px" class="fas fa-shopping-cart"></i>Carrinho</a>
+        <a asp-controller="Orders" asp-action="Create">
+            <i style="margin-right: 5px" class="fas fa-shopping-cart"></i>
+            Carrinho
+            <span class="cart-badge">0</span>
+        </a>
     </li>
 }
 @if (User.Identity.IsAuthenticated)

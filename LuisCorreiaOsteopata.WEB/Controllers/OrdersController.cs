@@ -5,6 +5,7 @@ using LuisCorreiaOsteopata.WEB.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Threading.Tasks;
 
 namespace LuisCorreiaOsteopata.WEB.Controllers
 {
@@ -12,9 +13,7 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
     public class OrdersController : Controller
     {
         private readonly IOrderRepository _orderRepository;
-        private readonly IUserHelper _userHelper;
         private readonly ILogger<OrdersController> _logger;
-        private readonly DataContext _context;
 
         public OrdersController(IOrderRepository orderRepository,
             IUserHelper userHelper,
@@ -22,16 +21,20 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
             DataContext context)
         {
             _orderRepository = orderRepository;
-            _userHelper = userHelper;
             _logger = logger;
-            _context = context;
         }
 
         #region Cart
         [HttpGet]
         public async Task<IActionResult> Create()
         {
-            var model = await _orderRepository.GetCartAsync(this.User.Identity.Name);
+            var model = await _orderRepository.GetCartAsync(User.Identity.Name);
+            if (model == null)
+            {
+                _logger.LogWarning("No cart found for user {Username}.", User.Identity.Name);
+                return RedirectToAction("Index", "Home");
+            }
+
             return View(model);
         }
 
@@ -46,10 +49,17 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
                 return NotFound();
             }
 
-            return RedirectToAction(nameof(Create));
+            var cartCount = await _orderRepository.GetCartItemCountAsync(User.Identity.Name);
+
+            return Json(new
+            {
+                success = true,
+                cartCount
+            });
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteCartItem(int? id)
         {
             if (id == null)
@@ -62,6 +72,7 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> UpdateCartQuantity(int id, double quantityChange)
         {
             var result = await _orderRepository.UpdateCartQuantityAsync(id, quantityChange);
@@ -80,19 +91,25 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
                 newQuantity
             });
         }
+
+        [HttpGet]
+        public async Task<IActionResult> GetCartCount()
+        {
+            var cartCount = await _orderRepository.GetCartItemCountAsync(User.Identity.Name);
+            return Json(new { cartCount });
+        }
         #endregion
 
-        #region CRUD Orders
-        //CREATE ORDER DETAIL
+        #region Order Processing
         [HttpPost]
-        public async Task<IActionResult> ConfirmOrder()
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CreateOrder()
         {
-            var response = await _orderRepository.ConfirmOrderAsync(this.User.Identity.Name);
+            var success = await _orderRepository.CreateOrderFromCartAsync(User.Identity.Name);
 
-            if (!response)
+            if (!success)
             {
-                _logger.LogWarning("Failed to confirm order for user {Username}. Redirecting back to Cart.", this.User.Identity.Name);
-
+                _logger.LogWarning("Failed to create order for user {Username}. Redirecting back to Cart.", User.Identity.Name);
                 return RedirectToAction("Create");
             }
 
@@ -102,14 +119,14 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
         [HttpGet]
         public async Task<IActionResult> Checkout()
         {
-            _logger.LogInformation("Accessing Checkout page for user {Username}.", this.User.Identity.Name);
+            _logger.LogInformation("Accessing Checkout page for user {Username}.", User.Identity.Name);
 
-            var orders = await _orderRepository.GetOrderAsync(this.User.Identity.Name);
+            var orders = await _orderRepository.GetOrderAsync(User.Identity.Name);
             var lastOrder = await orders.FirstOrDefaultAsync();
 
             if (lastOrder == null)
             {
-                _logger.LogWarning("No orders found for user {Username}. Redirecting to Create.", this.User.Identity.Name);
+                _logger.LogWarning("No orders found for user {Username}. Redirecting to Cart.", User.Identity.Name);
                 return RedirectToAction("Create");
             }
 
@@ -123,14 +140,33 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
         }
 
         [HttpGet]
-        public IActionResult Index()
+        [Authorize(Roles = "Colaborador,Administrador")]
+        public async Task<IActionResult> ViewAllOrders(string? userId, string? orderNumber, DateTime? orderDate, DateTime? deliveryDate, DateTime? paymentDate, string? sortBy, bool sortDescending = false)
         {
             _logger.LogInformation("Accessed Orders Index page.");
-            return View();
+
+            var orders = await _orderRepository.GetFilteredOrdersAsync(userId, orderNumber, orderDate, deliveryDate, paymentDate, sortBy, sortDescending);
+
+            var model = new OrderListViewModel
+            {
+                OrderUserFilter = userId,
+                OrderNumberFilter = orderNumber,
+                OrderDateFilter = orderDate,
+                OrderDeliveryDateFilter = deliveryDate,
+                OrderPaymentDateFilter = orderDate,
+                Orders = orders
+            };
+
+            ViewBag.DefaultSortBy = sortBy;
+            ViewBag.DefaultSortDescending = sortDescending;
+
+            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                return PartialView("_OrdersTable", model.Orders);
+
+            return View(model);
         }
         #endregion
     }
 }
 
-//TODO: Recuperar carrinho depois de uma Order ser criada se o utilizador nunca acabar a Order.
 //TODO: Criar Faturação

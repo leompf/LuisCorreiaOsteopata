@@ -1,8 +1,10 @@
-﻿using LuisCorreiaOsteopata.WEB.Data.Entities;
+﻿using AngleSharp.Dom;
+using LuisCorreiaOsteopata.WEB.Data.Entities;
 using LuisCorreiaOsteopata.WEB.Helpers;
 using LuisCorreiaOsteopata.WEB.Models;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Query;
 
 namespace LuisCorreiaOsteopata.WEB.Data;
 
@@ -22,14 +24,13 @@ public class AppointmentRepository : GenericRepository<Appointment>, IAppointmen
     }
 
     #region CRUD Apppointments
-    public async Task<List<Appointment>> GetAllAppointmentsAsync()
+    public IQueryable<Appointment> GetAllAppointments()
     {
-        return await _context.Appointments
+        return _context.Appointments
             .Include(a => a.Staff)
                 .ThenInclude(s => s.User)
             .Include(a => a.Patient)
-                .ThenInclude(p => p.User)
-            .ToListAsync();
+                .ThenInclude(p => p.User);
     }
 
     public async Task<Appointment?> GetAppointmentByIdAsync(int? id)
@@ -64,74 +65,69 @@ public class AppointmentRepository : GenericRepository<Appointment>, IAppointmen
 
     public async Task<List<Appointment>> GetFilteredAppointmentsAsync(string? userId, string? staffName, string? patientName, DateTime? fromDate, DateTime? toDate, string? sortBy, bool sortDescending = false)
     {
-        var appointments = await GetAllAppointmentsAsync();
+        var appointments = GetAllAppointments();
 
         if (!string.IsNullOrEmpty(userId))
         {
-            appointments = appointments
-                .Where(a => (a.Staff != null && a.Staff.User.Id == userId)
-                         || (a.Patient != null && a.Patient.User.Id == userId))
-                .ToList();
+            appointments = appointments.Where(a =>
+            (a.Staff != null && a.Staff.User.Id == userId) ||
+            (a.Patient != null && a.Patient.User.Id == userId));
         }
 
-        if (!string.IsNullOrWhiteSpace(staffName))
+        if (!string.IsNullOrEmpty(staffName))
         {
-            appointments = appointments
-                .Where(a => a.Staff != null &&
-                            a.Staff.FullName.Contains(staffName, StringComparison.OrdinalIgnoreCase))
-                .ToList();
+            appointments = appointments.Where(a =>
+                a.Staff != null &&
+                EF.Functions.Like(a.Staff.User.Names + " " + a.Staff.User.LastName, $"%{staffName}%"));
         }
 
-        if (!string.IsNullOrWhiteSpace(patientName))
+        if (!string.IsNullOrEmpty(patientName))
         {
-            appointments = appointments
-                .Where(a => a.Patient != null &&
-                            a.Patient.FullName.Contains(patientName, StringComparison.OrdinalIgnoreCase))
-                .ToList();
+            appointments = appointments.Where(a =>
+                a.Patient != null &&
+                EF.Functions.Like(a.Patient.User.Names + " " + a.Patient.User.LastName, $"%{patientName}%"));
         }
 
         if (fromDate.HasValue)
         {
             appointments = appointments
-                .Where(a => a.AppointmentDate >= fromDate.Value)
-                .ToList();
+                .Where(a => a.AppointmentDate >= fromDate.Value);
         }
 
         if (toDate.HasValue)
         {
             appointments = appointments
-                .Where(a => a.AppointmentDate <= toDate.Value)
-                .ToList();
+                .Where(a => a.AppointmentDate <= toDate.Value);
         }
 
         appointments = sortBy switch
         {
             "Date" => sortDescending
-                ? appointments.OrderByDescending(a => a.AppointmentDate).ThenByDescending(a => a.StartTime).ToList()
-                : appointments.OrderBy(a => a.AppointmentDate).ThenBy(a => a.StartTime).ToList(),
+                ? appointments.OrderByDescending(a => a.AppointmentDate).ThenByDescending(a => a.StartTime)
+                : appointments.OrderBy(a => a.AppointmentDate).ThenBy(a => a.StartTime),
 
             "Patient" => sortDescending
-                ? appointments.OrderByDescending(a => a.Patient.FullName).ToList()
-                : appointments.OrderBy(a => a.Patient.FullName).ToList(),
+                ? appointments.OrderByDescending(a => a.Patient.Names).ThenByDescending(a => a.Patient.LastName)
+                : appointments.OrderBy(a => a.Patient.Names).ThenBy(a => a.Patient.LastName),
 
             "Staff" => sortDescending
-                ? appointments.OrderByDescending(a => a.Staff.FullName).ToList()
-                : appointments.OrderBy(a => a.Staff.FullName).ToList(),
+                ? appointments.OrderByDescending(a => a.Staff.Names).ThenByDescending(a => a.Staff.LastName)
+                : appointments.OrderBy(a => a.Staff.Names).ThenBy(a => a.Staff.LastName),
 
             "Status" => sortDescending
-                ? appointments.OrderByDescending(a => a.AppointmentStatus).ToList()
-                : appointments.OrderBy(a => a.AppointmentStatus).ToList(),
+                ? appointments.OrderByDescending(a => a.AppointmentStatus)
+                : appointments.OrderBy(a => a.AppointmentStatus),
 
-            _ => appointments.OrderBy(a => a.AppointmentDate).ThenBy(a => a.StartTime).ToList()
+            _ => appointments.OrderBy(a => a.AppointmentDate).ThenBy(a => a.StartTime)
         };
 
-        return appointments;
+        return await appointments.ToListAsync();
     }
 
     public async Task<List<AppointmentViewModel>> GetSchedulledAppointmentsAsync()
     {
-        var appointments = await GetAllAppointmentsAsync();
-        return appointments.Select(a => new AppointmentViewModel
+        var appointments =  GetAllAppointments();
+        return await appointments.Select(a => new AppointmentViewModel
         {
             Id = a.Id,
             PatientId = a.PatientId,
@@ -144,7 +140,7 @@ public class AppointmentRepository : GenericRepository<Appointment>, IAppointmen
             EndTime = a.EndTime,
             PatientNotes = a.PatientNotes,
             StaffNotes = a.StaffNotes,
-        }).ToList();
+        }).ToListAsync();
     }
 
     public async Task<(bool Success, string? ErrorMessage)> CreateAppointmentAsync(Appointment appointment, int patientId)
@@ -204,43 +200,44 @@ public class AppointmentRepository : GenericRepository<Appointment>, IAppointmen
     {
         var now = DateTime.Now;
 
-        var booked = _context.Appointments
+        if (date.Date < now.Date)
+            return new List<SelectListItem>();
+
+        (TimeOnly start, TimeOnly end)? workingHours = date.DayOfWeek switch
+        {
+            DayOfWeek.Monday or DayOfWeek.Tuesday or DayOfWeek.Wednesday
+            or DayOfWeek.Thursday or DayOfWeek.Friday => (new TimeOnly(9, 0), new TimeOnly(19, 0)),
+
+            DayOfWeek.Saturday => (new TimeOnly(9, 0), new TimeOnly(13, 0)),
+
+            _ => null 
+        };
+
+        if (workingHours == null)
+            return new List<SelectListItem>();
+
+        var (startTime, endTime) = workingHours.Value;
+
+        var bookedSlots = _context.Appointments
             .Where(a => a.AppointmentDate.Date == date.Date)
             .Select(a => a.StartTime)
             .ToList();
 
-        TimeOnly start, end;
-
-        if (date.DayOfWeek == DayOfWeek.Saturday)
-        {
-            start = new TimeOnly(9, 0);
-            end = new TimeOnly(13, 0);
-        }
-        else if (date.DayOfWeek >= DayOfWeek.Monday && date.DayOfWeek <= DayOfWeek.Friday)
-        {
-            start = new TimeOnly(9, 0);
-            end = new TimeOnly(19, 0);
-        }
-        else
-        {
-            return new List<SelectListItem>();
-        }
-
         var slotDuration = TimeSpan.FromMinutes(60);
-        var slots = new List<TimeOnly>();
+        var availableSlots = new List<TimeOnly>();
 
-        for (var t = start; t < end; t = t.AddMinutes(slotDuration.TotalMinutes))
+        for (var t = startTime; t < endTime; t = t.AddMinutes(slotDuration.TotalMinutes))
         {
-            if (booked.Contains(t))
+            if (bookedSlots.Contains(t))
                 continue;
 
             if (date.Date == now.Date && t <= TimeOnly.FromDateTime(now))
                 continue;
 
-            slots.Add(t);
+            availableSlots.Add(t);
         }
 
-        return slots.Select(t => new SelectListItem
+        return availableSlots.Select(t => new SelectListItem
         {
             Text = t.ToString("HH:mm"),
             Value = t.ToString("HH:mm")

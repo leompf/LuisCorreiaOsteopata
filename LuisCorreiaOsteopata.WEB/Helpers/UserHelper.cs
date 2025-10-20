@@ -410,6 +410,11 @@ public class UserHelper : IUserHelper
             throw;
         }
     }
+
+    public async Task<bool> CheckPasswordAsync(User user, string password)
+    {
+        return await _userManager.CheckPasswordAsync(user, password);
+    }
     #endregion
 
     #region External
@@ -603,5 +608,7 @@ public class UserHelper : IUserHelper
             _ => sortDescending ? users.OrderByDescending(u => u.Name).ToList() : users.OrderBy(u => u.Name).ToList()
         };
     }
+
+    
     #endregion
 }

@@ -85,89 +85,13 @@
                                 </div>
                             }
                         </div>
-                    </form>
-                    <div class="form-group row">
-                        <form method="post" asp-controller="Google" asp-action="SavePreferredCalendar">
-                            @if (ViewBag.Token == null)
-                            {
-                                @if (Model.IsEditable)
-                                {
-                                    <a asp-controller="Google" asp-action="LinkGoogleCalendar" class="btn btn-danger">
-                                        <i class="fab fa-google"></i> Conectar ao Google Calendar
-                                    </a>
-                                }
-                            }
-                            @if (ViewBag.GoogleCalendars != null && ViewBag.GoogleCalendars.Count > 0)
-                            {
-                                <div class="cart-page__buttons cart-page__buttons-1">
-                                    <label class="col-auto col-form-label pe-1">
-                                        <strong>
-                                            Calendário do Google Calendar:
-                                        </strong>
-                                        @(string.IsNullOrWhiteSpace(Model.CalendarId) ? "Calendário não escolhido" : Model.CalendarName)
-                                    </label>
-
-                                    @if (Model.IsEditable)
-                                    {
-                                        <button type="submit" asp-controller="Google" asp-action="SavePreferredCalendar" class="thm-btn" id="calendarButton">
-                                            @if (string.IsNullOrWhiteSpace(Model.CalendarId))
-                                            {
-                                                @:Definir calendário
-                                            }
-                                            else
-                                            {
-                                                @:Alterar Calendário Selecionado
-                                            }
-                                            <span class="icon-right-arrow"></span>
-                                        </button>
-                                    }
-                                </div>
-
-                                <input type="hidden" name="CalendarId" id="hiddenCalendarId" value="@Model.CalendarId" />
-                            }
-                        </form>
-                    </div>
+                    </form>                   
                 </div>
             </div>
         </div>
     </div>
 </section>
 
-<div id="confirmDialog" class="modal fade">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h4 class="modal-title">Selecionar Calendário</h4>
-                <button type="button" class="close" data-bs-dismiss="modal"><i class="fa fa-window-close"></i></button>
-            </div>
-            <div class="modal-body">
-                <div class="form-group">
-                    <label>Seleciona o calendário Google para as consultas:</label>
-                    <div class="col-auto">
-                        <select id="modalCalendarSelect" class="form-control">
-                            <option value="">-- Selecionar calendário --</option>
-                            @foreach (var cal in ViewBag.GoogleCalendars)
-                            {
-                                if (Model.CalendarId == cal.Value)
-                                {
-                                    <option value="@cal.Value" selected>@cal.Text</option>
-                                }
-                                else
-                                {
-                                    <option value="@cal.Value">@cal.Text</option>
-                                }
-                            }
-                        </select>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-success" id="btnYes">Confirmar</button>
-                <button type="button" class="btn btn-danger" id="btnNo">Cancelar</button>
-            </div>
-        </div>
-    </div>
-</div>
 
 @section Scripts {
     @{
@@ -217,32 +141,6 @@
                 if (hasErrors) {
                     event.preventDefault();
                 }
-            });
-        });
-
-        document.addEventListener("DOMContentLoaded", function () {
-            const confirmDialogEl = document.getElementById('confirmDialog');
-            const confirmDialog = new bootstrap.Modal(confirmDialogEl);
-
-            const calendarButton = $("#calendarButton");
-            const btnYes = $("#btnYes");
-            const btnNo = $("#btnNo");
-            const modalSelect = $("#modalCalendarSelect");
-            const hiddenInput = $("#hiddenCalendarId");
-
-            calendarButton.click(function (e) {
-                e.preventDefault();
-                confirmDialog.show();
-            });
-
-            btnYes.click(function () {
-                hiddenInput.val(modalSelect.val());;
-                confirmDialog.hide();
-                calendarButton.closest("form").submit();
-            });
-
-            btnNo.click(function () {
-                confirmDialog.hide();
             });
         });
 

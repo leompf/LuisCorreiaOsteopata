@@ -21,7 +21,7 @@ namespace LuisCorreiaOsteopata.WEB.Helpers
         {
             var targetDate = DateTime.UtcNow.AddHours(24).Date;
 
-            var appointments = await _appointmentRepository.GetAllAppointmentsAsync();
+            var appointments = _appointmentRepository.GetAllAppointments();
             var upcomingAppointments = appointments
                 .Where(a => 
                 !a.ReminderSent &&

@@ -97,7 +97,7 @@ public class PaymentsController : Controller
                 //TODO: VERIFICAR ORDER NUMBER PORQUE A QUERY NAO FUNCIONA                
 
                 order.IsPaid = true;
-                order.PaymentDate = DateTime.UtcNow;
+                order.PaymentDate = DateTime.UtcNow;           
                 order.OrderNumber = $"LC-{DateTime.Today.Year}-{order.Id:D4}";
                 order.PaymentIntentId = session.PaymentIntentId;
 
@@ -106,14 +106,19 @@ public class PaymentsController : Controller
                     if (item.Product.ProductType == ProductType.Consulta)
                     {
                         item.RemainingUses = 1;
+                        order.DeliveryDate = DateTime.UtcNow;
                     }
                     else if (item.Product.ProductType == ProductType.Pacote)
                     {
                         item.RemainingUses = 3;
+                        order.DeliveryDate = DateTime.UtcNow;
                     }
                 }
 
                 _context.Update(order);
+
+                var tempCart = _context.OrderDetailsTemp.Where(o => o.User.Id == order.User.Id);
+                _context.OrderDetailsTemp.RemoveRange(tempCart);
                 await _context.SaveChangesAsync();
 
                 var productList = string.Join(", ", order.Items.Select(i => i.Product.Name));

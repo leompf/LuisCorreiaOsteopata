@@ -152,8 +152,94 @@ public class OrderRepository : GenericRepository<Order>, IOrderRepository
             return null;
         }
     }
+
+    public async Task<int> GetCartItemCountAsync(string username)
+    {
+        try
+        {
+            var user = await _userHelper.GetUserByEmailAsync(username);
+            if (user == null)
+            {
+                _logger.LogWarning("User {Username} not found when getting cart count.", username);
+                return 0;
+            }
+
+            var count = (int)await _context.OrderDetailsTemp
+                .Where(o => o.User.Id == user.Id)
+                .SumAsync(o => o.Quantity);
+
+            _logger.LogInformation("User {Username} has {Count} items in cart.", username, count);
+
+            return count;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to get cart count for user {Username}.", username);
+            return 0;
+        }
+    }
     #endregion
 
+    #region Order Processing
+    public async Task<bool> CreateOrderFromCartAsync(string username)
+    {
+        try
+        {
+            var user = await _userHelper.GetUserByEmailAsync(username);
+            if (user == null) return false;
+
+            var orderTmps = await _context.OrderDetailsTemp
+                .Include(o => o.Product)
+                .Where(o => o.User == user)
+                .ToListAsync();
+
+            if (!orderTmps.Any())
+            {
+                _logger.LogInformation("No cart items found for User {userId}.", user.Id);
+                return false;
+            }
+
+            var existingOrder = await _context.Orders
+                .Include(o => o.Items)
+                .Where(o => o.User == user && !o.IsPaid)
+                .FirstOrDefaultAsync();
+
+            if (existingOrder != null)
+            {
+                _logger.LogInformation("Recovered existing unpaid order {OrderId} for user {userId}.", existingOrder.Id, user.Id);
+                return true;
+            }
+
+            var details = orderTmps.Select(o => new OrderDetail
+            {
+                Price = o.Price,
+                Product = o.Product,
+                Quantity = o.Quantity,
+            }).ToList();
+
+            var total = details.Sum(d => d.Price * (decimal)d.Quantity);
+
+            var order = new Order
+            {
+                OrderDate = DateTime.UtcNow,
+                User = user,
+                Items = details,
+                IsPaid = false,
+                OrderTotal = total
+            };
+
+            await CreateAsync(order);
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation("Order created (unpaid) for {Username}.", username);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error creating order for {Username}.", username);
+            return false;
+        }
+    }
 
     public async Task<IQueryable<Order>> GetOrderAsync(string userName)
     {
@@ -191,54 +277,95 @@ public class OrderRepository : GenericRepository<Order>, IOrderRepository
             return null;
         }
     }
+    #endregion
 
-    public async Task<bool> ConfirmOrderAsync(string username)
+    #region CRUD Orders
+    public IQueryable<Order> GetAllOrders()
     {
-        try
+        var orders = _context.Orders
+            .Include(o => o.User)
+            .AsQueryable();
+
+        var user = _userHelper.GetCurrentUserAsync().Result; 
+        var role = _userHelper.GetUserRoleAsync(user).Result;
+
+        if (role == "Utente")
         {
-            var user = await _userHelper.GetUserByEmailAsync(username);
-            if (user == null)
-            {
-                _logger.LogWarning("User {Username} not found.", username);
-                return false;
-            }
-
-            var orderTmps = await _context.OrderDetailsTemp
-                .Include(o => o.Product)
-                .Where(o => o.User == user)
-                .ToListAsync();
-
-            if (orderTmps == null || orderTmps.Count == 0)
-            {
-                _logger.LogWarning("No temporary order details found for user {Username}.", username);
-                return false;
-            }
-
-            var details = orderTmps.Select(o => new OrderDetail
-            {
-                Price = o.Price,
-                Product = o.Product,
-                Quantity = o.Quantity,
-            }).ToList();
-
-            var order = new Order
-            {
-                OrderDate = DateTime.UtcNow,
-                Items = details,
-                User = user,
-            };
-
-            await CreateAsync(order);
-            _context.OrderDetailsTemp.RemoveRange(orderTmps);
-            await _context.SaveChangesAsync();
-
-            _logger.LogInformation("Order successfully saved for {Username} with {ItemCount} items.", username, details.Count);
-            return true;
+            orders = orders.Where(o => o.User.Id == user.Id);
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error confirming order for {Username}.", username);
-            return false;
-        }
+
+        return orders;
     }
+
+    public async Task<List<Order>> GetFilteredOrdersAsync(string? userId, string? orderNumber, DateTime? orderDate, DateTime? deliveryDate, DateTime? paymentDate, string? sortBy, bool sortDescending = false)
+    {
+        var orders = GetAllOrders();
+
+        if (!string.IsNullOrEmpty(userId))
+        {
+            orders = orders.Where(o =>
+            (o.User != null && o.User.Id == userId));
+        }
+
+        if (!string.IsNullOrEmpty(orderNumber))
+        {
+            orders = orders.Where(o =>
+            o.OrderNumber != null &&
+            EF.Functions.Like(o.OrderNumber, $"%{orderNumber}%"));
+        }
+
+        if (orderDate.HasValue)
+        {
+            orders = orders
+                .Where(o => o.OrderDate >= orderDate.Value.Date && o.OrderDate < orderDate.Value.Date.AddDays(1));
+        }
+
+        if (deliveryDate.HasValue)
+        {
+            orders = orders
+                .Where(o => o.DeliveryDate >= deliveryDate.Value.Date && o.DeliveryDate < deliveryDate.Value.Date.AddDays(1));
+        }
+
+        if (paymentDate.HasValue)
+        {
+            orders = orders
+                .Where(o => o.PaymentDate >= paymentDate.Value.Date && o.PaymentDate < paymentDate.Value.Date.AddDays(1));
+        }
+
+        orders = sortBy switch
+        {
+            "OrderNumber" => sortDescending
+                ? orders.OrderByDescending(o => o.OrderNumber)
+                : orders.OrderBy(o => o.OrderNumber),
+
+            "OrderDate" => sortDescending
+                ? orders.OrderByDescending(o => o.OrderDate).ThenByDescending(o => o.OrderDate)
+                : orders.OrderBy(o => o.OrderDate).ThenBy(o => o.OrderDate),
+
+            "DeliveryDate" => sortDescending
+                ? orders.OrderByDescending(o => o.DeliveryDate).ThenByDescending(o => o.DeliveryDate)
+                : orders.OrderBy(o => o.OrderDate).ThenBy(o => o.OrderDate),
+
+            "PaymentDate" => sortDescending
+                ? orders.OrderByDescending(o => o.PaymentDate).ThenByDescending(o => o.PaymentDate)
+                : orders.OrderBy(o => o.PaymentDate).ThenBy(o => o.PaymentDate),
+
+            "User" => sortDescending
+                ? orders.OrderByDescending(o => o.User)
+                : orders.OrderBy(o => o.User),
+
+            "OrderTotal" => sortDescending
+                ? orders.OrderByDescending(o => o.OrderTotal)
+                : orders.OrderBy(o => o.OrderTotal),
+
+            "IsPaid" => sortDescending
+                ? orders.OrderByDescending(o => o.IsPaid)
+                : orders.OrderBy(o => o.IsPaid),
+
+            _ => orders.OrderBy(o => o.OrderDate).ThenBy(o => o.OrderDate)
+        };
+
+        return await orders.ToListAsync();
+    }
+    #endregion
 }

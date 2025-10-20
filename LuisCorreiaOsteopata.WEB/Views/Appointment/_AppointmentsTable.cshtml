@@ -13,17 +13,17 @@
         </tr>
     </thead>
     <tbody>
-        @foreach (var appt in Model)
+        @foreach (var appointment in Model)
         {
             <tr>
-                <td>@appt.AppointmentDate.ToString("dd/MM/yyyy")</td>
-                <td>@appt.PatientName</td>
-                <td>@appt.StaffName</td>
-                <td>@appt.AppointmentStatus</td>
-                <td>@appt.StaffNotes</td>
-                <td>@(appt.IsPaid ? "Sim" : "Não")</td>
+                <td>@appointment.AppointmentDate.ToString("dd/MM/yyyy")</td>
+                <td>@appointment.PatientName</td>
+                <td>@appointment.StaffName</td>
+                <td>@appointment.AppointmentStatus</td>
+                <td>@appointment.StaffNotes</td>
+                <td>@(appointment.IsPaid ? "Sim" : "Não")</td>
                 <td>
-                    <a asp-action="Details" asp-route-id="@appt.Id" class="btn-link">
+                    <a asp-action="Details" asp-route-id="@appointment.Id" class="btn-link">
                         Ver Detalhes
                     </a>
                 </td>

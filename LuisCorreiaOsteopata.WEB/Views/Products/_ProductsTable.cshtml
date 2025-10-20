@@ -1,0 +1,41 @@
+﻿@model IEnumerable<LuisCorreiaOsteopata.WEB.Data.Entities.Product>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th><a href="#" class="sortable" data-sort="Name"><span>Nome</span> <i class="sort-icon"></i></a></th>
+            <th></th>
+            <th><a href="#" class="sortable" data-sort="Price"><span>Preço</span> <i class="sort-icon"></i></a></th>
+            <th><a href="#" class="sortable" data-sort="Category"><span>Categoria</span> <i class="sort-icon"></i></a></th>
+            <th><a href="#" class="sortable" data-sort="LastPurchase"><span>Última Compra</span> <i class="sort-icon"></i></a></th>
+            <th><a href="#" class="sortable" data-sort="LastSale"><span>Última Venda</span> <i class="sort-icon"></i></a></th>
+            <th><a href="#" class="sortable" data-sort="IsAvailable"><span>Disponível</span> <i class="sort-icon"></i></a></th>
+            <th><a href="#" class="sortable" data-sort="Stock"><span>Stock</span> <i class="sort-icon"></i></a></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var product in Model)
+        {
+            <tr>
+                <td>@product.Name</td>
+                <td>
+                    @if (!string.IsNullOrEmpty(product.ImageFullPath))
+                    {
+                        <img src="@product.ImageFullPath" alt="@product.Name" style="width:100px; height:auto;" />
+                    }
+                </td>
+                <td>@product.Price</td>
+                <td>@product.ProductType.ToString()</td>
+                <td>@product.LastPurchase</td>
+                <td>@product.LastSale</td>
+                <td>@product.IsAvailable</td>
+                <td>@product.Stock</td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@product.Id" class="btn btn-warning">Edit</a>
+                    <a asp-action="Details" asp-route-id="@product.Id" class="btn btn-info">Details</a>
+                    <a asp-action="Delete" asp-route-id="@product.Id" class="btn btn-danger">Delete</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

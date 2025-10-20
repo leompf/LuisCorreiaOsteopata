@@ -4,6 +4,7 @@
     ViewData["Title"] = "Create";
     Layout = "~/Views/Shared/_Layout2.cshtml";
 }
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
 
 @section MainMenu
 {
@@ -171,7 +172,7 @@
                                 </div>
                                 <div class="cart-page__buttons-2">
                                     <form method="post">
-                                        <button asp-action="ConfirmOrder" class="thm-btn">
+                                        <button asp-action="CreateOrder" class="thm-btn">
                                             Checkout
                                             <span class="icon-right-arrow"></span>
                                         </button>
@@ -213,9 +214,9 @@
 
 
 @section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
     <script type="text/javascript">
         $(document).ready(function(){
-
             var id = 0;
 
             $("a[id*=btnDeleteItem]").click(function() {
@@ -234,31 +235,57 @@
                 window.location.href = baseUrl + "/" + id;
             });
 
-            $(document).on("click", ".add, .sub", function (e) {
-                e.preventDefault();
+                    $(document).on("click", ".add, .sub", function (e) {
+            e.preventDefault();
 
-                const id = $(this).data("id");
-                const input = $("input[data-id='" + id + "']");
-                let quantityChange = $(this).hasClass("add") ? 1 : -1;
+            const id = $(this).data("id");
+            const input = $("input[data-id='" + id + "']");
+            const isAdd = $(this).hasClass("add");
+            let quantityChange = isAdd ? 1 : -1;
 
-                $.ajax({
-                    url: '@Url.Action("UpdateCartQuantity", "Orders")',
-                    type: 'POST',
-                    data: { id: id, quantityChange: quantityChange },
-                    success: function (response) {
-                        input.val(response.newQuantity);
+            const token = $('input[name="__RequestVerificationToken"]').val();
 
-                        const row = input.closest("tr");
-                        row.find("td:nth-child(4)").text(response.itemTotal);
+            $.ajax({
+                url: '@Url.Action("UpdateCartQuantity", "Orders")',
+                type: 'POST',
+                data: { id: id, quantityChange: quantityChange, __RequestVerificationToken: token },
+                success: function (response) {
+                    input.val(response.newQuantity);
 
-                        $(".cart-total-amount").text(response.cartTotal);
-                        $("#cart-subtotal").text(response.cartTotal);
-                    },
-                    error: function () {
-                        alert("Erro ao atualizar a quantidade. Tenta novamente.");
+                    const row = input.closest("tr");
+                    row.find("td:nth-child(4)").text(response.itemTotal);
+
+                    $(".cart-total-amount").text(response.cartTotal);
+                    $("#cart-subtotal").text(response.cartTotal);
+
+                    if (window.updateCartCount) window.updateCartCount();
+
+                    let toastMessage, bgColor;
+                    if (isAdd) {
+                        toastMessage = "Quaantidade adicionada!";
+                        bgColor = "#4BB543"; 
+                    } else if (response.newQuantity === 0) {
+                        toastMessage = "Produto removido do carrinho!";
+                        bgColor = "#FF4B4B"; 
+                    } else {
+                        toastMessage = "Quantidade removida!";
+                        bgColor = "#2196F3"; 
                     }
-                });
+
+                    Toastify({
+                        text: toastMessage,
+                        duration: 3000,
+                        gravity: "top",
+                        position: "right",
+                        backgroundColor: bgColor,
+                        stopOnFocus: true
+                    }).showToast();
+                },
+                error: function () {
+                    alert("Erro ao atualizar a quantidade. Tenta novamente.");
+                }
             });
+        });
         });       
     </script>
 }                                    

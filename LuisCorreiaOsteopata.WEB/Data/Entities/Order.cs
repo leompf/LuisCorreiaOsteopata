@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace LuisCorreiaOsteopata.WEB.Data.Entities;
 
@@ -16,30 +17,28 @@ public class Order : IEntity
     [DisplayFormat(DataFormatString = "{0:yyyy/MM/dd hh:mm tt}", ApplyFormatInEditMode = false)]
     public DateTime OrderDate { get; set; }
 
-
-    [Required]
     [Display(Name = "Delivery Date")]
     [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy hh:mm tt}", ApplyFormatInEditMode = false)]
-    public DateTime DeliveryDate { get; set; }
+    public DateTime? DeliveryDate { get; set; }
 
     [Display(Name = "Payment Date")]
     [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy hh:mm tt}", ApplyFormatInEditMode = false)]
     public DateTime? PaymentDate { get; set; }
 
+    [Display(Name = "Order Total")]
+    [Column(TypeName = "decimal(18,2)")]
+    [DisplayFormat(DataFormatString = "{0:C2}", ApplyFormatInEditMode = true)]
+    public decimal OrderTotal { get; set; }
 
     [Display(Name = "Dados de Faturação")]
     public BillingDetail? BillingDetail { get; set; }
 
-
     [Required]
     public User User { get; set; }
 
-
     public bool IsPaid { get; set; } = false;
 
-
     public string? StripeSessionId { get; set; }
-
 
     public string? PaymentIntentId { get; set; }
 

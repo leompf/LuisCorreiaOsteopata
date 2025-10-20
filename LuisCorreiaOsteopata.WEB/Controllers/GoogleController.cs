@@ -1,6 +1,5 @@
 ﻿using LuisCorreiaOsteopata.WEB.Data.Entities;
 using LuisCorreiaOsteopata.WEB.Helpers;
-using LuisCorreiaOsteopata.WEB.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -50,7 +49,7 @@ public class GoogleController : Controller
         {
             _logger.LogWarning("Google login info is null for user {Email}. Cannot link account.", currentUserEmail);
             TempData["Error"] = "Não foi possível ligar a conta Google.";
-            return RedirectToAction("Profile", "Account");
+            return RedirectToAction("Index", "Account");
         }
 
         var user = await _userHelper.GetCurrentUserAsync();
@@ -74,15 +73,15 @@ public class GoogleController : Controller
         }
 
         _logger.LogInformation("Successfully linked Google account for user {UserId} ({Email}).", user.Id, user.Email);
-        return RedirectToAction("Profile", "Account");
+        return RedirectToAction("Index", "Account");
     }
 
     [HttpPost]
-    public async Task<IActionResult> SavePreferredCalendar(ProfileViewModel model)
+    public async Task<IActionResult> SavePreferredCalendar(string calendarId)
     {
         var user = await _userHelper.GetCurrentUserAsync();
         var previousCalendarId = user.CalendarId;
-        user.CalendarId = model.CalendarId;
+        user.CalendarId = calendarId;
 
         await _userHelper.UpdateUserAsync(user);
 
@@ -91,9 +90,9 @@ public class GoogleController : Controller
             user.Id,
             user.Email,
             previousCalendarId,
-            model.CalendarId
+            user.CalendarId
         );
 
-        return RedirectToAction("Profile", "Account");
+        return RedirectToAction("Index", "Account");
     }
 }

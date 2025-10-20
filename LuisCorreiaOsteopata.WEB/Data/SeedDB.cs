@@ -148,21 +148,23 @@ public class SeedDB
 
         if (!_context.Products.Any())
         {
-            AddProduct("Consulta Individual", adminUser);
-            AddProduct("Pacote de 3 Consultas", adminUser);
+            AddProduct("Pacote de 3 Consultas", 150m, adminUser, ProductType.Pacote,"~/images/products/consulta_1.jpg");
+            AddProduct("Consulta Individual", 60m, adminUser, ProductType.Consulta,"~/images/products/consulta_2.jpg");
             await _context.SaveChangesAsync();
         }
     }
 
-    private void AddProduct(string name, User user)
+    private void AddProduct(string name, decimal price, User user, ProductType productType, string imagePath)
     {
         _context.Products.Add(new Product
         {
             Name = name,
-            Price = _random.Next(1000),
+            Price = price,
             IsAvailable = true,
             Stock = _random.Next(100),
-            User = user           
+            User = user,
+            ImageUrl = imagePath,
+            ProductType = productType
         });
     }
 }

@@ -62,6 +62,43 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
                     return RedirectToAction("Login", "Account");
                 }
 
+                var accessToken = await _userHelper.GetUserTokenAsync(user, "Google", "access_token");
+                ViewBag.Token = accessToken;
+
+                ViewBag.GoogleCalendars = new List<SelectListItem>();
+                string? calendarName = null;
+
+                if (!string.IsNullOrEmpty(accessToken))
+                {
+                    try
+                    {
+                        var calendars = await _googleHelper.GetUserCalendarsAsync(user, CancellationToken.None);
+
+                        ViewBag.GoogleCalendars = calendars
+                            .Select(c => new SelectListItem
+                            {
+                                Value = c.Id,
+                                Text = c.Summary
+                            })
+                            .ToList();
+
+                        if (!string.IsNullOrWhiteSpace(user.CalendarId))
+                        {
+                            var selected = ((List<SelectListItem>)ViewBag.GoogleCalendars)
+                                .FirstOrDefault(c => c.Value == user.CalendarId);
+                            calendarName = selected?.Text;
+                        }
+                    }
+                    catch (InvalidOperationException ex) when (ex.Message.Contains("Google account not connected"))
+                    {
+                        _logger.LogInformation("User {Email} has no Google account connected.", user.Email);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Failed to retrieve Google calendars for {Email}.", user.Email);
+                    }
+                }
+
                 var appointments = await _appointmentRepository.GetAppointmentsByUserAsync(user);
                 _logger.LogInformation("Fetched {AppointmentCount} appointments for user {UserId}", appointments.Count, user.Id);
 
@@ -77,6 +114,8 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
                 _logger.LogDebug("Mapped {EventCount} events for calendar display for user {UserId}", events.Count, user.Id);
 
                 ViewBag.Appointments = events;
+                ViewBag.CalendarId = user.CalendarId;
+                ViewBag.CalendarName = calendarName;
 
                 return View();
             }
@@ -102,9 +141,21 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
             }
 
             var user = await _userHelper.GetUserByEmailAsync(model.Email);
-            if (user != null)
+            var nif = await _userHelper.GetUserByNifAsync(model.Nif);
+
+            if (user != null && nif!= null)
             {
-                ModelState.AddModelError(string.Empty, "Já existe um utilizador com esse email.");
+                ModelState.AddModelError(string.Empty,"Já existe um utilizador com esse Email e NIF.");
+                return View(model);
+            }
+            else if (user != null)
+            {
+                ModelState.AddModelError(string.Empty, "Já existe um utilizador com esse Email.");
+                return View(model);
+            }
+            else if (nif != null)
+            {
+                ModelState.AddModelError(string.Empty, "Já existe um utilizador com esse NIF.");
                 return View(model);
             }
 
@@ -172,6 +223,33 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
             }
 
             return View("ConfirmEmailFailure");
+        }
+
+        [AllowAnonymous]
+        [HttpPost]
+        public async Task<IActionResult> ResendEmailConfirmation(string email)
+        {
+            if (string.IsNullOrWhiteSpace(email))
+                return BadRequest("Por favor insere o email.");
+
+            var user = await _userHelper.GetUserByEmailAsync(email);
+            if (user == null || user.EmailConfirmed)
+                return Ok("Se este email estiver registado, receberá um novo link de confirmação.");
+
+            var token = await _userHelper.GenerateEmailConfirmationTokenAsync(user);
+            var confirmationLink = Url.Action("ConfirmEmail", "Account", new { userId = user.Id, token }, Request.Scheme);
+
+            var message = $@"<p>Olá {user.Names.Split(' ')[0]},</p>
+            <p>Foi requisitado o reenvio do email de confirmação para a tua conta, na qual podes confirmar
+            clicando <a href='{confirmationLink}'>aqui</a>.</p>
+            <p>Se não foste tu a efetuar este pedido ou não tens conta na plataforma, por favor contacta-nos.</p>
+            <p>Obrigado e cumprimentos,<br />
+            Luís Correia, Osteopata</p>";
+            
+
+            await _emailSender.SendEmailAsync(user.Email, "Confirmação de Conta", message);
+
+            return Ok("Foi enviado um novo email de confirmação.");
         }
 
         [HttpGet]
@@ -264,7 +342,24 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
         {
             if (ModelState.IsValid)
             {
+                var user = await _userHelper.GetUserByEmailAsync(model.Username);
+                if (user == null)
+                {
+                    _logger.LogWarning("Login failed: user not found ({Username})", model.Username);
+                    ModelState.AddModelError(string.Empty, "Nome de utilizador ou palavra-passe incorretos.");
+                    return View(model);
+                }
+
+                var isPasswordValid = await _userHelper.CheckPasswordAsync(user, model.Password);
+                if (!isPasswordValid)
+                {
+                    _logger.LogWarning("Login failed: invalid password for {Username}", model.Username);
+                    ModelState.AddModelError(string.Empty, "Nome de utilizador ou palavra-passe incorretos.");
+                    return View(model);
+                }
+
                 var result = await _userHelper.LoginAsync(model.Username, model.Password, model.RememberMe);
+
                 if (result.Succeeded)
                 {
                     if (Request.Query.TryGetValue("ReturnUrl", out var returnUrl) && !string.IsNullOrEmpty(returnUrl))
@@ -278,6 +373,7 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
                 else if (result.IsNotAllowed)
                 {
                     ModelState.AddModelError(string.Empty, "Por favor confirma o teu email antes de fazer login.");
+                    ViewBag.ShowResendConfirmation = true;
                     return View(model);
                 }
                 else if (result.RequiresTwoFactor)
@@ -494,36 +590,7 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
                     return NotFound();
             }
 
-            var role = await _userHelper.GetUserRoleAsync(user);
-
-            var accessToken = await _userHelper.GetUserTokenAsync(user, "Google", "access_token");
-            ViewBag.Token = accessToken;
-
-            ViewBag.GoogleCalendars = new List<SelectListItem>();
-
-            if (!string.IsNullOrEmpty(accessToken))
-            {
-                try
-                {
-                    var calendars = await _googleHelper.GetUserCalendarsAsync(user, CancellationToken.None);
-
-                    ViewBag.GoogleCalendars = calendars
-                        .Select(c => new SelectListItem
-                        {
-                            Value = c.Id,
-                            Text = c.Summary
-                        })
-                        .ToList();
-                }
-                catch (InvalidOperationException ex) when (ex.Message.Contains("Google account not connected"))
-                {
-                    _logger.LogInformation("User {Email} has no Google account connected.", user.Email);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning(ex, "Failed to retrieve Google calendars for {Email}.", user.Email);
-                }
-            }
+            var role = await _userHelper.GetUserRoleAsync(user);         
 
             var model = new ProfileViewModel
             {
@@ -533,20 +600,8 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
                 BirthDate = user.Birthdate,
                 NIF = user.Nif,
                 Role = role,
-                CalendarId = user.CalendarId,
-                CalendarName = null,
                 IsEditable = string.IsNullOrEmpty(id) || User.IsInRole("Administrador") || User.IsInRole("Colaborador")
             };
-
-            if (!string.IsNullOrWhiteSpace(user.CalendarId) && ViewBag.GoogleCalendars != null)
-            {
-                var selected = ((List<SelectListItem>)ViewBag.GoogleCalendars)
-                                    .FirstOrDefault(c => c.Value == user.CalendarId);
-                if (selected != null)
-                {
-                    model.CalendarName = selected.Text;
-                }
-            }
 
             return View(model);
         }

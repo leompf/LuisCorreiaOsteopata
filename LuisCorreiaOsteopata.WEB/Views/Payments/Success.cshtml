@@ -5,6 +5,11 @@
     Layout = "~/Views/Shared/_Layout2.cshtml";
 }
 
+@section MainMenu
+{
+    <partial name="_Menu"></partial>
+}
+
 <section class="page-header">
     <div class="container">
         <div class="page-header__inner">
@@ -21,7 +26,7 @@
             <ul>
                 <li><strong>Nº do Pedido:</strong> @Model.OrderNumber</li>
                 <li><strong>Data:</strong> @Model.OrderDate.ToString("dd/MM/yyyy HH:mm")</li>
-                <li><strong>Total:</strong> @Model.Value.ToString("C2")</li>
+                <li><strong>Total:</strong> @Model.OrderTotal.ToString("C2")</li>
             </ul>
 
             <h4>Items</h4>

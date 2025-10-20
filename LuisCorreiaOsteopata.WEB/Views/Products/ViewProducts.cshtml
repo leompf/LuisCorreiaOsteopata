@@ -4,6 +4,7 @@
     ViewData["Title"] = "ViewProducts";
     Layout = "~/Views/Shared/_Layout2.cshtml";
 }
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
 
 @section MainMenu
 {
@@ -109,8 +110,8 @@
                                                                         </a>
                                                                     </li>
                                                                     <li>
-                                                                        <form method="post">
-                                                                            <button asp-controller="Orders" asp-action="AddItemToCart" asp-route-id="@product.Id" title="Add to Cart">
+                                                                        <form method="post" class="add-to-cart-form" asp-controller="Orders" asp-action="AddItemToCart" asp-route-id="@product.Id">
+                                                                            <button type="submit" title="Add to Cart">
                                                                                 <i class="fa fa-solid fa-cart-plus"></i>
                                                                             </button>
                                                                         </form>
@@ -200,7 +201,7 @@
                                                                             <li>
                                                                                 <a href="#" title="Add to Wishlist"><i class="fa fa-regular fa-heart"></i></a>
                                                                             </li>
-                                                                            <li>                                                                                
+                                                                            <li>
                                                                                 <a asp-controller="Cart" asp-action="Add" asp-route-id="@product.Id" title="Add to cart">
                                                                                     <i class="fa fa-solid fa-cart-plus"></i>
                                                                                 </a>
@@ -342,3 +343,43 @@
     </div>
 </section>
 <!--Product End-->
+
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <script type="text/javascript">
+                    document.querySelectorAll('.add-to-cart-form').forEach(form => {
+            form.addEventListener('submit', async e => {
+                e.preventDefault();
+
+                const formData = new FormData(form);
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    updateCartCount();
+
+                    Toastify({
+                        text: "Item adicionado ao carrinho!",
+                        duration: 5000,
+                        gravity: "top",
+                        position: "right",
+                        backgroundColor: "#4BB543"
+                    }).showToast();
+                } else {
+                    Toastify({
+                        text: "Failed to add item to cart.",
+                        backgroundColor: "#FF4B4B"
+                    }).showToast();
+                }
+            });
+        });
+    </script>
+}

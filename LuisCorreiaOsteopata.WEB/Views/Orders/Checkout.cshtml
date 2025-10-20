@@ -32,7 +32,7 @@
 <!--Start Checkout Page-->
 <section class="checkout-page">
     <div class="container">
-        <form method="post">
+        <form method="post" asp-controller="Payments" asp-action="CreateCheckoutSession">
             <div class="row">
                 <div class="col-xl-8 col-lg-6">
                     <div class="billing_details">
@@ -255,7 +255,7 @@
                             </div>
 
                             <div class="sidebar-order-summary__btn">
-                                <button type="submit" class="thm-btn" asp-controller="Payments" asp-action="CreateCheckoutSession">
+                                <button type="submit" class="thm-btn">
                                     Place your order
                                     <span class="icon-right-arrow"></span>
                                 </button>

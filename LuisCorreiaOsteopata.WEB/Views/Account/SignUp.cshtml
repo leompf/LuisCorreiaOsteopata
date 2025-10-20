@@ -4,6 +4,7 @@
     ViewData["Title"] = "Registar";
     Layout = "~/Views/Shared/_Layout2.cshtml";
 }
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
 
 @section MainMenu
 {
@@ -11,7 +12,6 @@
         <a asp-controller="Home" asp-action="Index">Home</a>
     </li>
 }
-
 
 <!--Page Header Start-->
 <section class="page-header">
@@ -39,67 +39,67 @@
                 <h2>Registar</h2>
             </div>
             <form method="post">
-                <div asp-validation-summary="ModelOnly"></div>
+                <div asp-validation-summary="ModelOnly" hidden></div>
                 <div class="row">
-                    <div class="col-xl-6">
+                    <div class="col-xl-7">
                         <div class="form-group">
                             <div class="input-box">
-                                <span asp-validation-for="Names"></span>
-                                <input asp-for="Names" type="text" placeholder="Nomes..." />
+                                <span class="span-validation-error" asp-validation-for="Names"></span>                                
+                                <input class="input-validation-error" asp-for="Names" type="text" placeholder="Nomes*" />
                             </div>
                         </div>
                     </div>
-                    <div class="col-xl-6">
+                    <div class="col-xl-5">
                         <div class="form-group">
                             <div class="input-box">
-                                <span asp-validation-for="LastName"></span>
-                                <input asp-for="LastName" type="text" placeholder="Apelido..." />
+                                <span class="span-validation-error" asp-validation-for="LastName"></span>
+                                <input class="input-validation-error" asp-for="LastName" type="text" placeholder="Apelido*" />
                             </div>
                         </div>
                     </div>
                     <div class="col-xl-12">
                         <div class="form-group">
                             <div class="input-box">
-                                <span asp-validation-for="Email"></span>
-                                <input asp-for="Email" type="email" placeholder="Email..." />
+                                <span class="span-validation-error" asp-validation-for="Email"></span>
+                                <input class="input-validation-error" asp-for="Email" type="email" placeholder="Email*" />
                             </div>
                         </div>
                     </div>
                     <div class="col-xl-6">
                         <div class="form-group">
                             <div class="input-box">
-                                <span asp-validation-for="PhoneNumber"></span>
-                                <input asp-for="PhoneNumber" type="tel" id="phone" placeholder="Telefone..." />
+                                <span class="span-validation-error" asp-validation-for="PhoneNumber"></span>
+                                <input class="input-validation-error" asp-for="PhoneNumber" type="tel" id="phone" placeholder="Telefone*" />
                             </div>
                         </div>
                     </div>
                     <div class="col-xl-6">
                         <div class="form-group">
                             <div class="input-box">
-                                <span asp-validation-for="Nif"></span>
-                                <input asp-for="Nif" type="text" id="nif" placeholder="Nif..." />
+                                <span class="span-validation-error" asp-validation-for="Nif"></span>
+                                <input class="input-validation-error" asp-for="Nif" type="text" id="nif" placeholder="Nif*" />
                             </div>
                         </div>
                     </div>
                     <div class="col-xl-6">
                         <div class="form-group">
                             <div class="appoinment-page__input-box">
-                                <span asp-validation-for="Birthdate"></span>
-                                <input asp-for="Birthdate" type="date" placeholder="Data de Nascimento..." />
+                                <span class="span-validation-error" asp-validation-for="Birthdate"></span>
+                                <input class="input-validation-error" asp-for="Birthdate" type="date" placeholder="Data de Nascimento*" />
                             </div>
                         </div>
                     </div>
                     <div class="col-xl-12">
                         <div class="form-group">
                             <div class="input-box">
-                                <span asp-validation-for="Password"></span>
-                                <input asp-for="Password" type="password" placeholder="Password..." />
+                                <span class="span-validation-error" asp-validation-for="Password"></span>
+                                <input asp-for="Password" type="password" placeholder="Password*" />
                             </div>
                         </div>
                         <div class="form-group">
                             <div class="input-box">
-                                <span asp-validation-for="Confirm"></span>
-                                <input asp-for="Confirm" type="password" placeholder="Confirmar password..." />
+                                <span class="span-validation-error" asp-validation-for="Confirm"></span>
+                                <input asp-for="Confirm" type="password" placeholder="Confirmar password*" />
                             </div>
                         </div>
                     </div>
@@ -112,11 +112,8 @@
                         </div>
                     </div>
                 </div>
-                <div class="text-center text-success">
-                    <p>@ViewBag.SignUpMessage</p>
-                </div>
                 <div class="google-facebook justify-content-center">
-                    <a asp-action="LoginGoogle" >
+                    <a asp-action="LoginGoogle">
                         <div class="icon">
                             <img src="~/assets/images/icon/icon-google-2.png" alt="Google">
                         </div>
@@ -125,7 +122,7 @@
                 </div>
                 <div class="create-account text-center">
                     <p>Já tens conta? <a asp-action="Login">Faz login</a></p>
-                </div>               
+                </div>
             </form>
         </div>
     </div>
@@ -135,94 +132,132 @@
 @section Scripts {
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
-        <script type="text/javascript">
-            document.addEventListener("DOMContentLoaded", function () {
-
-                // Scroll to register section
-                const registerSection = document.getElementById("register-section");
-                if (registerSection) {
-                    registerSection.scrollIntoView({ behavior: "smooth" });
-                }
-
-                // Phone input
-                const phoneInput = document.querySelector("#phone");
-                const nifInput = document.querySelector("#nif");
-
-                const iti = window.intlTelInput(phoneInput, {
-                    initialCountry: "pt",
-                    separateDialCode: false,
-                    formatOnDisplay: true
-                });
-
-                const form = phoneInput.closest("form");
-
-                // Create inline error spans if they don't exist
-                function ensureErrorSpan(input) {
-                    let span = input.nextElementSibling;
-                    if (!span || !span.classList.contains("inline-error")) {
-                        span = document.createElement("span");
-                        span.classList.add("inline-error");
-                        span.style.color = "red";
-                        span.style.fontSize = "0.9rem";
-                        input.parentNode.appendChild(span);
-                    }
-                    span.textContent = "";
-                    return span;
-                }
-
-                form.addEventListener("submit", function (event) {
-                    let hasErrors = false;
-
-                    // Phone validation
-                    const phoneError = ensureErrorSpan(phoneInput);
-                    if (!iti.isValidNumber()) {
-                        phoneError.textContent = "Número de telefone inválido.";
-                        phoneInput.classList.add("is-invalid");
-                        hasErrors = true;
-                    } else {
-                        phoneInput.value = iti.getNumber();
-                        phoneInput.classList.remove("is-invalid");
-                    }
-
-                    // NIF validation
-                    const nifError = ensureErrorSpan(nifInput);
-                    if (!validaContribuinte(nifInput.value)) {
-                        nifError.textContent = "Número de contribuinte inválido.";
-                        nifInput.classList.add("is-invalid");
-                        hasErrors = true;
-                    } else {
-                        nifInput.classList.remove("is-invalid");
-                    }
-
-                    if (hasErrors) {
-                        event.preventDefault();
-                    }
-                });
-
-                // NIF validation function
-                function validaContribuinte(contribuinte) {
-                    if (!/^\d{9}$/.test(contribuinte)) return false;
-
-                    const prefix = parseInt(contribuinte.substr(0, 2));
-                    const firstDigit = parseInt(contribuinte.charAt(0));
-                    const invalidPrefixes = [45, 70, 71, 72, 77, 79, 90, 91, 98, 99];
-                    const validFirstDigits = [1, 2, 3, 5, 6, 8];
-
-                    if (!validFirstDigits.includes(firstDigit) && !invalidPrefixes.includes(prefix)) return false;
-
-                    let total = 0;
-                    for (let i = 0, j = 9; i < 8; i++, j--) {
-                        total += parseInt(contribuinte.charAt(i)) * j;
-                    }
-
-                    let modulo11 = total % 11;
-                    let comparador = (modulo11 === 0 || modulo11 === 1) ? 0 : 11 - modulo11;
-                    const ultimoDigito = parseInt(contribuinte.charAt(8));
-
-                    return ultimoDigito === comparador;
-                }
-
-            });
-        </script>
     }
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <script type="text/javascript">
+        document.addEventListener("DOMContentLoaded", function () {
+
+            // Toastify CSS class for vertical center
+            const style = document.createElement('style');
+            style.innerHTML = `
+                .toast-center {
+                    top: 50% !important;
+                    transform: translateY(-50%) !important;
+                }
+            `;
+            document.head.appendChild(style);
+
+            // Scroll to register section
+            const registerSection = document.getElementById("register-section");
+            if (registerSection) {
+                registerSection.scrollIntoView({ behavior: "smooth" });
+            }
+
+            // Phone and NIF inputs
+            const phoneInput = document.querySelector("#phone");
+            const nifInput = document.querySelector("#nif");
+
+            // Initialize intlTelInput
+            const iti = window.intlTelInput(phoneInput, {
+                initialCountry: "pt",
+                separateDialCode: false,
+                formatOnDisplay: true
+            });
+
+            const form = phoneInput.closest("form");
+
+            function ensureErrorSpan(input) {
+                let span = input.nextElementSibling;
+                if (!span || !span.classList.contains("inline-error")) {
+                    span = document.createElement("span");
+                    span.classList.add("inline-error");
+                    span.style.color = "red";
+                    span.style.fontSize = "0.9rem";
+                    input.parentNode.appendChild(span);
+                }
+                span.textContent = "";
+                return span;
+            }
+
+            // Client-side validation
+            form.addEventListener("submit", function (event) {
+                let hasErrors = false;
+
+                const phoneError = ensureErrorSpan(phoneInput);
+                if (!iti.isValidNumber()) {
+                    phoneError.textContent = "Número de telefone inválido.";
+                    phoneInput.classList.add("is-invalid");                 
+                    hasErrors = true;
+                } else {
+                    phoneInput.value = iti.getNumber();
+                    phoneInput.classList.remove("is-invalid");
+                }
+
+                const nifError = ensureErrorSpan(nifInput);
+                if (!validaContribuinte(nifInput.value)) {
+                    nifError.textContent = "Número de contribuinte inválido.";
+                    nifInput.classList.add("is-invalid");                    
+                    hasErrors = true;
+                } else {
+                    nifInput.classList.remove("is-invalid");
+                }
+
+                if (hasErrors) {
+                    event.preventDefault();
+                }
+            });
+
+            function validaContribuinte(contribuinte) {
+                if (!/^\d{9}$/.test(contribuinte)) return false;
+                const prefix = parseInt(contribuinte.substr(0, 2));
+                const firstDigit = parseInt(contribuinte.charAt(0));
+                const invalidPrefixes = [45, 70, 71, 72, 77, 79, 90, 91, 98, 99];
+                const validFirstDigits = [1, 2, 3, 5, 6, 8];
+
+                if (!validFirstDigits.includes(firstDigit) && !invalidPrefixes.includes(prefix)) return false;
+
+                let total = 0;
+                for (let i = 0, j = 9; i < 8; i++, j--) {
+                    total += parseInt(contribuinte.charAt(i)) * j;
+                }
+
+                let modulo11 = total % 11;
+                let comparador = (modulo11 === 0 || modulo11 === 1) ? 0 : 11 - modulo11;
+                const ultimoDigito = parseInt(contribuinte.charAt(8));
+
+                return ultimoDigito === comparador;
+            }
+
+            const modelErrors = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+                            ViewData.ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage)
+            ));
+
+            if (modelErrors.length > 0) {
+                modelErrors.forEach(errorMsg => {
+                    Toastify({
+                        text: errorMsg,
+                        duration: 2000,
+                        gravity: "center",
+                        position: "center",
+                        backgroundColor: "#FF4B4B",
+                        className: "toast-center"
+                    }).showToast();
+                });
+            }
+
+            // Success message
+            var message = '@ViewBag.SignUpMessage';
+            if (message && message.trim() !== '') {
+                Toastify({
+                    text: message,
+                    duration: 5000,
+                    gravity: "center",
+                    position: "center",
+                    backgroundColor: "#4BB543",
+                    className: "toast-center"
+                }).showToast();
+            }
+
+        });
+    </script>
 }

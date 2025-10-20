@@ -2,6 +2,8 @@
   "use strict";
 
 
+
+
   /*--------------------------------------------------------------
     RegisterPlugin, ScrollTrigger, SplitText
   --------------------------------------------------------------*/
@@ -11,7 +13,27 @@
     trialWarn: false
   });
 
+window.updateCartCount = async function() {
+    try {
+        const response = await fetch('/Orders/GetCartCount');
+        const data = await response.json();
 
+        document.querySelectorAll('.cart-badge').forEach(badge => {
+            if (data.cartCount > 0) {
+                badge.textContent = `(${data.cartCount})`; // Wrap in ()
+                badge.style.display = 'inline';          // Make sure it’s visible
+            } else {
+                badge.textContent = '';                  // Hide when 0
+                badge.style.display = 'none';
+            }
+        });
+    } catch (err) {
+        console.error('Failed to load cart count', err);
+    }
+}
+
+    // Call on every page load
+document.addEventListener('DOMContentLoaded', updateCartCount);
 
 
 

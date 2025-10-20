@@ -34,6 +34,7 @@ public interface IUserHelper
     #endregion
 
     #region Login
+    Task<bool> CheckPasswordAsync(User user, string password);
     Task<SignInResult> LoginAsync(string username, string password, bool rememberMe);
     Task LogoutAsync();
     #endregion
@@ -43,7 +44,7 @@ public interface IUserHelper
     Task<string?> GetUserTokenAsync(User user, string loginProvider, string tokenName);
     #endregion
 
-    #region Helpers   
+    #region Helper Methods
     string GenerateRandomPassword(PasswordOptions options);
     List<UserViewModel> SortUsers(IEnumerable<UserViewModel> users, string? sortBy, bool sortDescending);
     Task<string> GenerateEmailConfirmationTokenAsync(User user);

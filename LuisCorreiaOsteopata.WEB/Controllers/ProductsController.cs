@@ -1,4 +1,5 @@
 ﻿using LuisCorreiaOsteopata.WEB.Data;
+using LuisCorreiaOsteopata.WEB.Data.Entities;
 using LuisCorreiaOsteopata.WEB.Helpers;
 using LuisCorreiaOsteopata.WEB.Models;
 using Microsoft.AspNetCore.Authorization;
@@ -25,10 +26,27 @@ public class ProductsController : Controller
         _imageHelper = imageHelper;
     }
 
+    [Authorize(Roles = "Administrador,Colaborador")]
     [HttpGet]
-    public IActionResult Index()
+    public async Task<IActionResult> Index(string? name, string? category, string? sortBy, bool sortDescending = true)
     {
-        return View(_productRepository.GetAll().OrderBy(p => p.Name));
+        var products = await _productRepository.GetFilteredProductsAsync(name, category, sortBy, sortDescending);
+
+        var model = new ProductListViewModel
+        {
+            NameFilter = name,
+            CategoryFilter = category,
+            Products = products,
+            Categories = _productRepository.GetComboProductCategory()
+        };
+
+        ViewBag.DefaultSortColumn = sortBy ?? "Name";
+        ViewBag.DefaultSortDescending = sortDescending;
+
+        if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+            return PartialView("_ProductsTable", model.Products);
+
+        return View(model);
     }
 
     [HttpGet]

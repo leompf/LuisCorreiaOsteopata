@@ -4,6 +4,7 @@
     ViewData["Title"] = "Login";
     Layout = "~/Views/Shared/_Layout2.cshtml";
 }
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
 
 @section MainMenu
 {
@@ -38,12 +39,12 @@
                 <h2>Login</h2>
             </div>
             <form method="post">
-                <div asp-validation-summary="ModelOnly"></div>
+                <div hidden asp-validation-summary="ModelOnly"></div>
                 <div class="row">
                     <div class="col-xl-12">
                         <div class="form-group">
                             <div class="input-box">
-                                <span asp-validation-for="Username"></span>
+                                <span class="span-validation-error" asp-validation-for="Username"></span>
                                 <input asp-for="Username" type="email" placeholder="Email..." />
                             </div>
                         </div>
@@ -51,7 +52,7 @@
                     <div class="col-xl-12">
                         <div class="form-group">
                             <div class="input-box">
-                                <span asp-validation-for="Password"></span>
+                                <span class="span-validation-error" asp-validation-for="Password"></span>
                                 <input asp-for="Password" type="password" placeholder="Password..." />
                             </div>
                         </div>
@@ -63,6 +64,15 @@
                                 <span class="icon-right-arrow"></span>
                             </button>
                         </div>
+
+                        @if (ViewBag.ShowResendConfirmation == true)
+                        {
+                            <div class="text-center mt-3">
+                                <button type="button" id="resendEmailBtn" class="btn btn-warning">
+                                    Reenviar Email de Confirmação
+                                </button>
+                            </div>
+                        }
                     </div>
                     <div class="remember-forget">
                         <div class="checked-box1">
@@ -97,15 +107,93 @@
 @section Scripts {
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
-        <script type="text/javascript">
-            document.addEventListener("DOMContentLoaded", function () 
-            {
-                const loginSection = document.getElementById("login-section");
-                if (loginSection)
-                {
-                    loginSection.scrollIntoView({ behavior: "smooth" });
-                }
-            });
-        </script>
     }
+
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <script type="text/javascript">
+        document.addEventListener("DOMContentLoaded", function ()
+        {
+            const loginSection = document.getElementById("login-section");
+            if (loginSection)
+            {
+                loginSection.scrollIntoView({ behavior: "smooth" });
+            }
+
+            // Toastify CSS class for vertical center
+            const style = document.createElement('style');
+            style.innerHTML = `
+                .toast-center {
+                    top: 50% !important;
+                    transform: translateY(-50%) !important;
+                }
+            `;
+            document.head.appendChild(style);
+
+            const modelErrors = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+                ViewData.ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage)
+            ));
+
+            if (modelErrors.length > 0) {
+                modelErrors.forEach(errorMsg => {
+                    Toastify({
+                        text: errorMsg,
+                        duration: 2000,
+                        gravity: "center",
+                        position: "center",
+                        backgroundColor: "#FF4B4B",
+                        className: "toast-center"
+                    }).showToast();
+                });
+            }
+
+            const resendBtn = document.getElementById("resendEmailBtn");
+            if (resendBtn) {
+                resendBtn.addEventListener("click", function () {
+                    const email = document.querySelector("#Username").value; // login input
+                    if (!email) {
+                        Toastify({
+                            text: "Por favor insira o seu email.",
+                            duration: 3000,
+                            gravity: "center",
+                            position: "center",
+                            backgroundColor: "#FF4B4B",
+                            className: "toast-center"
+                        }).showToast();
+                        return;
+                    }
+
+                    const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+
+                    fetch('@Url.Action("ResendEmailConfirmation", "Account")', {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/x-www-form-urlencoded"
+                        },
+                        body: `email=${encodeURIComponent(email)}&__RequestVerificationToken=${encodeURIComponent(token)}`
+                    })
+                    .then(res => res.text())
+                    .then(msg => {
+                        Toastify({
+                            text: msg || "Foi enviado um novo email de confirmação.",
+                            duration: 4000,
+                            gravity: "center",
+                            position: "center",
+                            backgroundColor: "#4CAF50",
+                            className: "toast-center"
+                        }).showToast();
+                    })
+                    .catch(err => {
+                        Toastify({
+                            text: "Erro ao enviar email.",
+                            duration: 4000,
+                            gravity: "center",
+                            position: "center",
+                            backgroundColor: "#FF4B4B",
+                            className: "toast-center"
+                        }).showToast();
+                    });
+                });
+            }
+        });
+    </script>
 }

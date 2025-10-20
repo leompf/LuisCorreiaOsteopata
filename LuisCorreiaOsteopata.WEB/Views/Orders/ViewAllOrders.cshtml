@@ -1,10 +1,9 @@
-﻿@model LuisCorreiaOsteopata.WEB.Models.AppointmentListViewModel
+﻿@model LuisCorreiaOsteopata.WEB.Models.OrderListViewModel
 
 @{
-    ViewData["Title"] = "ViewAppointments";
+    ViewData["Title"] = "ViewAllOrders";
     Layout = "~/Views/Shared/_Layout2.cshtml";
 }
-
 
 @section MainMenu
 {
@@ -16,12 +15,12 @@
     </div>
     <div class="container">
         <div class="page-header__inner">
-            <h3>Ver Todas as Consultas</h3>
+            <h3>Ver Todos os Pedidos</h3>
             <div class="thm-breadcrumb__inner">
                 <ul class="thm-breadcrumb list-unstyled">
                     <li><a asp-controller="Account" asp-action="Index">Home</a></li>
                     <li><span class="icon-arrow-left"></span></li>
-                    <li>Ver Todas as Consultas</li>
+                    <li>Ver Todos os Pedidos</li>
                 </ul>
             </div>
         </div>
@@ -29,7 +28,7 @@
 </section>
 
 <section class="appoinment-page" id="profile-section" style="margin-top: -100px">
-    <div class="container">
+    <div class="container-fluid px-5">
         <div class="row">
             <form method="get">
                 <div class="row">
@@ -37,34 +36,41 @@
                     <hr />
                     <div class="row align-items-center mb-3">
                         <div class="col-auto">
-                            <label class="col-form-label fw-bold pe-1">Colaborador:</label>
+                            <label class="col-form-label fw-bold pe-1">Nº do Pedido:</label>
                         </div>
                         <div class="col-auto ps-0">
-                            <input asp-for="StaffName" class="form-control" id="StaffName" />
+                            <input asp-for="OrderNumberFilter" class="form-control" id="OrderNumber" />
                         </div>
 
                         <div class="col-auto">
                             <label class="col-form-label fw-bold pe-1">Paciente:</label>
                         </div>
                         <div class="col-auto ps-0">
-                            <input asp-for="PatientName" class="form-control" id="PatientName" />
+                            <input asp-for="OrderUserFilter" class="form-control" id="OrderUser" />
                         </div>
                     </div>
 
                     <div class="row align-items-center mb-3">
 
                         <div class="col-auto">
-                            <label class="col-form-label fw-bold pe-0">De:</label>
+                            <label class="col-form-label fw-bold pe-0">Data do Pedido:</label>
                         </div>
                         <div class="col-auto ps-0">
-                            <input asp-for="FromDate" type="date" class="form-control" />
+                            <input asp-for="OrderDateFilter" type="date" class="form-control" />
                         </div>
 
                         <div class="col-auto">
-                            <label class="col-form-label fw-bold pe-0">Até:</label>
+                            <label class="col-form-label fw-bold pe-0">Data de Entrega:</label>
                         </div>
                         <div class="col-auto ps-0">
-                            <input asp-for="ToDate" type="date" class="form-control" />
+                            <input asp-for="OrderDeliveryDateFilter" type="date" class="form-control" />
+                        </div>
+
+                        <div class="col-auto">
+                            <label class="col-form-label fw-bold pe-0">Data de Pagamento:</label>
+                        </div>
+                        <div class="col-auto ps-0">
+                            <input asp-for="OrderPaymentDateFilter" type="date" class="form-control" />
                         </div>
 
                         <div class="col-auto">
@@ -75,13 +81,13 @@
             </form>
         </div>
 
-        <div id="appointments-table">
-            @await Html.PartialAsync("_AppointmentsTable", Model.Appointments)    
+        <div id="orders-table">
+            @await Html.PartialAsync("_OrdersTable", Model.Orders)
         </div>
     </div>
 </section>
 
-@section Scripts 
+@section Scripts
 {
     <script>
         $(document).ready(function () {
@@ -101,9 +107,7 @@
                     if (col === currentSortColumn) {
                         $(this).addClass("active-sort");
                         icon.addClass(currentSortState === "asc" ? "fa fa-sort-up" : "fa fa-sort-down");
-                    } 
-                    else 
-                    {
+                    } else {
                         icon.addClass("fa fa-sort text-muted");
                     }
                 });
@@ -113,15 +117,18 @@
 
             function getFilters() {
                 return {
-                    staffName: $("#StaffName").val(),
-                    patientName: $("#PatientName").val()
+                    orderNumber: $("#OrderNumber").val(),
+                    userId: $("#OrderUser").val(),
+                    orderDate: $("input[name='OrderDateFilter']").val(),
+                    deliveryDate: $("input[name='OrderDeliveryDateFilter']").val(),
+                    paymentDate: $("input[name='OrderPaymentDateFilter']").val()
                 };
             }
 
-            function loadAppointments() {
+            function loadOrders() {
                 const filters = getFilters();
                 $.ajax({
-                    url: '@Url.Action("ViewAppointments", "Appointment")',
+                    url: '@Url.Action("ViewAllOrders", "Orders")',
                     type: 'GET',
                     data: {
                         ...filters,
@@ -129,14 +136,14 @@
                         sortDescending: currentSortState === "desc"
                     },
                     success: function (result) {
-                        $("#appointments-table").html(result);
+                        $("#orders-table").html(result);
                         updateSortIcons();
                     },
                     error: function () {
                         alert("Erro ao carregar os dados.");
                     }
                 });
-            }            
+            }
 
             $(document).on("click", ".sortable", function (e) {
                 e.preventDefault();
@@ -144,30 +151,25 @@
 
                 if (currentSortColumn === sortBy) {
                     currentSortState = currentSortState === "desc" ? "asc" : "desc";
-                } 
-                else 
-                {
+                } else {
                     currentSortColumn = sortBy;
                     currentSortState = "desc";
                 }
 
-                loadAppointments();
+                loadOrders();
             });
 
-            $("#StaffName, #PatientName").on("keyup", function () {
+            // Fix: select both inputs
+            $("#OrderNumber, #OrderUser").on("keyup", function () {
                 clearTimeout(typingTimer);
-                typingTimer = setTimeout(loadUsers, debounceDelay);
+                typingTimer = setTimeout(loadOrders, debounceDelay);
             });
 
-            $("#StaffName, #PatientName").on("input", function () {
-                loadAppointments();
-            });
-
-            $("form").on("submit", function () {
+            $("form").on("submit", function (e) {
                 e.preventDefault();
-                loadAppointments();
+                loadOrders();
             });
         });
     </script>
-
 }
+

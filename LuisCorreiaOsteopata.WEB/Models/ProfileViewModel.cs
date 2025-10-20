@@ -19,9 +19,5 @@ public class ProfileViewModel
 
     public string? Role { get; set; }
 
-    public string? CalendarId { get; set; }
-
-    public string? CalendarName { get; set; }
-
     public bool IsEditable { get; set; } = true;
 }
