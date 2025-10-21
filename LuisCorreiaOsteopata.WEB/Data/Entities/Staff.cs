@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Identity;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace LuisCorreiaOsteopata.WEB.Data.Entities;
 
@@ -15,7 +14,7 @@ public class Staff : IEntity
 
     [Required]
     [Display(Name = "Last Name")]
-    public string LastName {  get; set; }
+    public string LastName { get; set; }
 
 
     [Display(Name = "Full Name")]
@@ -31,7 +30,7 @@ public class Staff : IEntity
 
 
     [Required]
-    public string Phone {  get; set; }
+    public string Phone { get; set; }
 
 
     [Required]

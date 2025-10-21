@@ -27,7 +27,7 @@ public class AddNewStaffViewModel
 
     [Required(ErrorMessage = "*Campo obrigatório")]
     [Display(Name = "Data de Nascimento")]
-    public DateTime Birthdate { get; set; }
+    public DateOnly Birthdate { get; set; }
 
 
     [Required(ErrorMessage = "*Campo obrigatório")]

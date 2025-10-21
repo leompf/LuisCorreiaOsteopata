@@ -27,7 +27,7 @@ public class SignUpViewModel
 
     [Required(ErrorMessage = "*Campo Obrigatório")]
     [Display(Name = "Data de Nascimento")]
-    public DateTime Birthdate { get; set; }
+    public DateOnly Birthdate { get; set; }
 
 
     [Required(ErrorMessage = "*Campo Obrigatório")]

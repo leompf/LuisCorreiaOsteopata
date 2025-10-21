@@ -42,6 +42,7 @@
             <div class="view-appointment__left">
                 <h3 class="view-appointment__title">Vê as tuas consultas</h3>
                 <div class="form-group row">
+                    <a asp-action="TestUserPdfCompanion" asp-route-id="@loggedUser.Id" target="_blank">Visualizar PDF</a>
                     <form method="post" asp-controller="Google" asp-action="SavePreferredCalendar">
                         @if (ViewBag.Token == null)
                         {

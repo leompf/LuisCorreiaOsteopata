@@ -80,6 +80,7 @@ public class PatientRepository : GenericRepository<Patient>, IPatientRepository
             Email = user.Email,
             Nif = user.Nif,
             Phone = user.PhoneNumber,
+            BirthDate = user.Birthdate,           
         };
 
         _logger.LogInformation("Patient entity created for user {Email}.", user.Email);

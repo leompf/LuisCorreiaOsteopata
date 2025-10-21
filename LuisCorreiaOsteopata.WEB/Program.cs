@@ -66,6 +66,8 @@ public class Program
 
         builder.Services.AddHangfireServer();
 
+        QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
+
         builder.Services.AddTransient<SeedDB>();
         builder.Services.AddTransient<IEmailSender, EmailSender>();
         builder.Services.AddScoped<IReminderHelper, ReminderHelper>();

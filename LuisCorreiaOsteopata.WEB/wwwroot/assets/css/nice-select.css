@@ -6,13 +6,12 @@
     box-sizing: border-box;
     clear: both;
     cursor: pointer;
-
     font-family: inherit;
     color: var(--careon-gray);
     font-size: 14px;
     font-weight: 450;
-    height: 60px;
-    line-height: 58px;
+    height: 40px;
+    line-height: 40px;
     outline: none;
     padding-left: 25px;
     padding-right: 25px;

@@ -138,7 +138,9 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
 
             return View(model);
         }
+        #endregion
 
+        #region Orders
         [HttpGet]
         [Authorize(Roles = "Colaborador,Administrador")]
         public async Task<IActionResult> ViewAllOrders(string? userId, string? orderNumber, DateTime? orderDate, DateTime? deliveryDate, DateTime? paymentDate, string? sortBy, bool sortDescending = false)

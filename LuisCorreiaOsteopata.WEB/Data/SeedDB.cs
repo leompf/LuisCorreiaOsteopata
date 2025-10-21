@@ -68,7 +68,7 @@ public class SeedDB
                 EmailConfirmed = true,
                 Nif = "255408650",
                 PhoneNumber = "+351965571434",
-                Birthdate = new DateTime(1997, 09, 30)
+                Birthdate = new DateOnly(1997, 09, 30)
             };
 
             var result = await _userHelper.AddUserAsync(patientUser, "123456");

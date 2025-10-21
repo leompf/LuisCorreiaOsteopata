@@ -1,6 +1,4 @@
-﻿using System.Security.Claims;
-using System.Text.RegularExpressions;
-using LuisCorreiaOsteopata.WEB.Data;
+﻿using LuisCorreiaOsteopata.WEB.Data;
 using LuisCorreiaOsteopata.WEB.Data.Entities;
 using LuisCorreiaOsteopata.WEB.Helpers;
 using LuisCorreiaOsteopata.WEB.Models;
@@ -12,6 +10,10 @@ using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using QRCoder;
+using QuestPDF.Companion;
+using QuestPDF.Fluent;
+using System.Security.Claims;
+using System.Text.RegularExpressions;
 
 namespace LuisCorreiaOsteopata.WEB.Controllers
 {
@@ -590,7 +592,8 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
                     return NotFound();
             }
 
-            var role = await _userHelper.GetUserRoleAsync(user);         
+            var role = await _userHelper.GetUserRoleAsync(user);
+            var patient = await _patientRepository.GetPatientByUserEmailAsync(user.Email!);
 
             var model = new ProfileViewModel
             {
@@ -600,6 +603,10 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
                 BirthDate = user.Birthdate,
                 NIF = user.Nif,
                 Role = role,
+                Gender = patient.Gender,
+                Height = patient.Height,
+                Weight = patient.Weight,
+                MedicalHistory = patient.MedicalHistory,
                 IsEditable = string.IsNullOrEmpty(id) || User.IsInRole("Administrador") || User.IsInRole("Colaborador")
             };
 
@@ -641,6 +648,18 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
 
                     await _userHelper.UpdateUserAsync(user);
                 }
+
+                var patient = await _patientRepository.GetPatientByUserEmailAsync(user.Email);
+                if (patient != null)
+                {
+                    patient.Gender = model.Gender;
+                    patient.Height = model.Height;
+                    patient.Weight = model.Weight;
+                    patient.MedicalHistory = model.MedicalHistory;
+
+                    await _patientRepository.UpdateAsync(patient);
+                }
+
             }
 
             return RedirectToAction("Profile");
@@ -757,6 +776,23 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
         private string FormatKey(string key)
         {
             return Regex.Replace(key.ToUpperInvariant(), ".{4}", "$0 ").Trim();
+        }
+
+        public async Task<IActionResult> TestUserPdfCompanion(string id)
+        {
+            var user = await _userHelper.GetUserByIdAsync(id);
+            if (user == null) return NotFound();
+
+            // Create the document
+            var document = new UserRecordDocument(user);
+
+            // Generate PDF into a memory stream
+            using var pdfStream = new MemoryStream();
+            document.GeneratePdf(pdfStream);
+            pdfStream.Position = 0;
+
+            // Return PDF to browser
+            return File(pdfStream.ToArray(), "application/pdf", $"UserRecord_{user.Names}.pdf");
         }
         #endregion
     }

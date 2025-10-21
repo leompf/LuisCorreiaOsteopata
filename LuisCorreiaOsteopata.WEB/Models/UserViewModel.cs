@@ -11,7 +11,7 @@ public class UserViewModel
 
     [Display(Name = "Data de Nascimento")]
     [DisplayFormat(DataFormatString = "{0:dd-MM-yyyy}", ApplyFormatInEditMode = true)]
-    public DateTime? Birthdate { get; set; }
+    public DateOnly? Birthdate { get; set; }
 
     public string Email { get; set; }
 

@@ -15,7 +15,7 @@ public class User : IdentityUser
     public string LastName { get; set; }
 
     [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy}", ApplyFormatInEditMode = false)]
-    public DateTime? Birthdate { get; set; }
+    public DateOnly? Birthdate { get; set; }
 
     
     [StringLength(9, ErrorMessage = "O NIF deve conter 9 dígitos")]
