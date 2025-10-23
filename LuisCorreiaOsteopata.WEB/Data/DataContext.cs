@@ -56,6 +56,10 @@ public class DataContext : IdentityDbContext<User>
             .IsRequired()
             .OnDelete(DeleteBehavior.Restrict);
 
+        modelbuilder.Entity<Order>()
+            .HasIndex(o => o.OrderNumber)
+            .IsUnique();
+
         modelbuilder.HasSequence<int>("OrderNumberSequence", "dbo")
             .StartsAt(1)
             .IncrementsBy(1);

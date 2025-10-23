@@ -7,10 +7,8 @@ public class Order : IEntity
 {
     public int Id { get; set; }
 
-
     [Display(Name = "Order Number")]
     public string OrderNumber { get; set; } = string.Empty;
-
 
     [Required]
     [Display(Name = "Order Date")]
@@ -30,6 +28,10 @@ public class Order : IEntity
     [DisplayFormat(DataFormatString = "{0:C2}", ApplyFormatInEditMode = true)]
     public decimal OrderTotal { get; set; }
 
+    [Required]
+    [Display(Name = "Order Status")]
+    public OrderStatus OrderStatus { get; set; }
+
     [Display(Name = "Dados de Faturação")]
     public BillingDetail? BillingDetail { get; set; }
 
@@ -43,18 +45,13 @@ public class Order : IEntity
     public string? PaymentIntentId { get; set; }
 
 
-
-
     public IEnumerable<OrderDetail> Items { get; set; }
-
 
     [DisplayFormat(DataFormatString = "{0:N0}")]
     public int Lines => Items == null ? 0 : Items.Count();
 
-
     [DisplayFormat(DataFormatString = "{0:N2}")]
     public double Quantity => Items == null ? 0 : Items.Sum(i => i.Quantity);
-
 
     [DisplayFormat(DataFormatString = "{0:C2}")]
     public decimal Value => Items == null ? 0 : Items.Sum(i => i.Value);

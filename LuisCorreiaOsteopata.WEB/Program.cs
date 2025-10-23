@@ -83,6 +83,7 @@ public class Program
         builder.Services.AddScoped<IAppointmentRepository, AppointmentRepository>();
         builder.Services.AddScoped<IProductRepository, ProductRepository>();
         builder.Services.AddScoped<IOrderRepository, OrderRepository>();
+        builder.Services.AddScoped<IBillingDetailRepository, BillingDetailRepository>();
 
         builder.Services.Configure<AuthMessageSenderOptions>(builder.Configuration);
         builder.Services.Configure<GoogleSettings>(builder.Configuration.GetSection("GoogleSettings"));

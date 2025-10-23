@@ -2,6 +2,7 @@
 using LuisCorreiaOsteopata.WEB.Data.Entities;
 using LuisCorreiaOsteopata.WEB.Helpers;
 using LuisCorreiaOsteopata.WEB.Models;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query;
@@ -167,7 +168,7 @@ public class AppointmentRepository : GenericRepository<Appointment>, IAppointmen
 
             if (orderDetail == null)
             {
-                _logger.LogInformation("Patient {PatientId} ({Email}) has no remaining appointment uses.", patientId, patient.User.Email);
+                _logger.LogInformation("Patient {PatientId} ({Email}) has no remaining appointment uses.", patientId, patient.User.Email);                
                 return (false, "Não tem consultas disponíveis. Por favor, adquira novas consultas.");
             }
 

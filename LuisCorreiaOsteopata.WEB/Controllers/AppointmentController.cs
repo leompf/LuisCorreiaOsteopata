@@ -63,15 +63,23 @@ public class AppointmentController : Controller
             if (patient != null)
             {
                 model.PatientId = patient.Id;
-            }
 
-            var remainingCredits = await _context.Orders
-                .Where(o => o.User.Id == currentUser.Id && o.IsPaid)
-                .SelectMany(o => o.Items)
-                .SumAsync(i => i.RemainingUses);
 
-            model.HasAvailableCredits = remainingCredits > 0;
-            model.RemainingCredits = remainingCredits;
+                var remainingCredits = await _context.Orders
+                    .Where(o => o.User.Id == currentUser.Id && o.IsPaid)
+                    .SelectMany(o => o.Items)
+                    .SumAsync(i => i.RemainingUses);
+
+                model.HasAvailableCredits = remainingCredits > 0;
+                model.RemainingCredits = remainingCredits;
+            }            
+        }
+
+        else if (User.IsInRole("Colaborador"))
+        {
+            model.Patients = _patientRepository.GetComboPatients();
+            model.HasAvailableCredits = true;
+            model.RemainingCredits = null;
         }
 
         return View(model);

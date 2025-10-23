@@ -593,7 +593,27 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
             }
 
             var role = await _userHelper.GetUserRoleAsync(user);
-            var patient = await _patientRepository.GetPatientByUserEmailAsync(user.Email!);
+            if (User.IsInRole("Utente"))
+            {
+                var patient = await _patientRepository.GetPatientByUserEmailAsync(user.Email!);
+
+                var userModel = new ProfileViewModel
+                {
+                    Name = $"{user.Names} {user.LastName}",
+                    Email = user.Email,
+                    PhoneNumber = user.PhoneNumber,
+                    BirthDate = user.Birthdate,
+                    NIF = user.Nif,
+                    Role = role,
+                    Gender = patient.Gender,
+                    Height = patient.Height,
+                    Weight = patient.Weight,
+                    MedicalHistory = patient.MedicalHistory,
+                    IsEditable = string.IsNullOrEmpty(id) || User.IsInRole("Administrador") || User.IsInRole("Colaborador")
+                };
+
+                return View(userModel);
+            }
 
             var model = new ProfileViewModel
             {
@@ -603,10 +623,6 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
                 BirthDate = user.Birthdate,
                 NIF = user.Nif,
                 Role = role,
-                Gender = patient.Gender,
-                Height = patient.Height,
-                Weight = patient.Weight,
-                MedicalHistory = patient.MedicalHistory,
                 IsEditable = string.IsNullOrEmpty(id) || User.IsInRole("Administrador") || User.IsInRole("Colaborador")
             };
 

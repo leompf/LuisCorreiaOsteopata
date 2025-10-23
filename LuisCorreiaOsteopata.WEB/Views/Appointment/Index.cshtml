@@ -19,7 +19,7 @@
 }
 
 <section class="page-header">
-    <div class="page-header__bg" style="background-image: url(assets/images/backgrounds/page-header-bg.jpg);">
+    <div class="page-header__bg" style="background-image: url(~/assets/images/backgrounds/page-header-bg.jpg);">
     </div>
     <div class="container">
         <div class="page-header__inner">
@@ -43,6 +43,12 @@
                     <h3 class="appoinment-page__title">Marcar Consulta</h3>
                     <form class="appoinment-page__form" method="post">
                         <div class="row">
+                            @if (!Model.HasAvailableCredits && User.IsInRole("Utente"))
+                            {
+                                <div class="alert alert-warning">
+                                    Não tens consultas disponíveis. Por favor, adquire uma antes de marcar.
+                                </div>
+                            }
                             <div class="col-xl-auto col-md-6">
                                 <div class="appoinment-page__input-box text-center">
                                     <label style="font-size: 1.0rem" class="col-auto col-form-label"><strong>Data da Consulta:</strong></label>
@@ -86,7 +92,7 @@
                                     <input type="hidden" asp-for="Notes" id="Notes" />
                                 </div>
                                 <div class="appoinment-page__btn-box" style="margin-top: 70px">
-                                    <button type="submit" asp-action="Index" id="btnConfirm" class="thm-btn" disabled="@(Model.HasAvailableCredits ? null : "disabled")" title=@(Model.HasAvailableCredits ? "" : "Não tens consultas disponíveis. Por favor, adquire uma consulta antes de marcar.")>
+                                    <button type="submit" asp-action="Index" id="btnConfirm" class="thm-btn" disabled="@(Model.HasAvailableCredits ? false : true)">
                                         Marcar<span class="icon-plus"></span>
                                     </button>
                                 </div>
@@ -132,22 +138,24 @@
 </section>
 
 <div id="confirmDialog" class="modal fade">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h4 class="modal-title">Confirmar Consulta</h4>
-                <button type="button" class="close" data-bs-dismiss="modal"><i class="fa fa-window-close"></i></button>
+                <h5 class="modal-title">Confirmar Consulta</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
             </div>
             <div class="modal-body">
                 <p>Queres confirmar a consulta com os seguintes dados?</p>
-                <p><strong>Conta Paciente:</strong> <span id="confirmPaciente"></span></p>
-                <p><strong>Profissional:</strong> <span id="confirmProfissional"></span></p>
-                <p><strong>Data:</strong> <span id="confirmData"></span></p>
-                <p><strong>Hora:</strong> <span id="confirmHora"></span></p>
+                <table class="table table-sm">
+                    <tr><th>Paciente:</th><td id="confirmPaciente"></td></tr>
+                    <tr><th>Profissional:</th><td id="confirmProfissional"></td></tr>
+                    <tr><th>Data:</th><td id="confirmData"></td></tr>
+                    <tr><th>Hora:</th><td id="confirmHora"></td></tr>
+                </table>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-danger" id="btnYes">Yes</button>
-                <button type="button" class="btn btn-success" id="btnNo">No</button>
+                <button type="button" class="btn btn-success" id="btnYes">Confirmar</button>
+                <button type="button" class="btn btn-secondary" id="btnNo">Cancelar</button>
             </div>
         </div>
     </div>

@@ -188,29 +188,50 @@ public class OrderRepository : GenericRepository<Order>, IOrderRepository
             var user = await _userHelper.GetUserByEmailAsync(username);
             if (user == null) return false;
 
-            var orderTmps = await _context.OrderDetailsTemp
+            var cartItems = await _context.OrderDetailsTemp
                 .Include(o => o.Product)
                 .Where(o => o.User == user)
                 .ToListAsync();
-
-            if (!orderTmps.Any())
-            {
-                _logger.LogInformation("No cart items found for User {userId}.", user.Id);
-                return false;
-            }
 
             var existingOrder = await _context.Orders
                 .Include(o => o.Items)
                 .Where(o => o.User == user && !o.IsPaid)
                 .FirstOrDefaultAsync();
 
+            if (!cartItems.Any())
+            {
+                if (existingOrder != null)
+                {
+                    _logger.LogInformation("Cart is empty — deleting existing unpaid order {OrderId} for user {UserId}.", existingOrder.Id, user.Id);
+                    _context.Orders.Remove(existingOrder);
+                    await _context.SaveChangesAsync();
+                }
+
+                _logger.LogInformation("No cart items found for User {userId}.", user.Id);
+                return false;
+            }            
+
             if (existingOrder != null)
             {
                 _logger.LogInformation("Recovered existing unpaid order {OrderId} for user {userId}.", existingOrder.Id, user.Id);
+
+                _context.OrderDetails.RemoveRange(existingOrder.Items);
+
+                existingOrder.Items = cartItems.Select(o => new OrderDetail
+                {
+                    Price = o.Price,
+                    Product = o.Product,
+                    Quantity = o.Quantity
+                }).ToList();
+
+                existingOrder.OrderTotal = existingOrder.Items.Sum(d => d.Price * (decimal)d.Quantity);
+                existingOrder.OrderDate = DateTime.Now;
+
+                await _context.SaveChangesAsync();
                 return true;
             }
 
-            var details = orderTmps.Select(o => new OrderDetail
+            var details = cartItems.Select(o => new OrderDetail
             {
                 Price = o.Price,
                 Product = o.Product,
@@ -218,15 +239,21 @@ public class OrderRepository : GenericRepository<Order>, IOrderRepository
             }).ToList();
 
             var total = details.Sum(d => d.Price * (decimal)d.Quantity);
+            var nextValue = _context.Database
+                .SqlQueryRaw<int>("SELECT NEXT VALUE FOR dbo.OrderNumberSequence")
+                .AsEnumerable()
+                .First();
 
             var order = new Order
             {
-                OrderDate = DateTime.UtcNow,
+                OrderDate = DateTime.Now,                
                 User = user,
                 Items = details,
                 IsPaid = false,
-                OrderTotal = total
-            };
+                OrderTotal = total,
+                OrderNumber = $"LC-{DateTime.Today.Year}-{nextValue:D4}",
+                OrderStatus = OrderStatus.Criado,
+            };            
 
             await CreateAsync(order);
             await _context.SaveChangesAsync();

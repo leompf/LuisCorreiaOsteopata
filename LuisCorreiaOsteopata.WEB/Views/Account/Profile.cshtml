@@ -78,83 +78,86 @@
                                 </div>
                             </div>
 
-                            <div class="form-group row mb-3 align-items-center">
-                                <label class="col-auto col-form-label pe-1"><strong>Género:</strong></label>
-                                <div class="col-auto ps-1">
-                                    <select asp-for="Gender">
-                                        <option>Masculino</option>
-                                        <option>Feminino</option>
-                                    </select>
-                                </div>
+                            @if(User.IsInRole("Utente"))
+                            {
+                                <div class="form-group row mb-3 align-items-center">
+                                    <label class="col-auto col-form-label pe-1"><strong>Género:</strong></label>
+                                    <div class="col-auto ps-1">
+                                        <select asp-for="Gender">
+                                            <option>Masculino</option>
+                                            <option>Feminino</option>
+                                        </select>
+                                    </div>
 
-                                <label class="col-auto col-form-label pe-1"><strong>Altura:</strong></label>
-                                <div class="col-2 ps-1">
-                                    <div class="input-group">
-                                        <input type="number" asp-for="Height" class="form-control" max="255" readonly="@(!Model.IsEditable)" />
-                                        <span class="input-group-text">cm</span>
+                                    <label class="col-auto col-form-label pe-1"><strong>Altura:</strong></label>
+                                    <div class="col-2 ps-1">
+                                        <div class="input-group">
+                                            <input type="number" asp-for="Height" class="form-control" max="255" readonly="@(!Model.IsEditable)" />
+                                            <span class="input-group-text">cm</span>
+                                        </div>
+                                    </div>
+
+                                    <label class="col-auto col-form-label pe-1"><strong>Peso:</strong></label>
+                                    <div class="col-2 ps-1">
+                                        <div class="input-group">
+                                            <input type="number" asp-for="Weight" class="form-control" readonly="@(!Model.IsEditable)" />
+                                            <span class="input-group-text">Kg</span>
+                                        </div>
                                     </div>
                                 </div>
 
-                                <label class="col-auto col-form-label pe-1"><strong>Peso:</strong></label>
-                                <div class="col-2 ps-1">
-                                    <div class="input-group">
-                                        <input type="number" asp-for="Weight" class="form-control" readonly="@(!Model.IsEditable)" />
-                                        <span class="input-group-text">Kg</span>
-                                    </div>
+                                <div class="form-group row">
+                                    <label class="col-auto col-form-label pe-1"><strong>Historial Médico:</strong></label>
                                 </div>
-                            </div>
+                                <div class="quill-container" id="toolbar-container">
+                                    <span class="ql-formats">
+                                        <select class="ql-font"></select>
+                                        <select class="ql-size"></select>
+                                    </span>
+                                    <span class="ql-formats">
+                                        <button class="ql-bold"></button>
+                                        <button class="ql-italic"></button>
+                                        <button class="ql-underline"></button>
+                                        <button class="ql-strike"></button>
+                                    </span>
+                                    <span class="ql-formats">
+                                        <select class="ql-color"></select>
+                                        <select class="ql-background"></select>
+                                    </span>
+                                    <span class="ql-formats">
+                                        <button class="ql-script" value="sub"></button>
+                                        <button class="ql-script" value="super"></button>
+                                    </span>
+                                    <span class="ql-formats">
+                                        <button class="ql-header" value="1"></button>
+                                        <button class="ql-header" value="2"></button>
+                                        <button class="ql-blockquote"></button>
+                                        <button class="ql-code-block"></button>
+                                    </span>
+                                    <span class="ql-formats">
+                                        <button class="ql-list" value="ordered"></button>
+                                        <button class="ql-list" value="bullet"></button>
+                                        <button class="ql-indent" value="-1"></button>
+                                        <button class="ql-indent" value="+1"></button>
+                                    </span>
+                                    <span class="ql-formats">
+                                        <button class="ql-direction" value="rtl"></button>
+                                        <select class="ql-align"></select>
+                                    </span>
+                                    <span class="ql-formats">
+                                        <button class="ql-link"></button>
+                                        <button class="ql-image"></button>
+                                        <button class="ql-video"></button>
+                                        <button class="ql-formula"></button>
+                                    </span>
+                                    <span class="ql-formats">
+                                        <button class="ql-clean"></button>
+                                    </span>
+                                </div>
 
-                            <div class="form-group row">
-                                <label class="col-auto col-form-label pe-1"><strong>Historial Médico:</strong></label>
-                            </div>
-                            <div class="quill-container" id="toolbar-container">
-                                <span class="ql-formats">
-                                    <select class="ql-font"></select>
-                                    <select class="ql-size"></select>
-                                </span>
-                                <span class="ql-formats">
-                                    <button class="ql-bold"></button>
-                                    <button class="ql-italic"></button>
-                                    <button class="ql-underline"></button>
-                                    <button class="ql-strike"></button>
-                                </span>
-                                <span class="ql-formats">
-                                    <select class="ql-color"></select>
-                                    <select class="ql-background"></select>
-                                </span>
-                                <span class="ql-formats">
-                                    <button class="ql-script" value="sub"></button>
-                                    <button class="ql-script" value="super"></button>
-                                </span>
-                                <span class="ql-formats">
-                                    <button class="ql-header" value="1"></button>
-                                    <button class="ql-header" value="2"></button>
-                                    <button class="ql-blockquote"></button>
-                                    <button class="ql-code-block"></button>
-                                </span>
-                                <span class="ql-formats">
-                                    <button class="ql-list" value="ordered"></button>
-                                    <button class="ql-list" value="bullet"></button>
-                                    <button class="ql-indent" value="-1"></button>
-                                    <button class="ql-indent" value="+1"></button>
-                                </span>
-                                <span class="ql-formats">
-                                    <button class="ql-direction" value="rtl"></button>
-                                    <select class="ql-align"></select>
-                                </span>
-                                <span class="ql-formats">
-                                    <button class="ql-link"></button>
-                                    <button class="ql-image"></button>
-                                    <button class="ql-video"></button>
-                                    <button class="ql-formula"></button>
-                                </span>
-                                <span class="ql-formats">
-                                    <button class="ql-clean"></button>
-                                </span>
-                            </div>
-
-                            <div class="quill-container" id="editor"></div>
-                            <input type="hidden" asp-for="MedicalHistory" id="MedicalHistory" />
+                                <div class="quill-container" id="editor"></div>
+                                <input type="hidden" asp-for="MedicalHistory" id="MedicalHistory" />
+                            }                            
 
                             @if (Model.IsEditable)
                             {

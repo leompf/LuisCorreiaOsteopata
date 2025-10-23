@@ -6,6 +6,26 @@
     Layout = "~/Views/Shared/_Layout2.cshtml";
 }
 
+<style>
+    .billing-card {
+        cursor: pointer;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        margin-bottom: 15px;
+        transition: 0.3s;
+    }
+
+        .billing-card:hover {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .billing-card.selected {
+            border: 2px solid #007bff;
+            box-shadow: 0 6px 12px rgba(0,123,255,0.2);
+        }
+</style>
+
+
 @section MainMenu
 {
     <partial name="_Menu"></partial>
@@ -39,14 +59,61 @@
                         <div class="billing_title">
                             <h2>Dados de Faturação</h2>
                         </div>
-                        <div class="billing_details_form">
+
+                        <div class="billing_cards">
+                            @if (Model.BillingDetails.Any())
+                            {
+                                <div class="row">
+                                    @foreach (var bd in Model.BillingDetails)
+                                    {
+                                        <div class="col-md-4">
+                                            <label class="card billing-card">
+                                                <input type="radio" name="BillingDetail.Id" value="@bd.Id" class="billing-radio" hidden />
+                                                <div class="card-body">
+                                                    <h5>@bd.Name</h5>
+                                                    @if (!string.IsNullOrEmpty(bd.CompanyName))
+                                                    {
+                                                        <p>@bd.CompanyName</p>
+                                                    }
+                                                    <p>@bd.Address, @bd.ZipCode @bd.City</p>
+                                                    <p>@bd.State</p>
+                                                    <p>@bd.Email</p>
+                                                    <p>@bd.Phone</p>
+                                                    <p>NIF: @bd.NIF</p>
+                                                </div>
+                                            </label>
+                                        </div>
+                                    }
+
+                                    @if (Model.BillingDetails.Count < 3)
+                                    {
+                                        <div class="col-md-4">
+                                            <label class="card billing-card new-billing">
+                                                <input type="radio" name="BillingDetail.Id" value="0" class="billing-radio" hidden />
+                                                <div class="card-body text-center">
+                                                    <h5>Adicionar novo</h5>
+                                                    <p>Clique para criar um novo dado de faturação</p>
+                                                </div>
+                                            </label>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                            else
+                            {
+                                <p>Não tem nenhum dado de faturação. Por favor crie um novo abaixo.</p>
+                                <input type="hidden" name="BillingDetail.Id" value="0" />
+                            }
+                        </div>
+
+                        <div id="billingForm" class="billing_details_form" style=@(Model.BillingDetails == null || !Model.BillingDetails.Any() ? "display:block;" : "display:none;")>
                             <div asp-validation-summary="ModelOnly"></div>
                             <div class="row">
                                 <div class="col-xl-12">
                                     <div class="billing_input_box">
                                         <div class="floating-label">
+                                            <span class="span-validation-error" asp-validation-for="BillingDetail.Name"></span>
                                             <input type="text" asp-for="BillingDetail.Name" placeholder="Nome">
-                                            <span asp-validation-for="BillingDetail.Name" class="text-danger"></span>
                                         </div>
                                     </div>
                                 </div>
@@ -55,7 +122,7 @@
                             <div class="row">
                                 <div class="col-xl-12">
                                     <div class="billing_input_box">
-                                        <input type="text" name="company_name" value="" placeholder="Company">
+                                        <input type="text" name="company_name" value="" placeholder="Nome Empresa (Opcional)">
                                     </div>
                                 </div>
                             </div>
@@ -63,6 +130,7 @@
                             <div class="row">
                                 <div class="col-xl-12">
                                     <div class="billing_input_box">
+                                        <span class="span-validation-error" asp-validation-for="BillingDetail.Address"></span>
                                         <input type="text" asp-for="BillingDetail.Address" placeholder="Morada">
                                     </div>
                                 </div>
@@ -71,11 +139,13 @@
                             <div class="row bs-gutter-x-20">
                                 <div class="col-xl-6">
                                     <div class="billing_input_box">
+                                        <span class="span-validation-error" asp-validation-for="BillingDetail.ZipCode"></span>
                                         <input type="text" asp-for="BillingDetail.ZipCode" pattern="\d{4}-\d{3}" placeholder="Código Postal">
                                     </div>
                                 </div>
                                 <div class="col-xl-6">
                                     <div class="billing_input_box">
+                                        <span class="span-validation-error" asp-validation-for="BillingDetail.City"></span>
                                         <input type="text" asp-for="BillingDetail.City" placeholder="Localidade" required="">
                                     </div>
                                 </div>
@@ -84,12 +154,13 @@
                             <div class="row bs-gutter-x-20">
                                 <div class="col-xl-6">
                                     <div class="billing_input_box">
-                                        <input type="text" asp-for="BillingDetail.State" placeholder="Distrito"
-                                               required="">
+                                        <span class="span-validation-error" asp-validation-for="BillingDetail.State"></span>
+                                        <input type="text" asp-for="BillingDetail.State" placeholder="Distrito">
                                     </div>
                                 </div>
                                 <div class="col-xl-6">
                                     <div class="billing_input_box">
+                                        <span class="span-validation-error" asp-validation-for="BillingDetail.Email"></span>
                                         <input type="email" asp-for="BillingDetail.Email" placeholder="Email">
                                     </div>
                                 </div>
@@ -97,14 +168,14 @@
                             <div class="row bs-gutter-x-20">
                                 <div class="col-xl-6">
                                     <div class="billing_input_box">
-                                        <input type="tel" id="phone" asp-for="BillingDetail.Phone"
-                                               required="" placeholder="Telemóvel">
+                                        <span class="span-validation-error" asp-validation-for="BillingDetail.Phone"></span>
+                                        <input type="tel" id="phone" asp-for="BillingDetail.Phone" placeholder="Telemóvel">
                                     </div>
                                 </div>
                                 <div class="col-xl-6">
                                     <div class="billing_input_box">
-                                        <input type="text" id="nif" asp-for="BillingDetail.NIF"
-                                               placeholder="NIF">
+                                        <span class="span-validation-error" asp-validation-for="BillingDetail.NIF"></span>
+                                        <input type="text" id="nif" asp-for="BillingDetail.NIF" placeholder="NIF">
                                     </div>
                                 </div>
                             </div>
@@ -121,16 +192,16 @@
                                 <div class="col-xl-12">
                                     <div class="billing_details_form-btns">
                                         <div class="billing_details_form-btn-1">
-                                            <button type="submit" class="thm-btn">
+                                            <a asp-controller="Products" asp-action="ViewProducts" class="thm-btn">
                                                 Continuar a Comprar
                                                 <span class="icon-right-arrow"></span>
-                                            </button>
+                                            </a>
                                         </div>
                                         <div class="billing_details_form-btn-2">
-                                            <button type="submit" class="thm-btn">
+                                            <a asp-controller="Orders" asp-action="Create" class="thm-btn">
                                                 Voltar ao Carrinho
                                                 <span class="icon-right-arrow"></span>
-                                            </button>
+                                            </a>
                                         </div>
                                     </div>
                                 </div>
@@ -216,47 +287,46 @@
 
                         <div class="sidebar-order-summary__Payment">
                             <div class="title-box">
-                                <h3>Payment Method</h3>
+                                <h3>Método de Pagamento</h3>
                             </div>
 
                             <div class="checkout__payment">
-                                <div class="checkout__payment__item checkout__payment__item--active">  
-                                    <input type="radio" asp-for="PaymentMethod" value="mb_way" id="mbway" checked hidden/>
-                                    <label class="checkout__payment__title" for="mbway" >MB Way</label>
+                                <div class="checkout__payment__item checkout__payment__item--active">
+                                    <input type="radio" asp-for="PaymentMethod" value="mb_way" id="mbway" checked hidden />
+                                    <label class="checkout__payment__title" for="mbway">MB Way</label>
                                     <div class="checkout__payment__content">
-                                        A Direct Bank Transfer is a method of sending money from one
-                                        bank account to another without using cash, checks, or third-party payment
-                                        services.
+                                        MB WAY permite fazer transferências imediatas de dinheiro entre números de telemóvel associados ao MB WAY, 
+                                        gerar cartões virtuais MB Net para compras online, pagar compras em lojas físicas através de código QR e contactless, 
+                                        e usar um Multibanco sem ter de usar cartão bancário.
                                     </div>
                                 </div>
                                 <div class="checkout__payment__item">
                                     <input type="radio" asp-for="PaymentMethod" value="paypal" id="paypal" hidden />
-                                    <label class="checkout__payment__title" for="paypal" >Paypal</label>
+                                    <label class="checkout__payment__title" for="paypal">Paypal</label>
                                     <div class="checkout__payment__content">
-                                        PayPal is an online payment system that allows users to send and receive
-                                        money securely. It supports personal and business transactions, including
-                                        shopping, invoicing, and international transfers.
+                                        PayPal é um sistema de pagamentos online que permite aos utilizadores fazer transações ou receber dinheiro de maneira segura.
                                     </div>
-                                </div>                                
+                                </div>
                             </div>
                         </div>
 
                         <div class="sidebar-order-summary__bottom">
-                            <p class="text1">
-                                your personal data will be used to process your order your support
-                                experience throughout this website and for other purposes described in our <a href="#">privacy policy</a>
-                            </p>
+                            <span class="text1">
+                                Ao concluir o pedido concorda com as nossas <a href="#">condições de venda</a>.<br />
+                                Consulte o nosso <a href="#">aviso de privacidade</a>.<br />
+                                Também concorda com os <a href="#">termos e condições</a> de Luís Correia, Osteopata.
+                            </span>
 
-                            <div class="sidebar-order-summary__checked">
+                            @* <div class="sidebar-order-summary__checked">
                                 <input type="checkbox" name="skipper1" id="skipper2" checked="">
                                 <label for="skipper2">
                                     <span></span>I have read and agree to the website <a href="#">terms and conditions</a>
                                 </label>
-                            </div>
+                            </div> *@
 
                             <div class="sidebar-order-summary__btn">
                                 <button type="submit" class="thm-btn">
-                                    Place your order
+                                    Finalizar Pedido
                                     <span class="icon-right-arrow"></span>
                                 </button>
                             </div>
@@ -268,109 +338,174 @@
     </div>
 </section>
 <!--End Checkout Page-->
+
 @section Scripts {
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
-        <script type="text/javascript">
-            document.addEventListener("DOMContentLoaded", function ()
-            {
+    }
+    <script type="text/javascript">
+        document.addEventListener("DOMContentLoaded", function () {
+            const cards = document.querySelectorAll(".billing-card");
+            const billingForm = document.getElementById("billingForm");
+            const phoneInput = document.querySelector("#phone");
+            const nifInput = document.querySelector("#nif");
+            const form = document.querySelector("form");
 
-                // Scroll to register section
-                const registerSection = document.getElementById("register-section");
-                if (registerSection)
-                {
-                    registerSection.scrollIntoView({ behavior: "smooth" });
+            // defensive: if billingForm doesn't exist, bail out
+            if (!form) return;
+
+            // Helper to find a checked radio OR a hidden BillingDetail.Id input
+            function getBillingSelection() {
+                // 1) checked radio (most common)
+                const selectedRadio = document.querySelector('.billing-radio:checked');
+                if (selectedRadio) return { type: 'radio', element: selectedRadio };
+
+                // 2) hidden input fallback (when no saved billing details exist)
+                const hidden = document.querySelector('input[name="BillingDetail.Id"][type="hidden"]');
+                if (hidden) return { type: 'hidden', element: hidden };
+
+                // nothing selected
+                return null;
+            }
+
+            // If there is a "new billing" radio (value="0"), keep a reference
+            const newBillingRadio = document.querySelector('.billing-radio[value="0"]');
+
+            // If form is visible on load and there's a new-billing radio -> check it
+            try {
+                const computedDisplay = billingForm ? getComputedStyle(billingForm).display : 'none';
+                if (computedDisplay !== 'none' && newBillingRadio) {
+                    newBillingRadio.checked = true;
                 }
+            } catch (e) {
+                // ignore getComputedStyle errors in weird environments
+            }
 
-                const phoneInput = document.querySelector("#phone");
-                const nifInput = document.querySelector("#nif");
+            // If user types in the billing form, ensure new-billing radio is selected (if present)
+            if (billingForm) {
+                billingForm.addEventListener("input", function () {
+                    if (newBillingRadio) newBillingRadio.checked = true;
+                });
+            }
 
-                const iti = window.intlTelInput(phoneInput,
-                {
+            // Card click handling (select radio + show/hide form + highlight)
+            cards.forEach(card => {
+                const radio = card.querySelector(".billing-radio");
+
+                card.addEventListener("click", function () {
+                    cards.forEach(c => c.classList.remove("selected"));
+                    card.classList.add("selected");
+
+                    if (radio) radio.checked = true;
+
+                    // Show form if "Adicionar novo" or its radio value === "0"
+                    if (card.classList.contains("new-billing") || (radio && radio.value === "0")) {
+                        if (billingForm) billingForm.style.display = "block";
+                        if (newBillingRadio) newBillingRadio.checked = true;
+                    } else {
+                        if (billingForm) billingForm.style.display = "none";
+                    }
+                });
+            });
+
+            // Initialize intlTelInput only if phone input exists
+            let iti = null;
+            if (phoneInput && window.intlTelInput) {
+                iti = window.intlTelInput(phoneInput, {
                     initialCountry: "pt",
                     separateDialCode: false,
                     formatOnDisplay: true
                 });
+            }
 
-                const form = phoneInput.closest("form");
+            function ensureErrorSpan(input) {
+                if (!input) return { set: () => {} }; // no-op if input missing
+                let span = input.nextElementSibling;
+                if (!span || !span.classList.contains("inline-error")) {
+                    span = document.createElement("span");
+                    span.classList.add("inline-error");
+                    span.style.color = "red";
+                    span.style.fontSize = "0.9rem";
+                    input.parentNode.appendChild(span);
+                }
+                span.textContent = "";
+                return {
+                    set: (msg) => { span.textContent = msg; }
+                };
+            }
 
-                function ensureErrorSpan(input)
-                {
-                    let span = input.nextElementSibling;
-                    if (!span || !span.classList.contains("inline-error"))
-                    {
-                        span = document.createElement("span");
-                        span.classList.add("inline-error");
-                        span.style.color = "red";
-                        span.style.fontSize = "0.9rem";
-                        input.parentNode.appendChild(span);
-                    }
-                    span.textContent = "";
-                    return span;
+            form.addEventListener("submit", function (event) {
+                const selection = getBillingSelection();
+
+                if (!selection) {
+                    alert("Por favor selecione ou crie um dado de faturação.");
+                    event.preventDefault();
+                    return;
                 }
 
-                form.addEventListener("submit", function (event)
-                {
+                // Determine whether this is "new billing"
+                const isNewBilling = (selection.type === 'hidden') ||
+                    (selection.type === 'radio' && selection.element.value === '0');
+
+                // If new billing, validate phone + NIF (only if fields present)
+                if (isNewBilling) {
                     let hasErrors = false;
 
-                    const phoneError = ensureErrorSpan(phoneInput);
-                    if (!iti.isValidNumber())
-                    {
-                        phoneError.textContent = "Número de telefone inválido.";
-                        phoneInput.classList.add("is-invalid");
-                        hasErrors = true;
-                    }
-                    else
-                    {
-                        phoneInput.value = iti.getNumber();
-                        phoneInput.classList.remove("is-invalid");
+                    const phoneErr = ensureErrorSpan(phoneInput);
+                    const nifErr = ensureErrorSpan(nifInput);
+
+                    if (phoneInput && iti) {
+                        if (!iti.isValidNumber()) {
+                            phoneErr.set("Número de telefone inválido.");
+                            phoneInput.classList.add("is-invalid");
+                            hasErrors = true;
+                        } else {
+                            phoneInput.value = iti.getNumber();
+                            phoneInput.classList.remove("is-invalid");
+                        }
                     }
 
-                    // NIF validation
-                    const nifError = ensureErrorSpan(nifInput);
-                    if (!validaContribuinte(nifInput.value))
-                    {
-                        nifError.textContent = "Número de contribuinte inválido.";
-                        nifInput.classList.add("is-invalid");
-                        hasErrors = true;
-                    }
-                    else
-                    {
-                        nifInput.classList.remove("is-invalid");
+                    if (nifInput) {
+                        if (!validaContribuinte(nifInput.value)) {
+                            nifErr.set("Número de contribuinte inválido.");
+                            nifInput.classList.add("is-invalid");
+                            hasErrors = true;
+                        } else {
+                            nifInput.classList.remove("is-invalid");
+                        }
                     }
 
-                    if (hasErrors)
-                    {
+                    if (hasErrors) {
                         event.preventDefault();
+                        return;
                     }
-                });
-
-                // NIF validation function
-                function validaContribuinte(contribuinte)
-                {
-                    if (!/^\d{9}$/.test(contribuinte)) return false;
-
-                    const prefix = parseInt(contribuinte.substr(0, 2));
-                    const firstDigit = parseInt(contribuinte.charAt(0));
-                    const invalidPrefixes = [45, 70, 71, 72, 77, 79, 90, 91, 98, 99];
-                    const validFirstDigits = [1, 2, 3, 5, 6, 8];
-
-                    if (!validFirstDigits.includes(firstDigit) && !invalidPrefixes.includes(prefix)) return false;
-
-                    let total = 0;
-                    for (let i = 0, j = 9; i < 8; i++, j--)
-                    {
-                        total += parseInt(contribuinte.charAt(i)) * j;
-                    }
-
-                    let modulo11 = total % 11;
-                    let comparador = (modulo11 === 0 || modulo11 === 1) ? 0 : 11 - modulo11;
-                    const ultimoDigito = parseInt(contribuinte.charAt(8));
-
-                    return ultimoDigito === comparador;
                 }
 
+                // otherwise allow submit to continue
             });
-        </script>
-    }
+
+            function validaContribuinte(contribuinte) {
+                if (!contribuinte) return false;
+                if (!/^\d{9}$/.test(contribuinte)) return false;
+
+                const prefix = parseInt(contribuinte.substr(0, 2));
+                const firstDigit = parseInt(contribuinte.charAt(0));
+                const invalidPrefixes = [45, 70, 71, 72, 77, 79, 90, 91, 98, 99];
+                const validFirstDigits = [1, 2, 3, 5, 6, 8];
+
+                if (!validFirstDigits.includes(firstDigit) && !invalidPrefixes.includes(prefix)) return false;
+
+                let total = 0;
+                for (let i = 0, j = 9; i < 8; i++, j--) {
+                    total += parseInt(contribuinte.charAt(i)) * j;
+                }
+
+                let modulo11 = total % 11;
+                let comparador = (modulo11 === 0 || modulo11 === 1) ? 0 : 11 - modulo11;
+                const ultimoDigito = parseInt(contribuinte.charAt(8));
+
+                return ultimoDigito === comparador;
+            }
+        });
+    </script>
 }

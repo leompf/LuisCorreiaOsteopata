@@ -13,15 +13,22 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
     public class OrdersController : Controller
     {
         private readonly IOrderRepository _orderRepository;
+        private readonly IUserHelper _userHelper;
         private readonly ILogger<OrdersController> _logger;
+        private readonly IBillingDetailRepository _billingDetailRepository;
+        private readonly DataContext _context;
 
         public OrdersController(IOrderRepository orderRepository,
             IUserHelper userHelper,
             ILogger<OrdersController> logger,
+            IBillingDetailRepository billingDetailRepository,
             DataContext context)
         {
             _orderRepository = orderRepository;
+            _userHelper = userHelper;
             _logger = logger;
+            _billingDetailRepository = billingDetailRepository;
+            _context = context;
         }
 
         #region Cart
@@ -130,10 +137,13 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
                 return RedirectToAction("Create");
             }
 
+            var billingDetails = await _billingDetailRepository.GetBillingDetailsByUserAsync(User.Identity.Name);
+
             var model = new CheckoutViewModel
             {
                 Order = lastOrder,
-                BillingDetail = new BillingDetail()
+                BillingDetail = new BillingDetail(),
+                BillingDetails = billingDetails
             };
 
             return View(model);
@@ -166,6 +176,26 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
                 return PartialView("_OrdersTable", model.Orders);
 
             return View(model);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Index()
+        {
+            var user = await _userHelper.GetCurrentUserAsync();
+            if (user == null)
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
+            var orders = await _context.Orders
+            .Include(o => o.Items)
+            .ThenInclude(i => i.Product)
+            .Include(o => o.BillingDetail)
+            .Where(o => o.User.Id == user.Id)
+            .OrderByDescending(o => o.OrderDate)
+            .ToListAsync();
+
+            return View(orders);
         }
         #endregion
     }

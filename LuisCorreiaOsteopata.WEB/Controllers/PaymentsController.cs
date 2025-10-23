@@ -14,22 +14,59 @@ public class PaymentsController : Controller
     private readonly DataContext _context;
     private readonly IUserHelper _userHelper;
     private readonly IEmailSender _emailSender;
+    private readonly IBillingDetailRepository _billingDetailRepository;
 
     public PaymentsController(DataContext context,
         IConfiguration configuration,
         IUserHelper userHelper,
         IEmailSender emailSender,
+        IBillingDetailRepository billingDetailRepository,
         ILogger<PaymentsController> logger)
     {
         _context = context;
         _userHelper = userHelper;
         _emailSender = emailSender;
+        _billingDetailRepository = billingDetailRepository;
     }
 
     [HttpPost]
     public async Task<IActionResult> CreateCheckoutSession(CheckoutViewModel model)
     {
         var user = await _userHelper.GetCurrentUserAsync();
+
+        BillingDetail? selectedBilling;
+
+        if (model.BillingDetail.Id > 0)
+        {
+            // Existing billing detail
+            selectedBilling = await _context.BillingDetails
+                .Include(b => b.User)
+                .FirstOrDefaultAsync(b => b.Id == model.BillingDetail.Id);
+
+            if (selectedBilling == null || selectedBilling.User.Id != user.Id)
+            {
+                return BadRequest("Invalid billing detail.");
+            }
+        }
+        else
+        {
+            selectedBilling = new BillingDetail
+            {
+                Name = model.BillingDetail.Name,
+                CompanyName = model.BillingDetail.CompanyName,
+                Address = model.BillingDetail.Address,
+                ZipCode = model.BillingDetail.ZipCode,
+                City = model.BillingDetail.City,
+                State = model.BillingDetail.State,
+                Email = model.BillingDetail.Email,
+                Phone = model.BillingDetail.Phone,
+                NIF = model.BillingDetail.NIF,
+                User = user   
+            };
+
+            _context.BillingDetails.Add(selectedBilling);
+            await _context.SaveChangesAsync();
+        }
 
         var order = await _context.Orders
             .Include(o => o.Items)
@@ -43,7 +80,6 @@ public class PaymentsController : Controller
         {
             return RedirectToAction("Create", "Orders");
         }
-
 
         var lineItems = order.Items.Select(item => new SessionLineItemOptions
         {
@@ -73,6 +109,7 @@ public class PaymentsController : Controller
 
         order.StripeSessionId = session.Id;
         order.PaymentIntentId = session.PaymentIntentId;
+        order.BillingDetail = selectedBilling;
         _context.Orders.Update(order);
         await _context.SaveChangesAsync();
 
@@ -93,25 +130,23 @@ public class PaymentsController : Controller
                 .FirstOrDefaultAsync(o => o.StripeSessionId == session.Id);
 
             if (order != null)
-            {
-                //TODO: VERIFICAR ORDER NUMBER PORQUE A QUERY NAO FUNCIONA                
-
+            {              
                 order.IsPaid = true;
-                order.PaymentDate = DateTime.UtcNow;           
-                order.OrderNumber = $"LC-{DateTime.Today.Year}-{order.Id:D4}";
+                order.PaymentDate = DateTime.Now;
                 order.PaymentIntentId = session.PaymentIntentId;
+                order.OrderStatus = OrderStatus.Completo;
 
                 foreach (var item in order.Items)
                 {
                     if (item.Product.ProductType == ProductType.Consulta)
                     {
                         item.RemainingUses = 1;
-                        order.DeliveryDate = DateTime.UtcNow;
+                        order.DeliveryDate = DateTime.Now;
                     }
                     else if (item.Product.ProductType == ProductType.Pacote)
                     {
                         item.RemainingUses = 3;
-                        order.DeliveryDate = DateTime.UtcNow;
+                        order.DeliveryDate = DateTime.Now;
                     }
                 }
 
@@ -145,8 +180,13 @@ public class PaymentsController : Controller
     }
 }
 
-
-//TODO: AUTENTICAÇÃO DE DOIS FATORES
-//TODO: AUTENTICAÇÃO DE BIOMETRIA NA APP Móvel
-//TODO: ALERTAS POR SMS E EMAIL
+//TODO: REFACTORING ORDERS PARA USAR ORDER STATUS.
+//TODO: CRIAR VIEW CANCEL
+//TODO: ALERTAS POR SMS
 //TODO: DOWNLOAD DA FICHA DE CLIENTE PARA PDF E WORD
+//TODO: CRIAR BLOGS
+//TODO: CRIAR REVIEWS
+//TODO: CRIAR ESTATÍSTICAS ADMIN
+//TODO: CRIAR PAGINAS 404, ETC
+//TODO: ESQUECER PASSWORD E ALTERAR PASSWORD
+//TODO: CRIAR LIVECHAT (TAKT)

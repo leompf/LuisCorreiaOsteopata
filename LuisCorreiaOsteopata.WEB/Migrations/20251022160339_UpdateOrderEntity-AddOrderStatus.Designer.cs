@@ -4,6 +4,7 @@ using LuisCorreiaOsteopata.WEB.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace LuisCorreiaOsteopata.Library.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20251022160339_UpdateOrderEntity-AddOrderStatus")]
+    partial class UpdateOrderEntityAddOrderStatus
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -220,7 +223,7 @@ namespace LuisCorreiaOsteopata.Library.Migrations
 
                     b.Property<string>("OrderNumber")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("OrderStatus")
                         .HasColumnType("int");
@@ -244,9 +247,6 @@ namespace LuisCorreiaOsteopata.Library.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("BillingDetailId");
-
-                    b.HasIndex("OrderNumber")
-                        .IsUnique();
 
                     b.HasIndex("UserId");
 
