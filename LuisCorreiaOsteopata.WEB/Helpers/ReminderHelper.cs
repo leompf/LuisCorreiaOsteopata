@@ -1,5 +1,7 @@
 ﻿using LuisCorreiaOsteopata.WEB.Data;
 using Microsoft.AspNetCore.Identity.UI.Services;
+using Twilio.Rest.Api.V2010.Account;
+using Twilio.Types;
 
 namespace LuisCorreiaOsteopata.WEB.Helpers
 {
@@ -7,23 +9,34 @@ namespace LuisCorreiaOsteopata.WEB.Helpers
     {
         private readonly IAppointmentRepository _appointmentRepository;
         private readonly IEmailSender _emailSender;
+        private readonly ILogger<ReminderHelper> _logger;
         private readonly DataContext _context;
 
-        public ReminderHelper(IAppointmentRepository appointmentRepository, 
+        private readonly string TwilioAccountSid;
+        private readonly string TwilioAuthToken;
+
+        public ReminderHelper(IAppointmentRepository appointmentRepository,
             IEmailSender emailSender,
+            ILogger<ReminderHelper> logger,
+            IConfiguration configuration,
             DataContext context)
         {
             _appointmentRepository = appointmentRepository;
             _emailSender = emailSender;
+            _logger = logger;
             _context = context;
+
+            TwilioAccountSid = configuration["Twilio:AccountSid"];
+            TwilioAuthToken = configuration["Twilio:AuthToken"];
         }
         public async Task SendAppointmentReminderAsync()
         {
+            Twilio.TwilioClient.Init(TwilioAccountSid, TwilioAuthToken);
             var targetDate = DateTime.UtcNow.AddHours(24).Date;
 
             var appointments = _appointmentRepository.GetAllAppointments();
             var upcomingAppointments = appointments
-                .Where(a => 
+                .Where(a =>
                 !a.ReminderSent &&
                 a.AppointmentDate.Date == targetDate)
                 .ToList();
@@ -44,11 +57,32 @@ namespace LuisCorreiaOsteopata.WEB.Helpers
                         "Lembrete de Consulta",
                         message
                     );
-
-                    appointment.ReminderSent = true;
-                    _context.Appointments.Update(appointment);
                 }
 
+                if (!string.IsNullOrEmpty(appointment.Patient?.User.PhoneNumber))
+                {                    
+                    var smsMessage = $"Olá {appointment.Patient.Names.Split(' ')[0]}, lembramos que tens " +
+                        $"agendada uma consulta com {appointment.Staff.FullName} no dia {appointment.AppointmentDate.ToShortDateString()} pelas pelas {appointment.StartTime.ToString("HH\\hmm")}." +
+                        $"Obrigado por contares connosco e até breve!";
+
+                    try
+                    {
+                        var message = MessageResource.Create(
+                        body: smsMessage,
+                        from: new PhoneNumber("+15005550006"),
+                        to: new PhoneNumber(appointment.Patient.User.PhoneNumber)
+                        );
+
+                        _logger.LogInformation($"Test SMS sent successfully: {message.Sid}");
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError($"Failed to send SMS: {ex.Message}");
+                    }                  
+                }
+
+                appointment.ReminderSent = true;
+                _context.Appointments.Update(appointment);
                 await _context.SaveChangesAsync();
             }
         }
