@@ -1,0 +1,115 @@
+﻿@model LuisCorreiaOsteopata.WEB.Data.Entities.Order
+
+
+@{
+    ViewData["Title"] = "Details";
+    Layout = "~/Views/Shared/_Layout2.cshtml";
+}
+
+@section MainMenu
+{
+    <partial name="_Menu"></partial>
+}
+
+<section class="page-header">
+    <div class="page-header__bg" style="background-image: url(~/assets/images/backgrounds/page-header-bg.jpg);">
+    </div>
+    <div class="container">
+        <div class="page-header__inner">
+            <h3>Detalhes do Pedido</h3>
+            <div class="thm-breadcrumb__inner">
+                <ul class="thm-breadcrumb list-unstyled">
+                    <li><a asp-controller="Account" asp-action="Index">Home</a></li>
+                    <li><span class="icon-arrow-left"></span></li>
+                    <li>Detalhes do Pedido</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="container-sm mt-4" style="max-width: 800px">
+    <a asp-action="Index" class="btn btn-link">
+        <i class="bi bi-arrow-left"></i> Voltar aos Pedidos
+    </a>
+
+    <div class="card shadow-sm border-1 mt-3">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4 class="fw-bold">Pedido @Model.OrderNumber</h4>
+                <span class="badge bg-primary">@Model.OrderStatus</span>
+            </div>
+
+            <p class="text-muted mb-1"><strong>Data:</strong> @Model.OrderDate.ToString("dd/MM/yyyy HH:mm")</p>
+            @if (Model.PaymentDate.HasValue)
+            {
+                <p class="text-muted mb-1"><strong>Data de Pagamento:</strong> @Model.PaymentDate.Value.ToString("dd/MM/yyyy HH:mm")</p>
+            }
+            @if (Model.DeliveryDate.HasValue)
+            {
+                <p class="text-muted mb-1"><strong>Data de Entrega:</strong> @Model.DeliveryDate.Value.ToString("dd/MM/yyyy HH:mm")</p>
+            }
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-1 mt-4">
+        <div class="card-body">
+            <h4 class="fw-semibold mb-3">Items</h4>
+
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>Produto</th>
+                        <th class="text-center">Quantidade</th>
+                        <th class="text-end">Preço</th>
+                        <th class="text-end">Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.Items)
+                    {
+                        <tr>
+                            <td>@item.Product.Name</td>
+                            <td class="text-center">@item.Quantity</td>
+                            <td class="text-end">@item.Price.ToString("C2")</td>
+                            <td class="text-end">@item.Value.ToString("C2")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+            <div class="d-flex justify-content-end">
+                <div class="text-end">
+                    <p><strong>Subtotal:</strong> @Model.Value.ToString("C2")</p>
+                    <p class="fs-5 fw-bold">Total: @Model.OrderTotal.ToString("C2")</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card border-1 shadow-sm">
+                <div class="card-body">
+                    <h5 class="fw-semibold mb-3">Detalhes de Faturação</h5>
+                    <p>@Model.BillingDetail?.Name</p>
+                    <p>@Model.BillingDetail?.Address, @Model.BillingDetail?.ZipCode, @Model.BillingDetail?.City</p>
+                    <p>@Model.BillingDetail?.State</p>
+                    <p>T: @Model.BillingDetail.Phone</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card border-1 shadow-sm">
+                <div class="card-body">
+                    <h5 class="fw-semibold mb-3">Detalhes de Pagamento</h5>
+                    <p><strong>Status:</strong> @(Model.IsPaid ? "Paid" : "Pending")</p>
+                    <p><strong>Payment Method:</strong> @("Stripe")</p>
+                    <p><strong>Stripe Session ID:</strong> @Model.StripeSessionId</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

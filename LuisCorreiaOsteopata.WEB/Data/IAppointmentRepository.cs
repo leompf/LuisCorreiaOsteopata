@@ -12,7 +12,8 @@ public interface IAppointmentRepository : IGenericRepository<Appointment>
     Task<List<AppointmentViewModel>> GetSchedulledAppointmentsAsync(); //API
     Task<List<Appointment>> GetAppointmentsByUserAsync(User user);
     Task<Appointment?> GetAppointmentByIdAsync(int? id);
-    Task<(bool Success, string? ErrorMessage)> CreateAppointmentAsync(Appointment appointment, int patientId);
+    Task<(bool Success, string? ErrorMessage)> CreateAppointmentAsync(Appointment appointment, int patientId, User currentUser, string role);
+    Task<(bool Success, string? ErrorMessage)> DeleteAppointmentAsync(int appointmentId);
     #endregion
 
     #region Helper Methods

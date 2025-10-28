@@ -15,11 +15,12 @@ public interface IOrderRepository :IGenericRepository<Order>
     #region Order Processing
     Task<bool> CreateOrderFromCartAsync(string username);
     Task<IQueryable<Order>> GetOrderAsync(string userName);
-
     #endregion
 
     #region CRUD Orders
     IQueryable<Order> GetAllOrders();
     Task<List<Order>> GetFilteredOrdersAsync(string? userId, string? orderNumber, DateTime? orderDate, DateTime? deliveryDate, DateTime? paymentDate, string? sortBy, bool sortDescending);
+    Task<int> GetRemainingCreditsAsync(string userId);
+    Task RefundCreditAsync(int orderDetailId);
     #endregion
 }

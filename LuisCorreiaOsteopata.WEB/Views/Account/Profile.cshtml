@@ -18,12 +18,12 @@
     </div>
     <div class="container">
         <div class="page-header__inner">
-            <h3>Perfil</h3>
+            <h3>Dados Pessoais</h3>
             <div class="thm-breadcrumb__inner">
                 <ul class="thm-breadcrumb list-unstyled">
                     <li><a asp-controller="Account" asp-action="Index">Home</a></li>
                     <li><span class="icon-arrow-left"></span></li>
-                    <li>Perfil</li>
+                    <li>Dados Pessoais</li>
                 </ul>
             </div>
         </div>
@@ -35,42 +35,10 @@
         <div class="row">
             <div class="col-xl-12 col-lg-7">
                 <div class="appoinment-page__left">
-                    <h3 class="appoinment-page__title">Perfil</h3>
-                    <form method="post">
+                    <h3 class="appoinment-page__title">Dados Pessoais</h3>
+                    <form method="post" asp-action="UpdateUser" asp-route-id="@Model.Id">
                         <div asp-validation-summary="ModelOnly"></div>
                         <div class="row">
-                            <div class="form-group row mb-4">
-                                <label class="col-auto col-form-label pe-1"><strong>Nome:</strong></label>
-                                <div class="col-4 ps-1">
-                                    <input type="text" asp-for="Name" class="form-control" readonly="@(!Model.IsEditable)" />
-                                </div>
-
-                                <label class="col-auto col-form-label pe-1"><strong>Data de Nascimento:</strong></label>
-                                <div class="col-auto ps-1">
-                                    <input asp-for="BirthDate" type="date" class="form-control" readonly="@(!Model.IsEditable)"
-                                           value="@Model.BirthDate?.ToString("yyyy-MM-dd")" />
-                                    <span asp-validation-for="BirthDate" class="text-danger"></span>
-                                </div>
-
-                                <label class="col-auto col-form-label pe-1"><strong>Telefone:</strong></label>
-                                <div class="col-2 ps-1">
-                                    <input type="tel" asp-for="PhoneNumber" id="phone" readonly="@(!Model.IsEditable)" class="form-control" />
-                                </div>
-                            </div>
-
-                            <div class="form-group row mb-3">
-                                <label class="col-auto col-form-label pe-1"><strong>Email:</strong></label>
-                                <div class="col-sm-3 ps-1">
-                                    <input type="email" asp-for="Email" id="email" readonly="@(!Model.IsEditable)" class="form-control" />
-                                </div>
-
-                                <label class="col-auto col-form-label pe-1"><strong>NIF:</strong></label>
-                                <div class="col-auto ps-1">
-                                    <input type="text" asp-for="NIF" id="nif" class="form-control" readonly="@(!Model.IsEditable) || (string.IsNullOrEmpty(Model.NIF))" />
-                                </div>
-                                <span asp-validation-for="NIF"></span>
-                            </div>
-
                             <div class="form-group row mb-3">
                                 <label class="col-auto col-form-label pe-1"><strong>Tipo de Perfil:</strong></label>
                                 <div class="col-auto ps-1">
@@ -78,7 +46,69 @@
                                 </div>
                             </div>
 
-                            @if(User.IsInRole("Utente"))
+                            <div class="form-group row mb-4">
+                                <label class="col-auto col-form-label pe-1"><strong>Nome:</strong></label>
+                                <div class="col-4 ps-1">
+                                    <input type="text" asp-for="Name" class="form-control" readonly />
+                                </div>
+
+
+                                <label class="col-auto col-form-label pe-1"><strong>Data de Nascimento:</strong></label>
+                                <div class="col-auto ps-1">
+                                    @if (User.IsInRole("Administrador"))
+                                    {
+                                        <input asp-for="BirthDate" type="date" class="form-control"
+                                               value="@Model.BirthDate?.ToString("yyyy-MM-dd")" />
+                                    }
+                                    else
+                                    {
+                                        <input asp-for="BirthDate" type="date" class="form-control" readonly
+                                               value="@Model.BirthDate?.ToString("yyyy-MM-dd")" />
+                                    }
+                                    <span asp-validation-for="BirthDate" class="text-danger"></span>
+                                </div>
+
+                                <label class="col-auto col-form-label pe-1"><strong>Telefone:</strong></label>
+                                <div class="col-2 ps-1">
+                                    @if (Model.IsEditable)
+                                    {
+                                        <input type="tel" asp-for="PhoneNumber" id="phone" class="form-control" />
+                                    }
+                                    else
+                                    {
+                                        <input type="tel" asp-for="PhoneNumber" id="phone" class="form-control" readonly />
+                                    }
+                                </div>
+                            </div>
+
+                            <div class="form-group row mb-3">
+                                <label class="col-auto col-form-label pe-1"><strong>Email:</strong></label>
+                                <div class="col-sm-3 ps-1">
+                                    @if (User.IsInRole("Administrador"))
+                                    {
+                                        <input type="email" asp-for="Email" id="email" class="form-control" />
+                                    }
+                                    else
+                                    {
+                                        <input type="email" asp-for="Email" id="email" class="form-control" readonly />
+                                    }
+                                </div>
+
+                                <label class="col-auto col-form-label pe-1"><strong>NIF:</strong></label>
+                                <div class="col-auto ps-1">
+                                    @if (User.IsInRole("Administrador") || string.IsNullOrEmpty(Model.NIF) && User.IsInRole("Utente"))
+                                    {
+                                        <input type="text" asp-for="NIF" id="nif" class="form-control" />
+                                    }
+                                    else
+                                    {
+                                        <input type="text" asp-for="NIF" id="nif" class="form-control" readonly />
+                                    }
+                                </div>
+                                <span asp-validation-for="NIF"></span>
+                            </div>
+
+                            @if (Model.ShowPatientFields)
                             {
                                 <div class="form-group row mb-3 align-items-center">
                                     <label class="col-auto col-form-label pe-1"><strong>Género:</strong></label>
@@ -92,7 +122,7 @@
                                     <label class="col-auto col-form-label pe-1"><strong>Altura:</strong></label>
                                     <div class="col-2 ps-1">
                                         <div class="input-group">
-                                            <input type="number" asp-for="Height" class="form-control" max="255" readonly="@(!Model.IsEditable)" />
+                                            <input type="number" asp-for="Height" class="form-control" max="255" />
                                             <span class="input-group-text">cm</span>
                                         </div>
                                     </div>
@@ -100,7 +130,7 @@
                                     <label class="col-auto col-form-label pe-1"><strong>Peso:</strong></label>
                                     <div class="col-2 ps-1">
                                         <div class="input-group">
-                                            <input type="number" asp-for="Weight" class="form-control" readonly="@(!Model.IsEditable)" />
+                                            <input type="number" asp-for="Weight" class="form-control" />
                                             <span class="input-group-text">Kg</span>
                                         </div>
                                     </div>
@@ -157,17 +187,15 @@
 
                                 <div class="quill-container" id="editor"></div>
                                 <input type="hidden" asp-for="MedicalHistory" id="MedicalHistory" />
-                            }                            
-
-                            @if (Model.IsEditable)
-                            {
-                                <div class="form-group row mt-3">
-                                    <button type="submit" asp-action="UpdateUser" class="col-auto thm-btn" disabled="@(!Model.IsEditable)">
-                                        Gravar Alterações
-                                        <span class="icon-right-arrow"></span>
-                                    </button>
-                                </div>
                             }
+
+                            <div class="form-group row mt-3">
+                                <button type="submit" class="col-auto thm-btn">
+                                    Gravar Alterações
+                                    <span class="icon-right-arrow"></span>
+                                </button>
+
+                            </div>
                         </div>
                     </form>
                 </div>

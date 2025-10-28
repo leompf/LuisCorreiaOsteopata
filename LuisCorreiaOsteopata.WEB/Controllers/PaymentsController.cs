@@ -38,7 +38,6 @@ public class PaymentsController : Controller
 
         if (model.BillingDetail.Id > 0)
         {
-            // Existing billing detail
             selectedBilling = await _context.BillingDetails
                 .Include(b => b.User)
                 .FirstOrDefaultAsync(b => b.Id == model.BillingDetail.Id);
@@ -180,13 +179,8 @@ public class PaymentsController : Controller
     }
 }
 
-//TODO: REFACTORING ORDERS PARA USAR ORDER STATUS.
+//TODO: PERMITIR AO COLABORADOR E ADMINISTRADOR MUDAR O STATUS DA CONSULTA
 //TODO: CRIAR VIEW CANCEL
-//TODO: ALERTAS POR SMS
 //TODO: DOWNLOAD DA FICHA DE CLIENTE PARA PDF E WORD
-//TODO: CRIAR BLOGS
 //TODO: CRIAR REVIEWS
-//TODO: CRIAR ESTATÍSTICAS ADMIN
 //TODO: CRIAR PAGINAS 404, ETC
-//TODO: ESQUECER PASSWORD E ALTERAR PASSWORD
-//TODO: CRIAR LIVECHAT (TAKT)

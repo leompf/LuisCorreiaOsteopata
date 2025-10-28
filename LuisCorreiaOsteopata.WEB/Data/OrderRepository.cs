@@ -394,5 +394,24 @@ public class OrderRepository : GenericRepository<Order>, IOrderRepository
 
         return await orders.ToListAsync();
     }
+
+    public async Task<int> GetRemainingCreditsAsync(string userId)
+    {
+        return await _context.Orders
+        .Where(o => o.User.Id == userId && o.IsPaid)
+        .SelectMany(o => o.Items)
+        .SumAsync(i => (int?)i.RemainingUses ?? 0);
+    }
+
+    public async Task RefundCreditAsync(int orderDetailId)
+    {
+        var detail = await _context.OrderDetails.FindAsync(orderDetailId);
+        if (detail != null)
+        {
+            detail.RemainingUses += 1;
+            _context.OrderDetails.Update(detail);
+            await _context.SaveChangesAsync();
+        }
+    }
     #endregion
 }

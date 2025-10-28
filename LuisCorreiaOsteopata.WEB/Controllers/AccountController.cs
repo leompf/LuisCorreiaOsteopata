@@ -10,7 +10,6 @@ using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using QRCoder;
-using QuestPDF.Companion;
 using QuestPDF.Fluent;
 using System.Security.Claims;
 using System.Text.RegularExpressions;
@@ -24,6 +23,7 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
         private readonly IPatientRepository _patientRepository;
         private readonly IStaffRepository _staffRepository;
         private readonly IAppointmentRepository _appointmentRepository;
+        private readonly IOrderRepository _orderRepository;
         private readonly IGoogleHelper _googleHelper;
         private readonly IEmailSender _emailSender;
         private readonly IConverterHelper _converterHelper;
@@ -34,6 +34,7 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
             IPatientRepository patientRepository,
             IStaffRepository staffRepository,
             IAppointmentRepository appointmentRepository,
+            IOrderRepository orderRepository,
             IGoogleHelper googleHelper,
             IEmailSender emailSender,
             IConverterHelper converterHelper,
@@ -44,6 +45,7 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
             _patientRepository = patientRepository;
             _staffRepository = staffRepository;
             _appointmentRepository = appointmentRepository;
+            _orderRepository = orderRepository;
             _googleHelper = googleHelper;
             _emailSender = emailSender;
             _converterHelper = converterHelper;
@@ -52,8 +54,13 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
 
         #region Homepage
         public async Task<IActionResult> Index()
-        {
+        {            
             _logger.LogInformation("Homepage accessed by user {User}", User.Identity?.Name ?? "Anonymous");
+
+            if (User.IsInRole("Administrador"))
+            {
+                return RedirectToAction("Admin", "Account");
+            }
 
             if (User.Identity?.IsAuthenticated == true)
             {
@@ -101,6 +108,8 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
                     }
                 }
 
+                var credits = await _orderRepository.GetRemainingCreditsAsync(user.Id);
+
                 var appointments = await _appointmentRepository.GetAppointmentsByUserAsync(user);
                 _logger.LogInformation("Fetched {AppointmentCount} appointments for user {UserId}", appointments.Count, user.Id);
 
@@ -118,12 +127,18 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
                 ViewBag.Appointments = events;
                 ViewBag.CalendarId = user.CalendarId;
                 ViewBag.CalendarName = calendarName;
+                ViewBag.RemainingCredits = credits;
 
                 return View();
             }
 
             _logger.LogInformation("User is not authenticated, redirecting to Login page.");
             return RedirectToAction("Login", "Account");
+        }
+
+        public IActionResult Admin()
+        {
+            return View();
         }
         #endregion
 
@@ -145,9 +160,9 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
             var user = await _userHelper.GetUserByEmailAsync(model.Email);
             var nif = await _userHelper.GetUserByNifAsync(model.Nif);
 
-            if (user != null && nif!= null)
+            if (user != null && nif != null)
             {
-                ModelState.AddModelError(string.Empty,"Já existe um utilizador com esse Email e NIF.");
+                ModelState.AddModelError(string.Empty, "Já existe um utilizador com esse Email e NIF.");
                 return View(model);
             }
             else if (user != null)
@@ -247,7 +262,7 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
             <p>Se não foste tu a efetuar este pedido ou não tens conta na plataforma, por favor contacta-nos.</p>
             <p>Obrigado e cumprimentos,<br />
             Luís Correia, Osteopata</p>";
-            
+
 
             await _emailSender.SendEmailAsync(user.Email, "Confirmação de Conta", message);
 
@@ -369,6 +384,10 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
                         _logger.LogInformation("Redirecting user {Username} to ReturnUrl {ReturnUrl}", model.Username, returnUrl);
                         return Redirect(returnUrl!);
                     }
+                    if (User.IsInRole("Administrador"))
+                    {
+                        return RedirectToAction("Admin", "Account");
+                    }
 
                     return this.RedirectToAction("Index", "Account");
                 }
@@ -418,74 +437,44 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
                 _logger.LogWarning("Google login info is null. Redirecting to login page.");
                 return RedirectToAction("Login");
             }
-                
-            var result = await _signInManager.ExternalLoginSignInAsync(
+
+            var signInResult = await _signInManager.ExternalLoginSignInAsync(
                 loginInfo.LoginProvider,
                 loginInfo.ProviderKey,
                 isPersistent: true,
-                bypassTwoFactor: true
-            );
+                bypassTwoFactor: false);
 
-            if (result.Succeeded)
+            if (signInResult.Succeeded)
             {
                 _logger.LogInformation("User successfully signed in with Google provider {Provider}.", loginInfo.LoginProvider);
                 return RedirectToAction("Index", "Account");
-            }                
+            }
+
+            if (signInResult.RequiresTwoFactor)
+            {
+                _logger.LogInformation("User requires 2FA. Redirecting to 2FA page.");
+                return RedirectToAction(nameof(LoginWith2fa), new { rememberMe = true });
+            }
 
             var claims = loginInfo.Principal.Identities.FirstOrDefault()?.Claims;
-
             var email = claims?.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value;
             var name = claims?.FirstOrDefault(c => c.Type == ClaimTypes.Name)?.Value;
-            var googleId = claims?.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
 
             if (string.IsNullOrEmpty(email))
             {
-                _logger.LogWarning("Google login failed: email claim not found. Redirecting to login page.");
+                _logger.LogWarning("Google login failed: email claim not found.");
                 return RedirectToAction("Login");
             }
 
-            _logger.LogInformation("Handling first-time Google login for user {Email}.", email);
+            var user = await _userHelper.GetUserByEmailAsync(email) ?? await CreateUserFromGoogleAsync(email, name);
 
-            var user = await _userHelper.GetUserByEmailAsync(email);
-            if (user == null)
+            var existingLogin = await _userHelper.GetExternalLoginAsync(user, loginInfo.LoginProvider);
+            if (existingLogin == null)
             {
-                _logger.LogInformation("Creating new user for Google login: {Email}", email);
-
-                user = new User
-                {
-                    Email = email,
-                    UserName = email,
-                    Names = name!.Split(' ')[0],
-                    LastName = name.Contains(" ") ? name.Substring(name.IndexOf(" ") + 1) : "",
-                    EmailConfirmed = true
-                };
-
-                await _userHelper.AddUserAsync(user, Guid.NewGuid().ToString());
-                await _userHelper.AddUserToRoleAsync(user, "Utente");
-
-                var patient = await _patientRepository.CreatePatientAsync(user, "Utente");
-                if (patient != null)
-                {
-                    await _patientRepository.CreateAsync(patient);
-                }
+                await _userHelper.AddExternalLoginAsync(user, loginInfo);
             }
 
-            var tokens = loginInfo.AuthenticationTokens?
-               .Where(t => t.Value != null)
-               .ToDictionary(t => t.Name, t => t.Value!) ?? new Dictionary<string, string>();
-
-            if (tokens.TryGetValue("access_token", out var accessToken))
-            {
-                await _userHelper.StoreUserTokenAsync(user, "Google", "access_token", accessToken);
-            }
-            if (tokens.TryGetValue("refresh_token", out var refreshToken))
-            {
-                await _userHelper.StoreUserTokenAsync(user, "Google", "refresh_token", refreshToken);
-            }
-            if (tokens.TryGetValue("expires_at", out var expiresAt))
-            {
-                await _userHelper.StoreUserTokenAsync(user, "Google", "expires_at", expiresAt);
-            }
+            await StoreGoogleTokensAsync(user, loginInfo);
 
             _logger.LogInformation("Signing in user {UserId} after Google login.", user.Id);
             await _signInManager.SignInAsync(user, isPersistent: true);
@@ -517,7 +506,7 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
             {
                 _logger.LogWarning("2FA login attempt with invalid model state.");
                 return View(model);
-            }                
+            }
 
             var user = await _signInManager.GetTwoFactorAuthenticationUserAsync();
             if (user == null)
@@ -525,7 +514,7 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
                 _logger.LogError("Unable to load 2FA user during POST login attempt.");
                 throw new InvalidOperationException("Unable to load two-factor authentication user.");
             }
-                
+
             var authenticatorCode = model.TwoFactorCode.Replace(" ", string.Empty).Replace("-", string.Empty);
             _logger.LogInformation("User {UserId} attempting 2FA login.", user.Id);
 
@@ -566,65 +555,199 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
 
             return RedirectToAction("Index", "Home");
         }
+
+        [HttpGet]
+        public IActionResult ForgotPassword()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ForgotPassword(ForgotPasswordViewModel model)
+        {
+            if (!ModelState.IsValid)
+                return View(model);
+
+            var user = await _userHelper.GetUserByEmailAsync(model.Email);
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            var token = await _userHelper.GeneratePasswordResetTokenAsync(user);
+            var callbackUrl = Url.Action(
+                nameof(ResetPassword),
+                "Account",
+                new { token, email = user.Email },
+                protocol: Request.Scheme);
+
+            var mail = $@"
+            <p>Olá {user.Names.Split(' ')[0]},</p>
+            <p>Foi emitido um pedido de reposição de password para a tua conta, podes prosseguir com o mesmo clicando <a href='{callbackUrl}'>aqui</a></p>
+            <p>Caso não tenhas requisitado o mesmo, por favor ignora este mail e certifica-te que a tua conta está protegida habilitando a Autenticação de 2 Fatores na tua Área Pessoal</p>
+            <p>Obrigado e cumprimentos<br />
+            Luís Correia, Osteopata</p>";
+
+            await _emailSender.SendEmailAsync(model.Email, "Repôr Password", mail);
+            ViewBag.ForgotPasswordMessage = "Se a conta existir, um mail foi enviado.";
+            ViewBag.IsError = false;
+
+            return View();
+        }
+
+        [HttpGet]
+        public IActionResult ResetPassword(string token, string email)
+        {
+            if (token == null || email == null)
+                return BadRequest("A valid password reset token must be supplied.");
+
+            var model = new ResetPasswordViewModel { Token = token, Email = email };
+            return View(model);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ResetPassword(ResetPasswordViewModel model)
+        {
+            if (!ModelState.IsValid)
+                return View(model);
+
+            var user = await _userHelper.GetUserByEmailAsync(model.Email);
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            var result = await _userHelper.ResetPasswordAsync(user, model.Token, model.NewPassword);
+
+            if (result.Succeeded)
+            {
+                ViewBag.PasswordNotification = "Password alterada com sucesso!";
+            }
+            else
+            {
+                ViewBag.ToastMessage = string.Join(" ", result.Errors.Select(e => e.Description));
+            }
+
+            return View(model);
+        }
+
         #endregion
 
         #region CRUD
         [HttpGet]
+        public async Task<IActionResult> Edit()
+        {
+            var user = await _userHelper.GetCurrentUserAsync();
+            if (user == null)
+                return NotFound();
+
+            var model = new EditAccountViewModel
+            {
+                Names = user.Names,
+                LastName = user.LastName,
+                Email = user.Email,
+                Birthdate = user.Birthdate
+            };
+
+            return View(model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(EditAccountViewModel model)
+        {
+            if (!ModelState.IsValid)
+                return View(model);
+
+            var user = await _userHelper.GetUserByEmailAsync(model.Email);
+            if (user == null)
+                return NotFound();
+
+            user.Names = model.Names;
+            user.LastName = model.LastName;
+            user.Email = model.Email;
+            user.UserName = model.Email;
+            user.Birthdate = model.Birthdate;
+
+            var result = await _userHelper.UpdateUserAsync(user);
+
+            if (!result.Succeeded)
+            {
+                foreach (var error in result.Errors)
+                    ModelState.AddModelError("", error.Description);
+                return View(model);
+            }
+
+            if (!string.IsNullOrEmpty(model.CurrentPassword) && !string.IsNullOrEmpty(model.NewPassword))
+            {
+                var passwordChangeResult = await _userHelper.ChangePasswordAsync(user, model.CurrentPassword, model.NewPassword);
+                if (!passwordChangeResult.Succeeded)
+                {
+                    foreach (var error in passwordChangeResult.Errors)
+                        ModelState.AddModelError("", error.Description);
+                    return View(model);
+                }
+
+                ViewBag.PasswordMessage = "A tua palavra-passe foi alterada com sucesso!";
+            }
+
+            return RedirectToAction(nameof(Edit));
+        }
+
+        [HttpGet]
         public async Task<IActionResult> Profile(string? id)
         {
-            User? user;
+            var currentUser = await _userHelper.GetCurrentUserAsync();
+            if (currentUser == null)
+                return RedirectToAction("Login", "Account");
 
+            User? user;
             if (string.IsNullOrEmpty(id))
             {
-                user = await _userHelper.GetCurrentUserAsync();
-                if (user == null)
-                    return RedirectToAction("Login", "Account");
+                user = currentUser;
             }
             else
             {
-                if (User.IsInRole("Utente"))
-                {
-                    return Forbid();
-                }
-
                 user = await _userHelper.GetUserByIdAsync(id);
                 if (user == null)
                     return NotFound();
+
+                if (user.Id != currentUser.Id && !User.IsInRole("Administrador") && !User.IsInRole("Colaborador"))
+                    return Forbid();
             }
 
             var role = await _userHelper.GetUserRoleAsync(user);
-            if (User.IsInRole("Utente"))
-            {
-                var patient = await _patientRepository.GetPatientByUserEmailAsync(user.Email!);
 
-                var userModel = new ProfileViewModel
-                {
-                    Name = $"{user.Names} {user.LastName}",
-                    Email = user.Email,
-                    PhoneNumber = user.PhoneNumber,
-                    BirthDate = user.Birthdate,
-                    NIF = user.Nif,
-                    Role = role,
-                    Gender = patient.Gender,
-                    Height = patient.Height,
-                    Weight = patient.Weight,
-                    MedicalHistory = patient.MedicalHistory,
-                    IsEditable = string.IsNullOrEmpty(id) || User.IsInRole("Administrador") || User.IsInRole("Colaborador")
-                };
-
-                return View(userModel);
-            }
+            bool isOwnProfile = user.Id == currentUser.Id;
+            bool isAdmin = User.IsInRole("Administrador");
+            bool isColaborador = User.IsInRole("Colaborador");
+            bool isUtente = User.IsInRole("Utente");
 
             var model = new ProfileViewModel
             {
+                Id = user.Id,
                 Name = $"{user.Names} {user.LastName}",
                 Email = user.Email,
                 PhoneNumber = user.PhoneNumber,
                 BirthDate = user.Birthdate,
                 NIF = user.Nif,
                 Role = role,
-                IsEditable = string.IsNullOrEmpty(id) || User.IsInRole("Administrador") || User.IsInRole("Colaborador")
+                IsEditable = isOwnProfile && (isUtente || isAdmin) || isAdmin, 
+                ShowPatientFields = (isUtente && isOwnProfile) || isAdmin || (isColaborador && role == "Utente"),
+                ArePatientFieldsReadonly = (isColaborador && role == "Utente") || (!isUtente && !isAdmin),
             };
+
+            if (role == "Utente")
+            {
+                var patient = await _patientRepository.GetPatientByUserEmailAsync(user.Email!);
+                if (patient != null)
+                {
+                    model.Gender = patient.Gender;
+                    model.Height = patient.Height;
+                    model.Weight = patient.Weight;
+                    model.MedicalHistory = patient.MedicalHistory;
+                }
+            }
 
             return View(model);
         }
@@ -647,25 +770,40 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> UpdateUser(ProfileViewModel model)
+        public async Task<IActionResult> UpdateUser(string id, ProfileViewModel model)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
+                return View("Profile", model);
+
+            var userToUpdate = await _userHelper.GetUserByIdAsync(id);
+            if (userToUpdate == null)
+                return NotFound();
+
+            var currentUser = await _userHelper.GetCurrentUserAsync();
+            var currentRole = await _userHelper.GetUserRoleAsync(currentUser);
+            var targetRole = await _userHelper.GetUserRoleAsync(userToUpdate);
+
+            bool canEdit =
+                currentUser.Id == userToUpdate.Id ||
+                currentRole == "Administrador" ||
+                (currentRole == "Colaborador" && targetRole == "Utente");
+
+            if (!canEdit)
+                return Forbid();
+
+            userToUpdate.PhoneNumber = model.PhoneNumber;
+            userToUpdate.Email = model.Email;
+            if (model.BirthDate.HasValue)
+                userToUpdate.Birthdate = model.BirthDate.Value;
+
+            if ((currentRole == "Administrador" || string.IsNullOrEmpty(userToUpdate.Nif)) && !string.IsNullOrEmpty(model.NIF))
+                userToUpdate.Nif = model.NIF;
+
+            await _userHelper.UpdateUserAsync(userToUpdate);
+
+            if (targetRole == "Utente")
             {
-                var user = await _userHelper.GetCurrentUserAsync();
-                if (user != null)
-                {
-                    user.Email = model.Email;
-                    user.PhoneNumber = model.PhoneNumber;
-                    user.Nif = model.NIF;
-                    if (model.BirthDate.HasValue)
-                    {
-                        user.Birthdate = model.BirthDate.Value;
-                    }
-
-                    await _userHelper.UpdateUserAsync(user);
-                }
-
-                var patient = await _patientRepository.GetPatientByUserEmailAsync(user.Email);
+                var patient = await _patientRepository.GetPatientByUserEmailAsync(userToUpdate.Email!);
                 if (patient != null)
                 {
                     patient.Gender = model.Gender;
@@ -675,10 +813,9 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
 
                     await _patientRepository.UpdateAsync(patient);
                 }
-
             }
 
-            return RedirectToAction("Profile");
+            return RedirectToAction("Profile", new { id });
         }
 
         [HttpGet]
@@ -794,21 +931,38 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
             return Regex.Replace(key.ToUpperInvariant(), ".{4}", "$0 ").Trim();
         }
 
-        public async Task<IActionResult> TestUserPdfCompanion(string id)
+        private async Task<User> CreateUserFromGoogleAsync(string email, string? name)
         {
-            var user = await _userHelper.GetUserByIdAsync(id);
-            if (user == null) return NotFound();
+            _logger.LogInformation("Creating new user for Google login: {Email}", email);
 
-            // Create the document
-            var document = new UserRecordDocument(user);
+            var user = new User
+            {
+                Email = email,
+                UserName = email,
+                Names = name?.Split(' ')[0] ?? email,
+                LastName = name?.Contains(" ") == true ? name.Substring(name.IndexOf(" ") + 1) : "",
+                EmailConfirmed = true
+            };
 
-            // Generate PDF into a memory stream
-            using var pdfStream = new MemoryStream();
-            document.GeneratePdf(pdfStream);
-            pdfStream.Position = 0;
+            await _userHelper.AddUserAsync(user, Guid.NewGuid().ToString());
+            await _userHelper.AddUserToRoleAsync(user, "Utente");
 
-            // Return PDF to browser
-            return File(pdfStream.ToArray(), "application/pdf", $"UserRecord_{user.Names}.pdf");
+            var patient = await _patientRepository.CreatePatientAsync(user, "Utente");
+            if (patient != null)
+                await _patientRepository.CreateAsync(patient);
+
+            return user;
+        }
+
+        private async Task StoreGoogleTokensAsync(User user, ExternalLoginInfo loginInfo)
+        {
+            var tokens = loginInfo.AuthenticationTokens?.Where(t => t.Value != null)
+                .ToDictionary(t => t.Name, t => t.Value!) ?? new Dictionary<string, string>();
+
+            foreach (var token in tokens)
+            {
+                await _userHelper.StoreUserTokenAsync(user, loginInfo.LoginProvider, token.Key, token.Value);
+            }
         }
         #endregion
     }

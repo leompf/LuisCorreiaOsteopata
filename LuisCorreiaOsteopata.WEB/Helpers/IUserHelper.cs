@@ -15,7 +15,8 @@ public interface IUserHelper
     Task<List<User>> GetAllUsersAsync();
     Task<IdentityResult> AddUserAsync(User user, string password);
     Task<IdentityResult> UpdateUserAsync(User user);
-
+    Task<IdentityResult> ChangePasswordAsync(User user, string currentPassword, string newPassword);
+    Task<IdentityResult> ResetPasswordAsync(User user, string token, string newPassword);
     #endregion
 
     #region CRUD Roles
@@ -42,12 +43,15 @@ public interface IUserHelper
     #region External
     Task StoreUserTokenAsync(User user, string loginProvider, string name, string value);
     Task<string?> GetUserTokenAsync(User user, string loginProvider, string tokenName);
+    Task<IdentityResult> AddExternalLoginAsync(User user, ExternalLoginInfo info);
+    Task<UserLoginInfo?> GetExternalLoginAsync(User user, string loginProvider);
     #endregion
 
     #region Helper Methods
     string GenerateRandomPassword(PasswordOptions options);
     List<UserViewModel> SortUsers(IEnumerable<UserViewModel> users, string? sortBy, bool sortDescending);
     Task<string> GenerateEmailConfirmationTokenAsync(User user);
+    Task<string> GeneratePasswordResetTokenAsync(User user);
     Task<IdentityResult> ConfirmEmailAsync(User user, string token);
     List<UserViewModel> FilterUsers(IEnumerable<UserViewModel> users, string? nameFilter, string? emailFilter, string? phoneFilter, string? nifFilter);
     #endregion

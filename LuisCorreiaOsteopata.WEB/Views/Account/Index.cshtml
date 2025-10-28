@@ -21,16 +21,8 @@
         <div class="row">
             <div class="service-details__content">
                 <h3 class="service-details__title-1">
-                    Bem-vindo,
-                    @if (User.IsInRole("Administrador"))
-                    {
-                        @:Administrador
-                    }
-                    else
-                    {
-                        @loggedUser?.Names.Split(' ')[0]
-                    }
-                </h3>
+                    Bem-vindo, @loggedUser?.Names.Split(' ')[0]
+                </h3>                
             </div>
         </div>
     </div>
@@ -41,8 +33,13 @@
         <div class="col-xl-10 col-lg-7">
             <div class="view-appointment__left">
                 <h3 class="view-appointment__title">Vê as tuas consultas</h3>
-                <div class="form-group row">
-                    <a asp-action="TestUserPdfCompanion" asp-route-id="@loggedUser.Id" target="_blank">Visualizar PDF</a>
+                <div class="form-group row">    
+                    @if (ViewBag.RemainingCredits != null)
+                    {
+                        <label style="font-size: 1.2rem" class="mt-2">
+                            <strong>Consultas disponíveis por marcar:</strong> @ViewBag.RemainingCredits
+                        </label>
+                    }
                     <form method="post" asp-controller="Google" asp-action="SavePreferredCalendar">
                         @if (ViewBag.Token == null)
                         {

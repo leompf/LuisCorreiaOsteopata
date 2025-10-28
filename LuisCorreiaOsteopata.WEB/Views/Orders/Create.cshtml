@@ -47,33 +47,43 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach (var item in Model)
+                                @if (Model != null && Model.Any())
+                                {
+
+                                    @foreach (var item in Model)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <div class="product-box">
+                                                    <div class="img-box">
+                                                        <img src="@item.Product.ImageFullPath" alt="@item.Product.Name" style="width:80px; height:auto;" />
+                                                    </div>
+                                                    <h3>@item.Product.Name</h3>
+                                                </div>
+                                            </td>
+                                            <td>@item.Price.ToString("C2")</td>
+                                            <td>
+                                                <div class="quantity-box">
+                                                    <a href="#" data-id="@item.Id" class="sub"><i class="fas fa-minus"></i></a>
+                                                    <input type="number" name="quantity" value="@item.Quantity" data-id="@item.Id" class="form-control text-center" style="width:70px; display:inline-block;" />
+                                                    <a href="#" data-id="@item.Id" class="add"><i class="fas fa-plus"></i></a>
+                                                </div>
+                                            </td>
+                                            <td>@item.Value.ToString("C2")</td>
+                                            <td id="@item.Id">
+                                                <form method="post">
+                                                    <button asp-action="DeleteCartItem" asp-route-id="@item.Id" class="cross-icon text-center text-danger" style="border: none; background-color: white" id="btnDeleteItem">
+                                                        <i class="fas fa-times"></i>
+                                                    </button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                                else
                                 {
                                     <tr>
-                                        <td>
-                                            <div class="product-box">
-                                                <div class="img-box">
-                                                    <img src="@item.Product.ImageFullPath" alt="@item.Product.Name" style="width:80px; height:auto;" />
-                                                </div>
-                                                <h3>@item.Product.Name</h3>
-                                            </div>
-                                        </td>
-                                        <td>@item.Price.ToString("C2")</td>
-                                        <td>
-                                            <div class="quantity-box">
-                                                <a href="#" data-id="@item.Id" class="sub"><i class="fas fa-minus"></i></a>
-                                                <input type="number" name="quantity" value="@item.Quantity" data-id="@item.Id" class="form-control text-center" style="width:70px; display:inline-block;" />
-                                                <a href="#" data-id="@item.Id" class="add"><i class="fas fa-plus"></i></a>
-                                            </div>
-                                        </td>
-                                        <td>@item.Value.ToString("C2")</td>
-                                        <td id="@item.Id">
-                                            <form method="post">
-                                                <button asp-action="DeleteCartItem" asp-route-id="@item.Id" class="cross-icon text-center text-danger" style="border: none; background-color: white" id="btnDeleteItem">
-                                                    <i class="fas fa-times"></i>
-                                                </button>
-                                            </form>                                            
-                                        </td>
+                                        <td colspan="5" class="text-center">O carrinho está vazio.</td>
                                     </tr>
                                 }
                             </tbody>
@@ -84,7 +94,7 @@
             <div class="col-xl-4 col-lg-5">
                 <div class="cart-page__right">
                     <div class="cart-page__sidebar">
-                       @*  <div class="cart-page__shipping">
+                        @*  <div class="cart-page__shipping">
                             <h3 class="cart-page__shipping-title">Calculated Shipping</h3>
                             <form action="#" class="cart-page__shipping-form">
                                 <div class="row">
@@ -128,7 +138,7 @@
                             </form>
                         </div> *@
                         <div class="cart-page__coupon-code">
-                            <h3 class="cart-page__coupon-code-title">Cupão</h3>
+                            @* <h3 class="cart-page__coupon-code-title">Cupão</h3>
                             <p class="cart-page__coupon-code-text">
                                 Se tiveres algum código, podes usá-lo aqui.
                             </p>
@@ -137,7 +147,7 @@
                                 <button class="thm-btn" type="submit">
                                     Aplicar Cupão <span class="icon-right-arrow"></span>
                                 </button>
-                            </form>
+                            </form> *@
                         </div>
 
                         @{
@@ -164,12 +174,12 @@
                                 </li>
                             </ul>
                             <div class="cart-page__buttons">
-                                <div class="cart-page__buttons-1">
+                                @* <div class="cart-page__buttons-1">
                                     <a class="thm-btn" href="checkout.html">
                                         Update
                                         <span class="icon-right-arrow"></span>
                                     </a>
-                                </div>
+                                </div> *@
                                 <div class="cart-page__buttons-2">
                                     <form method="post">
                                         <button asp-action="CreateOrder" class="thm-btn">
@@ -263,13 +273,13 @@
                     let toastMessage, bgColor;
                     if (isAdd) {
                         toastMessage = "Quaantidade adicionada!";
-                        bgColor = "#4BB543"; 
+                        bgColor = "#4BB543";
                     } else if (response.newQuantity === 0) {
                         toastMessage = "Produto removido do carrinho!";
-                        bgColor = "#FF4B4B"; 
+                        bgColor = "#FF4B4B";
                     } else {
                         toastMessage = "Quantidade removida!";
-                        bgColor = "#2196F3"; 
+                        bgColor = "#2196F3";
                     }
 
                     Toastify({
@@ -286,6 +296,6 @@
                 }
             });
         });
-        });       
+        });
     </script>
-}                                    
+}

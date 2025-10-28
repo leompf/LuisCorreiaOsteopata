@@ -2480,6 +2480,12 @@ input .input-validation-error {
     border-bottom-color: #e53935;
 }
 
+.span-validation-error {
+    color: red;
+    font-size: 0.9rem;
+    height: 1rem;
+}
+
 .cart-badge {
     background-color: white;
     color: var(--careon-extra-rgb);
@@ -2490,10 +2496,8 @@ input .input-validation-error {
     display: none;
 }
 
-.span-validation-error {
-    color: red;
-    font-size: 0.9rem;
-}
+
+
 
 /*--------------------------------------------------------------
 # End

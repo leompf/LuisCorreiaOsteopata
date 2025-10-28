@@ -152,6 +152,16 @@ public class UserHelper : IUserHelper
 
         return result;
     }
+
+    public async Task<IdentityResult> ChangePasswordAsync(User user, string currentPassword, string newPassword)
+    {
+        return await _userManager.ChangePasswordAsync(user, currentPassword, newPassword);
+    }
+
+    public async Task<IdentityResult> ResetPasswordAsync(User user, string token, string newPassword)
+    {
+        return await _userManager.ResetPasswordAsync(user, token, newPassword);
+    }
     #endregion
 
     #region CRUD Roles
@@ -478,6 +488,34 @@ public class UserHelper : IUserHelper
             throw;
         }
     }
+
+    public async Task<IdentityResult> AddExternalLoginAsync(User user, ExternalLoginInfo info)
+    {
+        if (user == null) 
+            throw new ArgumentNullException(nameof(user));
+
+        if (info == null) 
+            throw new ArgumentNullException(nameof(info));
+
+        var login = new UserLoginInfo(
+            info.LoginProvider,
+            info.ProviderKey,
+            info.ProviderDisplayName);
+
+        return await _userManager.AddLoginAsync(user, login);
+    }
+
+    public async Task<UserLoginInfo?> GetExternalLoginAsync(User user, string loginProvider)
+    {
+        if (user == null) 
+            throw new ArgumentNullException(nameof(user));
+
+        if (string.IsNullOrEmpty(loginProvider))
+            throw new ArgumentNullException(nameof(loginProvider));
+
+        var logins = await _userManager.GetLoginsAsync(user);
+        return logins.FirstOrDefault(l => l.LoginProvider == loginProvider);
+    }
     #endregion
 
     #region Helpers
@@ -609,6 +647,11 @@ public class UserHelper : IUserHelper
         };
     }
 
-    
+    public async Task<string> GeneratePasswordResetTokenAsync(User user)
+    {
+        return await _userManager.GeneratePasswordResetTokenAsync(user);
+    }
+
+
     #endregion
 }

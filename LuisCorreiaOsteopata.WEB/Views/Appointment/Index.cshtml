@@ -8,7 +8,7 @@
 
 <style>
     .thm-btn:disabled {
-        opacity: 0.5; 
+        opacity: 0.5;
         cursor: not-allowed;
     }
 </style>
@@ -43,7 +43,7 @@
                     <h3 class="appoinment-page__title">Marcar Consulta</h3>
                     <form class="appoinment-page__form" method="post">
                         <div class="row">
-                            @if (!Model.HasAvailableCredits && User.IsInRole("Utente"))
+                            @if (!Model.HasAvailableCredits && User.IsInRole("Utente") && ViewBag.AppointmentBookingMessageIsShown is not true)
                             {
                                 <div class="alert alert-warning">
                                     Não tens consultas disponíveis. Por favor, adquire uma antes de marcar.
@@ -92,7 +92,7 @@
                                     <input type="hidden" asp-for="Notes" id="Notes" />
                                 </div>
                                 <div class="appoinment-page__btn-box" style="margin-top: 70px">
-                                    <button type="submit" asp-action="Index" id="btnConfirm" class="thm-btn" disabled="@(Model.HasAvailableCredits ? false : true)">
+                                    <button type="submit" asp-action="Index" id="btnConfirm" class="thm-btn">
                                         Marcar<span class="icon-plus"></span>
                                     </button>
                                 </div>
@@ -167,92 +167,86 @@
     }
     <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
     <script>
-         $(document).ready(function ()
-        {
-             const appointmentSection = document.getElementById("appointment-section");
-                if (appointmentSection) {
-                    appointmentSection.scrollIntoView({ behavior: "smooth" });
-                }
-
-            const toolbarOptions = [
-                    ['bold', 'italic', 'underline'],
-                    ['link'],
-                    ['clean'],
-                 ];
-
-                 const quill = new Quill('#quill-editor', {
-                    theme: 'snow',
-                    placeholder: 'Razão da consulta...',
-                    modules: {
-                        toolbar: toolbarOptions
-                    }
-                });
-
-                $('form').on('submit', function ()
-                {
-                    $('#Notes').val(quill.root.innerHTML);
-                });
-
+        $(document).ready(function () {
+            const $appointmentDate = $('#AppointmentDate');
             const $timeSlots = $('#timeSlots');
+            const $btnConfirm = $('#btnConfirm');
 
-            if ($timeSlots.find('option').length === 0)
-            {
-                $timeSlots.append($('<option>',
-                {
-                    value: '',
-                    text: 'Sem horários disponíveis',
-                    disabled: true,
-                    selected: true
-                }));
-                $timeSlots.niceSelect('update');
+            // Get user credit info from Razor model
+            const hasAvailableCredits = @Model.HasAvailableCredits.ToString().ToLower(); // true or false
+
+            // Scroll to appointment section on load
+            const appointmentSection = document.getElementById("appointment-section");
+            if (appointmentSection) {
+                appointmentSection.scrollIntoView({ behavior: "smooth" });
             }
 
-            $('#AppointmentDate').on('change', function ()
-            {
-                const selectedDate = $(this).val();
-                if (!selectedDate) return;
+            // Initialize Quill editor
+            const toolbarOptions = [['bold', 'italic', 'underline'], ['link'], ['clean']];
+            const quill = new Quill('#quill-editor', {
+                theme: 'snow',
+                placeholder: 'Razão da consulta...',
+                modules: { toolbar: toolbarOptions }
+            });
 
-                $.getJSON('api/Appointments/AvailableTimeSlots', { date: selectedDate })
-                    .done(function (data)
-                    {
+            // On form submit, copy Quill content to hidden input
+            $('form').on('submit', function () {
+                $('#Notes').val(quill.root.innerHTML);
+            });
+
+            // Function to load available time slots
+            function loadTimeSlots(date) {
+                if (!date) return;
+
+                $.getJSON('api/Appointments/AvailableTimeSlots', { date: date })
+                    .done(function (data) {
                         $timeSlots.empty();
 
-                        if (data.length === 0)
-                        {
-                            $timeSlots.append($('<option>',
-                            {
+                        if (data.length === 0) {
+                            $timeSlots.append($('<option>', {
                                 value: '',
                                 text: 'Sem horários disponíveis',
                                 disabled: true,
                                 selected: true
                             }));
-                        }
-                        else
-                        {
-                            $.each(data, function (i, slot)
-                            {
+                            $btnConfirm.prop('disabled', true);
+                        } else {
+                            $.each(data, function (i, slot) {
                                 $timeSlots.append($('<option>', { value: slot.value, text: slot.text }));
                             });
                             $timeSlots.val(data[0].value);
+
+                            // Enable the button only if user has credits
+                            $btnConfirm.prop('disabled', !hasAvailableCredits);
                         }
+
                         $timeSlots.niceSelect('update');
+                    })
+                    .fail(function () {
+                        // Disable button if API call fails
+                        $btnConfirm.prop('disabled', true);
                     });
+            }
+
+            // Load slots when page loads for initial date
+            loadTimeSlots($appointmentDate.val());
+
+            // Reload slots whenever the date changes
+            $appointmentDate.on('change', function () {
+                const selectedDate = $(this).val();
+                loadTimeSlots(selectedDate);
             });
 
-
+            // Confirm dialog
             const confirmDialogEl = document.getElementById('confirmDialog');
             const confirmDialog = new bootstrap.Modal(confirmDialogEl);
 
-            $("#btnConfirm").click(function (e) {
+            $btnConfirm.click(function (e) {
                 e.preventDefault();
 
-                let paciente;
-                const $patientSelect = $("#PatientId");
-                if ($patientSelect.is("select")) {
-                    paciente = $patientSelect.find("option:selected").text().trim();
-                } else {
-                    paciente = "@User.Identity.Name".trim();
-                }
+                const paciente = $("#PatientId").is("select")
+                    ? $("#PatientId option:selected").text().trim()
+                    : "@User.Identity.Name".trim();
 
                 const profissional = $("#StaffId option:selected").text().trim();
                 const data = $("#AppointmentDate").val();
@@ -280,7 +274,6 @@
             $("#btnNo").click(function () {
                 confirmDialog.hide();
             });
-
         });
     </script>
 }

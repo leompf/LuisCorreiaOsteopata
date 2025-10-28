@@ -28,6 +28,4 @@ public class User : IdentityUser
     public string? CalendarId { get; set; }
 
     public string? StripeCustomerId { get; set; }
-
-    public ICollection<Payment>? Payments { get; set; } 
 }

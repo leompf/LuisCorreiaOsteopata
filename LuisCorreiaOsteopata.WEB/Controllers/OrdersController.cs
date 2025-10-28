@@ -197,6 +197,24 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
 
             return View(orders);
         }
+
+        [HttpGet]
+        public IActionResult Details(int id)
+        {
+            var order = _context.Orders
+                .Include(o => o.Items)
+                    .ThenInclude(i => i.Product)
+                .Include(o => o.BillingDetail)
+                .Include(o => o.User)
+                .FirstOrDefault(o => o.Id == id);
+
+            if (order == null)
+            {
+                return NotFound();
+            }
+
+            return View(order);
+        }
         #endregion
     }
 }

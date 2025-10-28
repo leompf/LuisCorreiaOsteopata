@@ -1,0 +1,206 @@
+﻿@{
+    ViewData["Title"] = "Admin";
+    Layout = "~/Views/Shared/_Layout2.cshtml";
+}
+
+@section MainMenu
+{
+    <partial name="_Menu"></partial>
+}
+
+<section class="service-details" id="home">
+    <div class="container">
+        <div class="row">
+            <div class="service-details__content">
+                <h3 class="service-details__title-1">
+                    Bem-vindo, Administrador
+                </h3>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="container my-4">
+    <!-- Summary Cards -->
+    <div class="row g-3">
+        <div class="col-sm-6 col-md-2">
+            <div class="card text-center shadow-sm p-3 h-100">
+                <div class="card-body">
+                    <h6 class="card-title text-muted">Total Appointments</h6>
+                    <h5 id="totalAppointments">Loading...</h5>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-md-2">
+            <div class="card text-center shadow-sm p-3 h-100">
+                <div class="card-body">
+                    <h6 class="card-title text-muted">Appointments / Month</h6>
+                    <h5 id="appointmentsMonth">Loading...</h5>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-md-2">
+            <div class="card text-center shadow-sm p-3 h-100">
+                <div class="card-body">
+                    <h6 class="card-title text-muted">Appointments / Year</h6>
+                    <h5 id="appointmentsYear">Loading...</h5>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-md-2">
+            <div class="card text-center shadow-sm p-3 h-100">
+                <div class="card-body">
+                    <h6 class="card-title text-muted">Total Orders</h6>
+                    <h5 id="totalOrders">Loading...</h5>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-md-2">
+            <div class="card text-center shadow-sm p-3 h-100">
+                <div class="card-body">
+                    <h6 class="card-title text-muted">Orders / Month</h6>
+                    <h5 id="ordersMonth">Loading...</h5>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-md-2">
+            <div class="card text-center shadow-sm p-3 h-100">
+                <div class="card-body">
+                    <h6 class="card-title text-muted">Orders / Year</h6>
+                    <h5 id="ordersYear">Loading...</h5>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-md-2">
+            <div class="card text-center shadow-sm p-3 h-100">
+                <div class="card-body">
+                    <h6 class="card-title text-muted">Appointments / Week</h6>
+                    <h5 id="appointmentsWeek">Loading...</h5>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-md-2">
+            <div class="card text-center shadow-sm p-3 h-100">
+                <div class="card-body">
+                    <h6 class="card-title text-muted">Orders / Week</h6>
+                    <h5 id="ordersWeek">Loading...</h5>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-md-2">
+            <div class="card text-center shadow-sm p-3 h-100">
+                <div class="card-body">
+                    <h6 class="card-title text-muted">Total Revenue</h6>
+                    <h5 id="totalRevenue">Loading...</h5>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Staff Filter -->
+    <div class="row mt-4">
+        <div class="col-md-3">
+            <select id="staffFilter" class="form-select">
+                <option value="">All Staff</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="row mt-3 g-3">
+        <div class="col-12 col-md-6">
+            <div class="card shadow-sm p-3">
+                <h6 class="card-title text-muted">Appointments Over Time</h6>
+                <canvas id="appointmentsChart" height="150"></canvas>
+            </div>
+        </div>
+        <div class="col-12 col-md-6">
+            <div class="card shadow-sm p-3">
+                <h6 class="card-title text-muted">Orders Over Time</h6>
+                <canvas id="ordersChart" height="150"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        let appointmentsChart, ordersChart;
+
+        async function loadMetrics(staffId = '') {
+            const res = await fetch(`/api/account/metrics?staffId=${staffId}`);
+            const data = await res.json();
+
+            // --- Update summary cards ---
+            document.getElementById('totalAppointments').innerText = data.totalAppointments;
+            document.getElementById('appointmentsWeek').innerText = data.appointmentsPerWeek;
+            document.getElementById('appointmentsMonth').innerText = data.appointmentsPerMonth;
+            document.getElementById('appointmentsYear').innerText = data.appointmentsPerYear;
+
+            document.getElementById('totalOrders').innerText = data.totalOrders;
+            document.getElementById('ordersWeek').innerText = data.ordersPerWeek;
+            document.getElementById('ordersMonth').innerText = data.ordersPerMonth;
+            document.getElementById('ordersYear').innerText = data.ordersPerYear;
+
+            document.getElementById('totalRevenue').innerText = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(data.totalRevenue);
+
+            // --- Populate staff filter ---
+                    const staffSelect = document.getElementById('staffFilter');
+        staffSelect.innerHTML = '<option value="">All Staff</option>';
+
+        // Use lowercase property exactly as returned by API
+        if (data.staffList && Array.isArray(data.staffList)) {
+            data.staffList.forEach(s => {
+                const option = document.createElement('option');
+                option.value = s.id;        // match API property
+                option.text = s.fullName;   // match API property
+                staffSelect.appendChild(option);
+            });
+        }
+
+            // --- Appointments chart ---
+            const ctxA = document.getElementById('appointmentsChart').getContext('2d');
+            if (appointmentsChart) appointmentsChart.destroy();
+            appointmentsChart = new Chart(ctxA, {
+                type: 'line',
+                data: {
+                    labels: ['Week', 'Month', 'Year'],
+                    datasets: [{
+                        label: 'Appointments',
+                        data: [data.AppointmentsPerWeek, data.AppointmentsPerMonth, data.AppointmentsPerYear],
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        fill: true
+                    }]
+                },
+                options: { responsive: true }
+            });
+
+            // --- Orders chart ---
+            const ctxO = document.getElementById('ordersChart').getContext('2d');
+            if (ordersChart) ordersChart.destroy();
+            ordersChart = new Chart(ctxO, {
+                type: 'line',
+                data: {
+                    labels: ['Week', 'Month', 'Year'],
+                    datasets: [{
+                        label: 'Orders',
+                        data: [data.OrdersPerWeek, data.OrdersPerMonth, data.OrdersPerYear],
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                        fill: true
+                    }]
+                },
+                options: { responsive: true }
+            });
+        }
+
+        document.getElementById('staffFilter').addEventListener('change', e => {
+            loadMetrics(e.target.value);
+        });
+
+        // Initial load
+        loadMetrics();
+    </script>
+}

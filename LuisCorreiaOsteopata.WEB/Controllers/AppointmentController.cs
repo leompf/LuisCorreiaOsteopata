@@ -54,7 +54,8 @@ public class AppointmentController : Controller
         {
             Staff = _staffRepository.GetComboStaff(),
             TimeSlots = _appointmentRepository.GetAvailableTimeSlotsCombo(DateTime.Today),
-            Patients = _patientRepository.GetComboPatients()
+            Patients = _patientRepository.GetComboPatients(),
+            HasAvailableCredits = false
         };
 
         if (User.IsInRole("Utente"))
@@ -64,7 +65,6 @@ public class AppointmentController : Controller
             {
                 model.PatientId = patient.Id;
 
-
                 var remainingCredits = await _context.Orders
                     .Where(o => o.User.Id == currentUser.Id && o.IsPaid)
                     .SelectMany(o => o.Items)
@@ -72,7 +72,7 @@ public class AppointmentController : Controller
 
                 model.HasAvailableCredits = remainingCredits > 0;
                 model.RemainingCredits = remainingCredits;
-            }            
+            }
         }
 
         else if (User.IsInRole("Colaborador"))
@@ -92,33 +92,32 @@ public class AppointmentController : Controller
 
         model.TimeSlots = _appointmentRepository.GetAvailableTimeSlotsCombo(model.AppointmentDate);
         model.Staff = _staffRepository.GetComboStaff();
-        if (User.IsInRole("Colaborador"))
-            model.Patients = _patientRepository.GetComboPatients();
 
+        if (User.IsInRole("Colaborador"))
+        {
+            model.Patients = _patientRepository.GetComboPatients();
+        }
+            
         if (!ModelState.IsValid)
         {
-            ViewBag.AppointmentBookingMessage = "<span class='text-danger'>Ocorreu um erro ao marcar a consulta. Por favor, verifica se tens os dados corretos.</span>";
             return View(model);
         }
-
+            
         var resolved = await ResolvePatientUserAsync(currentUser, model);
         if (resolved == null)
         {
-            ModelState.AddModelError(string.Empty, "Paciente não encontrado.");
             return View(model);
         }
+            
         var (patientUser, patientId) = resolved.Value;
 
         var staff = await _staffRepository.GetByIdAsync(model.StaffId);
         if (staff == null)
         {
-            ModelState.AddModelError(string.Empty, "Colaborador selecionado não encontrado.");
             return View(model);
         }
+           
         var staffUser = await ResolveStaffUserAsync(currentUser, staff);
-
-
-        var endTime = model.StartTime.AddHours(1);
 
         var appointment = new Appointment
         {
@@ -128,24 +127,32 @@ public class AppointmentController : Controller
             AppointmentDate = model.AppointmentDate.Date,
             AppointmentStatus = "Marcada",
             StartTime = model.StartTime,
-            EndTime = endTime
+            EndTime = model.StartTime.AddHours(1)
         };
 
-        var result = await _appointmentRepository.CreateAppointmentAsync(appointment, patientId);
-        if (!result.Success)
+        string role;
+        if (User.IsInRole("Utente"))
         {
-            ModelState.AddModelError(string.Empty, result.ErrorMessage ?? "Erro ao criar a consulta.");
-            return View(model);
+            role = "Utente"; 
+        }
+        else if (User.IsInRole("Colaborador"))
+        {
+            role = "Colaborador"; 
+        }
+        else 
+        {
+            role = "Administrador"; 
         }
 
-        await NotifyAppointmentCreatedAsync(appointment, (patientUser, patientId), staffUser, model.Notes);
+        var result = await _appointmentRepository.CreateAppointmentAsync(appointment, patientId, patientUser, role);
 
-        var message = @"
-        <p>A consulta foi marcada com <strong>sucesso!</strong></p>
-        <p>Podes visualizá-la no teu calendário da Homepage e ver os seus detalhes.</p>
-        <p>Um email de confirmação foi enviado. Obrigado por contares connosco!</p>";
+        ViewBag.AppointmentBookingMessageIsShown = true;
+        ViewBag.AppointmentBookingMessage = _converterHelper.Sanitize(@"
+            <p>A consulta foi marcada com <strong>sucesso!</strong></p>
+            <p>Podes visualizá-la no teu calendário da Homepage e ver os seus detalhes.</p>
+            <p>Um email de confirmação foi enviado. Obrigado por contares connosco!</p>
+        ");
 
-        ViewBag.AppointmentBookingMessage = _converterHelper.Sanitize(message);
         return View(model);
     }
 
@@ -209,7 +216,8 @@ public class AppointmentController : Controller
         }
 
         var appointment = await _appointmentRepository.GetAppointmentByIdAsync(model.Id);
-        if (appointment == null) return NotFound();
+        if (appointment == null)
+            return NotFound();
 
         if (appointment.AppointmentDate != model.AppointmentDate ||
             appointment.StartTime != model.StartTime)
@@ -226,6 +234,45 @@ public class AppointmentController : Controller
         _context.Update(appointment);
         await _context.SaveChangesAsync();
 
+        var patientUser = await _userHelper.GetUserByEmailAsync(appointment.Patient.Email);
+        var staffUser = await _userHelper.GetUserByEmailAsync(appointment.Staff.Email);
+
+        var googleEvents = await _context.GoogleCalendar
+        .Where(e => e.AppointmentId == appointment.Id)
+        .ToListAsync();
+
+        foreach (var evt in googleEvents)
+        {
+            var user = await _userHelper.GetUserByIdAsync(evt.UserId);
+            try
+            {
+                var updatedEvent = await _googleHelper.UpdateEventAsync(
+                    user,
+                    evt.CalendarId,
+                    evt.EventId,
+                    $"Consulta com {appointment.Staff.Names} {appointment.Staff.LastName}",
+                    appointment.PatientNotes,
+                    appointment.AppointmentDate.Add(appointment.StartTime.ToTimeSpan()),
+                    appointment.AppointmentDate.Add(appointment.EndTime.ToTimeSpan()),
+                    CancellationToken.None
+                );
+
+                if (updatedEvent != null)
+                {
+                    evt.EventId = updatedEvent.Id; // In case the ID changed
+                    _context.GoogleCalendar.Update(evt);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to update Google Calendar event {EventId} for user {UserId}", evt.EventId, user.Id);
+            }
+        }
+
+        await _context.SaveChangesAsync();
+
+        await NotifyAppointmentUpdatedAsync(appointment, patientUser, staffUser);
+
         var message = @"
         <p>A consulta foi alterada com <strong>sucesso!</strong></p>
         <p>Podes visualizá-la no teu calendário da Homepage e ver os seus detalhes.</p>
@@ -239,32 +286,13 @@ public class AppointmentController : Controller
     [HttpPost]
     public async Task<IActionResult> Delete(int id)
     {
-        var appointment = await _appointmentRepository.GetByIdAsync(id);
-        if (appointment == null)
+        var (success, errorMessage) = await _appointmentRepository.DeleteAppointmentAsync(id);
+
+        if (!success)
         {
-            return NotFound();
+            _logger.LogWarning("Failed to delete appointment {AppointmentId}: {Error}", id, errorMessage);
+            return BadRequest(errorMessage ?? "Erro ao cancelar a consulta.");
         }
-
-        var googleEvents = await _context.GoogleCalendar
-           .Where(e => e.AppointmentId == id)
-           .ToListAsync();
-
-        foreach (var evt in googleEvents)
-        {
-            var user = await _userHelper.GetUserByIdAsync(evt.UserId);
-            try
-            {
-                await _googleHelper.DeleteEventAsync(user, evt.CalendarId, evt.EventId, CancellationToken.None);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, $"Failed to delete Google Calendar event {evt.EventId} for user {user.Email}");
-            }
-        }
-
-        _context.GoogleCalendar.RemoveRange(googleEvents);
-        _context.Appointments.Remove(appointment);
-        await _context.SaveChangesAsync();
 
         return RedirectToAction("Index", "Account");
     }
@@ -326,83 +354,42 @@ public class AppointmentController : Controller
             : currentUser;
     }
 
-    private async Task NotifyAppointmentCreatedAsync(Appointment appointment, (User User, int PatientId) patient, User staffUser, string notes)
+    private async Task NotifyAppointmentUpdatedAsync(Appointment appointment, User patientUser, User staffUser)
     {
         var startDateTime = appointment.AppointmentDate.Add(appointment.StartTime.ToTimeSpan());
-        var endDateTime = appointment.AppointmentDate.Add(appointment.EndTime.ToTimeSpan());
 
-        var usersToNotify = new[]
+        try
         {
-        (currentUser: patient.User, role: "Utente", otherUser: staffUser),
-        (currentUser: staffUser, role: "Colaborador", otherUser: patient.User)
-    };
+            var patientEmailBody = $@"
+            <p>Olá {patientUser.Names.Split(' ')[0]},</p>
+            <p>A tua consulta com <strong>{staffUser.Names} {staffUser.LastName}</strong> foi alterada para <strong>{startDateTime:f}</strong>.</p>
+            <p>Obrigado por contares connosco!</p>";
 
-        foreach (var (currentUser, role, otherUser) in usersToNotify)
+            await _emailSender.SendEmailAsync(
+                patientUser.Email!,
+                "Alteração de Consulta",
+                patientEmailBody);
+        }
+        catch (Exception ex)
         {
-            string? eventLink = null;
+            _logger.LogError(ex, "Failed to send update email to patient {Email}.", patientUser.Email);
+        }
 
-            try
-            {
-                if (!string.IsNullOrEmpty(currentUser.CalendarId))
-                {
-                    var createdEvent = await _googleHelper.CreateEventAsync(
-                        currentUser,
-                        currentUser.CalendarId,
-                        $"Consulta com {otherUser.Names} {otherUser.LastName}",
-                        notes,
-                        startDateTime,
-                        endDateTime,
-                        CancellationToken.None
-                    );
+        try
+        {
+            var staffEmailBody = $@"
+            <p>Olá {staffUser.Names.Split(' ')[0]},</p>
+            <p>A consulta com o paciente <strong>{patientUser.Names} {patientUser.LastName}</strong> foi alterada para <strong>{startDateTime:f}</strong>.</p>
+            <p>Por favor, verifica o teu calendário e prepara a sessão.</p>";
 
-                    eventLink = createdEvent?.HtmlLink;
-
-                    if (createdEvent != null)
-                    {
-                        _context.GoogleCalendar.Add(new GoogleCalendar
-                        {
-                            AppointmentId = appointment.Id,
-                            UserId = currentUser.Id,
-                            EventId = createdEvent.Id,
-                            CalendarId = currentUser.CalendarId,
-                            Role = role
-                        });
-                        await _context.SaveChangesAsync();
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Google Calendar sync failed for user {UserId}, continuing with email.", currentUser.Id);
-            }
-
-            try
-            {
-                var formattedDate = startDateTime.ToString("f", new System.Globalization.CultureInfo("pt-PT"));
-                var emailBody = role == "Utente"
-                    ? $@"
-                        <h3>Consulta Marcada com Sucesso</h3>
-                        <p>Olá {currentUser.Names.Split(' ')[0]},</p>
-                        <p>A tua consulta com <strong>{otherUser.Names} {otherUser.LastName}</strong> foi marcada para <strong>{formattedDate}</strong>.</p>
-                        <p>Local: <a href=""https://maps.app.goo.gl/DNVAiw4m7ipYtE9h9"">Rua Camilo Castelo Branco, 2625-215 Póvoa de Santa Iria, Loja nº 27</a></p>
-                        {(eventLink != null ? $"<p><a href='{eventLink}'>Ver no Google Calendar</a></p>" : "")}
-                        <p>Obrigado por contares connosco!</p>"
-                    : $@"
-                        <h3>Nova Consulta Marcada</h3>
-                        <p>Olá {currentUser.Names.Split(' ')[0]},</p>
-                        <p>Foi marcada uma nova consulta com o paciente <strong>{otherUser.Names} {otherUser.LastName}</strong> para <strong>{formattedDate}</strong>.</p>
-                        {(eventLink != null ? $"<p><a href='{eventLink}'>Ver no Google Calendar</a></p>" : "")}
-                        <p>Por favor, verifica o teu calendário e prepara a sessão.</p>";
-
-                await _emailSender.SendEmailAsync(
-                    currentUser.Email!,
-                    role == "Utente" ? "Consulta Marcada com Sucesso" : "Nova Consulta Marcada",
-                    emailBody);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to send appointment email to {Email}.", currentUser.Email);
-            }
+            await _emailSender.SendEmailAsync(
+                staffUser.Email!,
+                "Alteração de Consulta",
+                staffEmailBody);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to send update email to staff {Email}.", staffUser.Email);
         }
     }
     #endregion

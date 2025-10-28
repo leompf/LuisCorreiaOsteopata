@@ -18,6 +18,12 @@ public class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
+        builder.Configuration
+           .SetBasePath(builder.Environment.ContentRootPath)
+           .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+           .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true)
+           .AddEnvironmentVariables();
+
         //Logger
         Log.Logger = new LoggerConfiguration()
             .MinimumLevel.Information()
@@ -88,6 +94,8 @@ public class Program
         builder.Services.Configure<AuthMessageSenderOptions>(builder.Configuration);
         builder.Services.Configure<GoogleSettings>(builder.Configuration.GetSection("GoogleSettings"));
         builder.Services.Configure<StripeSettings>(builder.Configuration.GetSection("Stripe"));
+
+
         Stripe.StripeConfiguration.ApiKey = builder.Configuration["Stripe:SecretKey"];
 
         builder.Services.AddAuthentication()
@@ -103,7 +111,7 @@ public class Program
                 options.Scope.Add("profile");
 
                 options.AccessType = "offline";
-                options.SaveTokens = true;                
+                options.SaveTokens = true;
 
                 options.Events.OnRedirectToAuthorizationEndpoint = context =>
                 {
@@ -134,9 +142,7 @@ public class Program
 
         app.UseHttpsRedirection();
         app.UseStaticFiles();
-
         app.UseRouting();
-
         app.UseAuthentication();
         app.UseAuthorization();
 
@@ -155,7 +161,13 @@ public class Program
             seeder.SeedAsync().Wait();
         }
 
-        app.UseHangfireDashboard("/hangfire");
+        app.UseHangfireDashboard("/hangfire", new DashboardOptions
+        {
+            Authorization = new[]
+            {
+                new HangFireAuthorizationHelper()
+            }
+        });
         using (var scope = app.Services.CreateScope())
         {
             var reminderService = scope.ServiceProvider.GetRequiredService<IReminderHelper>();

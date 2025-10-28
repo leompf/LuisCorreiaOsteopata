@@ -10,7 +10,4 @@ public class Invoice : IEntity
 
     public decimal Total { get; set; }
 
-    //FK
-    public int PaymentId { get; set; }
-    public Payment Payment { get; set; } = null!;
 }

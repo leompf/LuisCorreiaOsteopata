@@ -1,15 +1,7 @@
-﻿
-@{
-    ViewData["Title"] = "Update";
-    Layout = "~/Views/Shared/_Layout2.cshtml";
-}
-
-<h1>Update</h1>
-
-@model LuisCorreiaOsteopata.WEB.Models.BookAppointmentViewModel
+﻿@model LuisCorreiaOsteopata.WEB.Models.BookAppointmentViewModel
 
 @{
-    ViewData["Title"] = "Marcar Consulta";
+    ViewData["Title"] = "Alterar Consulta";
     Layout = "~/Views/Shared/_Layout2.cshtml";
 }
 <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
@@ -31,12 +23,12 @@
     </div>
     <div class="container">
         <div class="page-header__inner">
-            <h3>Marcar Consulta</h3>
+            <h3>Alterar Consulta</h3>
             <div class="thm-breadcrumb__inner">
                 <ul class="thm-breadcrumb list-unstyled">
                     <li><a asp-controller="Account" asp-action="Index">Home</a></li>
                     <li><span class="icon-arrow-left"></span></li>
-                    <li>Marcar Consulta</li>
+                    <li>Alterar Consulta</li>
                 </ul>
             </div>
         </div>
@@ -48,7 +40,7 @@
         <div class="row">
             <div class="col-xl-8 col-lg-7">
                 <div class="appoinment-page__left">
-                    <h3 class="appoinment-page__title">Marcar Consulta</h3>
+                    <h3 class="appoinment-page__title">Alterar Consulta</h3>
                     <form class="appoinment-page__form" method="post">
                         <div class="row">
                             <input type="hidden" asp-for="Id" />
@@ -168,88 +160,86 @@
     }
     <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
     <script>
-         $(document).ready(function ()
-        {
-             const appointmentSection = document.getElementById("appointment-section");
-                if (appointmentSection) {
-                    appointmentSection.scrollIntoView({ behavior: "smooth" });
-                }
-
-            const toolbarOptions = [
-                    ['bold', 'italic', 'underline'],
-                    ['link'],
-                    ['clean'],
-                 ];
-
-                 const quill = new Quill('#quill-editor', {
-                    theme: 'snow',
-                    placeholder: 'Razão da consulta...',
-                    modules: {
-                        toolbar: toolbarOptions
-                    }
-                });
-
-                $('form').on('submit', function ()
-                {
-                    $('#Notes').val(quill.root.innerHTML);
-                });
-
+        $(document).ready(function () {
+            const $appointmentDate = $('#AppointmentDate');
             const $timeSlots = $('#timeSlots');
+            const $btnConfirm = $('#btnConfirm');
+            const appointmentId = '@Model.Id';
+            const currentAppointmentTime = '@Model.StartTime.ToString("HH\\:mm")';
 
-            if ($timeSlots.find('option').length === 0)
-            {
-                $timeSlots.append($('<option>',
-                {
-                    value: '',
-                    text: 'Sem horários disponíveis',
-                    disabled: true,
-                    selected: true
-                }));
-                $timeSlots.niceSelect('update');
+            // Scroll to appointment section on load
+            const appointmentSection = document.getElementById("appointment-section");
+            if (appointmentSection) {
+                appointmentSection.scrollIntoView({ behavior: "smooth" });
             }
 
-            $('#AppointmentDate').on('change', function () {
-            const selectedDate = $(this).val();
-            if (!selectedDate) return;
+            // Initialize Quill editor
+            const quill = new Quill('#quill-editor', {
+                theme: 'snow',
+                placeholder: 'Razão da consulta...',
+                modules: { toolbar: [['bold','italic','underline'],['link'],['clean']] }
+            });
 
-            const appointmentId = '@Model.Id'; // current appointment ID
+            $('form').on('submit', function () {
+                $('#Notes').val(quill.root.innerHTML);
+            });
 
-            $.getJSON('api/Appointments/AvailableTimeSlots', { date: selectedDate, appointmentId: appointmentId })
-                .done(function (data) {
-                    $timeSlots.empty();
+            // Function to update time slots
+            function updateTimeSlots(date) {
+                if (!date) return;
 
-                    if (data.length === 0) {
-                        $timeSlots.append($('<option>', {
-                            value: '',
-                            text: 'Sem horários disponíveis',
-                            disabled: true,
-                            selected: true
-                        }));
-                    } else {
-                        $.each(data, function (i, slot) {
-                            $timeSlots.append($('<option>', { value: slot.value, text: slot.text }));
-                        });
-                        $timeSlots.val(data[0].value);
-                    }
-                    $timeSlots.niceSelect('update');
-                });
-        });
+                $.getJSON('/api/Appointments/AvailableTimeSlots', { date: date, appointmentId: appointmentId })
+                    .done(function (data) {
+                        $timeSlots.empty();
 
+                        if (data.length === 0) {
+                            $timeSlots.append($('<option>', {
+                                value: '',
+                                text: 'Sem horários disponíveis',
+                                disabled: true,
+                                selected: true
+                            }));
+                            $btnConfirm.prop('disabled', true);
+                        } else {
+                            $.each(data, function (i, slot) {
+                                $timeSlots.append($('<option>', { value: slot.value, text: slot.text }));
+                            });
 
+                            // Preselect current appointment time if still available
+                            if (data.some(s => s.value === currentAppointmentTime)) {
+                                $timeSlots.val(currentAppointmentTime);
+                            } else {
+                                $timeSlots.val(data[0].value);
+                            }
+
+                            $btnConfirm.prop('disabled', false);
+                        }
+
+                        $timeSlots.niceSelect('update');
+                    })
+                    .fail(function () {
+                        $btnConfirm.prop('disabled', true);
+                    });
+            }
+
+            // Initialize slots on page load
+            const initialDate = $appointmentDate.val();
+            if (initialDate) updateTimeSlots(initialDate);
+
+            // Update slots when date changes
+            $appointmentDate.on('change', function () {
+                const selectedDate = $(this).val();
+                updateTimeSlots(selectedDate);
+            });
+
+            // Confirm dialog
             const confirmDialogEl = document.getElementById('confirmDialog');
             const confirmDialog = new bootstrap.Modal(confirmDialogEl);
 
-            $("#btnConfirm").click(function (e) {
+            $btnConfirm.click(function (e) {
                 e.preventDefault();
 
-                let paciente;
-                const $patientSelect = $("#PatientId");
-                if ($patientSelect.is("select")) {
-                    paciente = $patientSelect.find("option:selected").text().trim();
-                } else {
-                    paciente = "@User.Identity.Name".trim();
-                }
-
+                let paciente = $("#PatientId").is("select") ? $("#PatientId option:selected").text().trim() : "@User.Identity.Name".trim();
                 const profissional = $("#StaffId option:selected").text().trim();
                 const data = $("#AppointmentDate").val();
                 const hora = $("#timeSlots option:selected").text().trim();
@@ -257,7 +247,7 @@
                 let formattedDate = "—";
                 if (data) {
                     const d = new Date(data);
-                    formattedDate = `${String(d.getDate()).padStart(2, '0')}-${String(d.getMonth() + 1).padStart(2, '0')}-${d.getFullYear()}`;
+                    formattedDate = `${String(d.getDate()).padStart(2,'0')}-${String(d.getMonth()+1).padStart(2,'0')}-${d.getFullYear()}`;
                 }
 
                 $("#confirmPaciente").text(paciente || "—");
@@ -276,7 +266,6 @@
             $("#btnNo").click(function () {
                 confirmDialog.hide();
             });
-
         });
     </script>
 }

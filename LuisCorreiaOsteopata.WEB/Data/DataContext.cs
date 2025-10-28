@@ -28,8 +28,6 @@ public class DataContext : IdentityDbContext<User>
 
     public DbSet<Invoice> Invoices { get; set; }
 
-    public DbSet<Payment> Payments { get; set; }
-
     public DataContext(DbContextOptions<DataContext> options) : base(options)
     {
     }

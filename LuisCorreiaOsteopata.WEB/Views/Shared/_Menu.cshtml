@@ -39,19 +39,19 @@
 @if (User.IsInRole("Colaborador"))
 {
     <li class="dropdown">
-        <a><i style="margin-right: 5px;" class="fas fa-user-plus"></i>Funcionalidades de Colaborador</a>
+        <a><i class="fas fa-user-plus me-1 align-content-center"></i>Colaborador</a>
         <ul>
             <li class="dropdown">
-                <a><i style="margin-right: 5px" class="fas fa-users-cog align-content-center"></i>Gestão de Utilizadores</a>
+                <a><i class="fas fa-users-cog align-content-center me-1"></i>Utilizadores</a>
                 <ul>
                     <li><a asp-controller="Account" asp-action="ViewAllUsers">Ver Utilizadores</a></li>
                 </ul>
             </li>
             <li class="dropdown">
-                <a><i style="margin-right: 5px" class="fas fa-calendar-check"></i>Gestão de Consultas</a>
+                <a><i class="fas fa-calendar-check me-1 align-content-center"></i> Consultas</a>
                 <ul>
                     <li><a asp-controller="Appointment" asp-action="ViewAppointments">Ver Todas as Consultas</a></li>
-                    <li><a asp-controller="Appointment" asp-action="Index"><i style="margin-right: 5px" class="far fa-calendar-plus align-content-center"></i>Marcar Consulta</a></li>
+                    <li><a asp-controller="Appointment" asp-action="Index"><i class="far fa-calendar-plus align-content-center me-1"></i>Marcar Consulta</a></li>
                 </ul>
             </li>
         </ul>
@@ -59,28 +59,20 @@
 }
 @if (User.Identity.IsAuthenticated && User.IsInRole("Utente"))
 {
-    <li>
-        <a asp-controller="Products" asp-action="ViewProducts"><i style="margin-right: 5px" class="fas fa-shopping-bag align-content-center"></i>Ver Produtos</a>
-    </li>
-    <li>
-        <a asp-controller="Orders" asp-action="Index"><i style="margin-right: 5px" class="fas fa-shopping-bag align-content-center"></i>Os Meus Pedidos</a>
-    </li>
-    <li>
-        <a asp-controller="Orders" asp-action="Create">
-            <i style="margin-right: 5px" class="fas fa-shopping-cart"></i>
-            Carrinho
-            <span class="cart-badge">0</span>
-        </a>
-    </li>
+    <li><a asp-controller="Products" asp-action="ViewProducts"><i class="fas fa-store me-1"></i> Loja</a></li>
+    <li><a asp-controller="Orders" asp-action="Index"><i class="fas fa-box me-1"></i> Meus Pedidos</a></li>
+    <li><a asp-controller="Orders" asp-action="Create"><i class="fas fa-shopping-cart me-1"></i> Carrinho <span class="cart-badge">0</span></a></li>
 }
+
 @if (User.Identity.IsAuthenticated)
 {
     <li class="dropdown">
-        <a><i style="margin-right: 5px;" class="fas fa-user"></i>Área Pessoal</a>
+        <a><i class="fas fa-user me-1 align-content-center"></i>Área Pessoal</a>
         <ul>
-            <li><a asp-controller="Account" asp-action="Profile"><i style="margin-right: 5px" class="fas fa-user-edit align-content-center"></i>Perfil</a></li>
-            <li><a asp-controller="Account" asp-action="Security"><i style="margin-right: 5px" class="fas fa-user-lock align-content-center"></i>Privacidade e Segurança</a></li>
-            <li><a asp-controller="Account" asp-action="Logout"><i style="margin-right: 5px" class="fas fa-sign-out-alt align-content-center"></i>Logout</a></li>
+            <li><a asp-controller="Account" asp-action="Edit"><i class="fas fa-user-edit align-content-center me-1"></i>Dados da Conta</a></li>
+            <li><a asp-controller="Account" asp-action="Profile"><i class="fas fa-user-edit align-content-center me-1"></i>Dados Pessoais</a></li>
+            <li><a asp-controller="Account" asp-action="Security"><i class="fas fa-user-lock align-content-center me-1"></i>Privacidade e Segurança</a></li>
+            <li><a asp-controller="Account" asp-action="Logout"><i class="fas fa-sign-out-alt align-content-center me-1"></i>Terminar Sessão</a></li>
         </ul>
     </li>
 }

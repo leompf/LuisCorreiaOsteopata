@@ -5,7 +5,8 @@ namespace LuisCorreiaOsteopata.WEB.Models;
 
 public class ProfileViewModel
 {
-    //Personal Details
+    public string? Id { get; set; }
+
     public string? Name { get; set; }
 
     public string? Email { get; set; }
@@ -31,4 +32,8 @@ public class ProfileViewModel
     public string? MedicalHistory { get; set; }
 
     public bool IsEditable { get; set; } = true;
+
+    public bool ShowPatientFields { get; set; }
+
+    public bool ArePatientFieldsReadonly { get; set; }
 }

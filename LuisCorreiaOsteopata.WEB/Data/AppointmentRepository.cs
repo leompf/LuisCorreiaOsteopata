@@ -1,11 +1,9 @@
-﻿using AngleSharp.Dom;
-using LuisCorreiaOsteopata.WEB.Data.Entities;
+﻿using LuisCorreiaOsteopata.WEB.Data.Entities;
 using LuisCorreiaOsteopata.WEB.Helpers;
 using LuisCorreiaOsteopata.WEB.Models;
-using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Query;
 
 namespace LuisCorreiaOsteopata.WEB.Data;
 
@@ -13,14 +11,20 @@ public class AppointmentRepository : GenericRepository<Appointment>, IAppointmen
 {
     private readonly DataContext _context;
     private readonly ILogger<AppointmentRepository> _logger;
+    private readonly IGoogleHelper _googleHelper;
+    private readonly IEmailSender _emailSender;
     private readonly IUserHelper _userHelper;
 
     public AppointmentRepository(DataContext context,
         ILogger<AppointmentRepository> logger,
+        IGoogleHelper googleHelper,
+        IEmailSender emailSender,
         IUserHelper userHelper) : base(context)
     {
         _context = context;
         _logger = logger;
+        _googleHelper = googleHelper;
+        _emailSender = emailSender;
         _userHelper = userHelper;
     }
 
@@ -127,7 +131,7 @@ public class AppointmentRepository : GenericRepository<Appointment>, IAppointmen
 
     public async Task<List<AppointmentViewModel>> GetSchedulledAppointmentsAsync()
     {
-        var appointments =  GetAllAppointments();
+        var appointments = GetAllAppointments();
         return await appointments.Select(a => new AppointmentViewModel
         {
             Id = a.Id,
@@ -144,19 +148,38 @@ public class AppointmentRepository : GenericRepository<Appointment>, IAppointmen
         }).ToListAsync();
     }
 
-    public async Task<(bool Success, string? ErrorMessage)> CreateAppointmentAsync(Appointment appointment, int patientId)
+    public async Task<(bool Success, string? ErrorMessage)> CreateAppointmentAsync(Appointment appointment, int patientId, User currentUser, string role)
     {
         using var transaction = await _context.Database.BeginTransactionAsync();
         try
         {
-            var patient = await _context.Patients
-                .Include(p => p.User)
-                .FirstOrDefaultAsync(p => p.Id == patientId);
+            Patient? patient;
 
-            if (patient?.User == null)
+            if (role == "Utente")
             {
-                _logger.LogWarning("Invalid patient ID {PatientId} provided for appointment creation.", patientId);
-                return (false, "Paciente inválido.");
+                patient = await _context.Patients
+                    .Include(p => p.User)
+                    .FirstOrDefaultAsync(p => p.User.Id == currentUser.Id);
+
+                if (patient == null)
+                {
+                    _logger.LogWarning("No patient found for user {UserId}", currentUser.Id);
+                    return (false, "Paciente inválido.");
+                }
+
+                patientId = patient.Id; 
+            }
+            else 
+            {
+                patient = await _context.Patients
+                    .Include(p => p.User)
+                    .FirstOrDefaultAsync(p => p.Id == patientId);
+
+                if (patient == null)
+                {
+                    _logger.LogWarning("Invalid patient ID {PatientId} provided by collaborator", patientId);
+                    return (false, "Paciente inválido.");
+                }
             }
 
             var orderDetail = await _context.Orders
@@ -168,7 +191,7 @@ public class AppointmentRepository : GenericRepository<Appointment>, IAppointmen
 
             if (orderDetail == null)
             {
-                _logger.LogInformation("Patient {PatientId} ({Email}) has no remaining appointment uses.", patientId, patient.User.Email);                
+                _logger.LogInformation("Patient {PatientId} ({Email}) has no remaining appointment uses.", patientId, patient.User.Email);
                 return (false, "Não tem consultas disponíveis. Por favor, adquira novas consultas.");
             }
 
@@ -179,8 +202,10 @@ public class AppointmentRepository : GenericRepository<Appointment>, IAppointmen
 
             _context.Update(orderDetail);
             _context.Appointments.Add(appointment);
-
             await _context.SaveChangesAsync();
+
+            await NotifyAppointmentCreatedAsync(appointment, patient.User, appointment.Staff.User, appointment.PatientNotes);
+
             await transaction.CommitAsync();
 
             _logger.LogInformation("Appointment {AppointmentId} created successfully for patient {PatientId} ({Email}).", appointment.Id, patientId, patient.User.Email);
@@ -191,6 +216,73 @@ public class AppointmentRepository : GenericRepository<Appointment>, IAppointmen
             await transaction.RollbackAsync();
             _logger.LogError(ex, "Failed to create appointment for patient {PatientId}.", patientId);
             return (false, $"Erro ao criar a consulta: {ex.Message}");
+        }
+    }
+
+    public async Task<(bool Success, string? ErrorMessage)> DeleteAppointmentAsync(int appointmentId)
+    {
+        using var transaction = await _context.Database.BeginTransactionAsync();
+
+        try
+        {
+            var appointment = await _context.Appointments
+                .Include(a => a.Patient.User)
+                .Include(a => a.OrderDetail)
+                .FirstOrDefaultAsync(a => a.Id == appointmentId);
+
+            if (appointment == null)
+            {
+                _logger.LogWarning("Attempted to delete non-existent appointment ID {AppointmentId}", appointmentId);
+                return (false, "Consulta não encontrada.");
+            }
+
+            var appointmentDateTime = appointment.AppointmentDate.Add(appointment.StartTime.ToTimeSpan());
+            var hoursUntilAppointment = (appointmentDateTime - DateTime.Now).TotalHours;
+            _logger.LogInformation("Appointment {AppointmentId} is {HoursUntil:F2} hours away", appointmentId, hoursUntilAppointment);
+
+            if (hoursUntilAppointment > 24 && appointment.OrderDetail != null)
+            {
+                appointment.OrderDetail.RemainingUses += 1;
+                _context.OrderDetails.Update(appointment.OrderDetail);
+                _logger.LogInformation("Refunded 1 credit for order detail {OrderDetailId}", appointment.OrderDetail.Id);
+            }
+
+            var googleEvents = await _context.GoogleCalendar
+                .Where(e => e.AppointmentId == appointmentId)
+                .ToListAsync();
+
+            _logger.LogInformation("Found {EventCount} Google events linked to appointment {AppointmentId}", googleEvents.Count, appointmentId);
+
+            foreach (var evt in googleEvents)
+            {
+                var user = await _userHelper.GetUserByIdAsync(evt.UserId);
+                try
+                {
+                    await _googleHelper.DeleteEventAsync(user, evt.CalendarId, evt.EventId, CancellationToken.None);
+                    _logger.LogInformation("Deleted Google Calendar event {EventId}", evt.EventId);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to delete Google Calendar event {EventId}", evt.EventId);
+                }
+            }
+
+            _context.GoogleCalendar.RemoveRange(googleEvents);
+            _context.Appointments.Remove(appointment);
+
+            var affected = await _context.SaveChangesAsync();
+            _logger.LogInformation("SaveChanges affected {Count} entities", affected);
+
+            await transaction.CommitAsync();
+            _logger.LogInformation("Appointment {AppointmentId} successfully deleted", appointment.Id);
+
+            return (true, null);
+        }
+        catch (Exception ex)
+        {
+            await transaction.RollbackAsync();
+            _logger.LogError(ex, "Error deleting appointment {AppointmentId}", appointmentId);
+            return (false, "Erro ao cancelar a consulta. Por favor, tente novamente.");
         }
     }
 
@@ -211,7 +303,7 @@ public class AppointmentRepository : GenericRepository<Appointment>, IAppointmen
 
             DayOfWeek.Saturday => (new TimeOnly(9, 0), new TimeOnly(13, 0)),
 
-            _ => null 
+            _ => null
         };
 
         if (workingHours == null)
@@ -243,6 +335,87 @@ public class AppointmentRepository : GenericRepository<Appointment>, IAppointmen
             Text = t.ToString("HH:mm"),
             Value = t.ToString("HH:mm")
         }).ToList();
+    }
+
+    private async Task NotifyAppointmentCreatedAsync(Appointment appointment, User patientUser, User staffUser, string notes)
+    {
+        var startDateTime = appointment.AppointmentDate.Add(appointment.StartTime.ToTimeSpan());
+        var endDateTime = appointment.AppointmentDate.Add(appointment.EndTime.ToTimeSpan());
+
+        var usersToNotify = new[]
+        {
+        (currentUser: patientUser, role: "Utente", otherUser: staffUser),
+        (currentUser: staffUser, role: "Colaborador", otherUser: patientUser)
+    };
+
+        foreach (var (currentUser, role, otherUser) in usersToNotify)
+        {
+            string? eventLink = null;
+
+            try
+            {
+                if (!string.IsNullOrEmpty(currentUser.CalendarId))
+                {
+                    var createdEvent = await _googleHelper.CreateEventAsync(
+                        currentUser,
+                        currentUser.CalendarId,
+                        $"Consulta com {otherUser.Names} {otherUser.LastName}",
+                        notes,
+                        startDateTime,
+                        endDateTime,
+                        CancellationToken.None
+                    );
+
+                    eventLink = createdEvent?.HtmlLink;
+
+                    if (createdEvent != null)
+                    {
+                        _context.GoogleCalendar.Add(new GoogleCalendar
+                        {
+                            AppointmentId = appointment.Id,
+                            UserId = currentUser.Id,
+                            EventId = createdEvent.Id,
+                            CalendarId = currentUser.CalendarId,
+                            Role = role
+                        });
+                        await _context.SaveChangesAsync();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Google Calendar sync failed for user {UserId}, continuing with email.", currentUser.Id);
+            }
+
+            try
+            {
+                var formattedDate = startDateTime.ToString("f", new System.Globalization.CultureInfo("pt-PT"));
+                var emailBody = role == "Utente"
+                    ? $@"
+                    <h3>Consulta Marcada com Sucesso</h3>
+                    <p>Olá {currentUser.Names.Split(' ')[0]},</p>
+                    <p>A tua consulta com <strong>{otherUser.Names} {otherUser.LastName}</strong> foi marcada para <strong>{formattedDate}</strong>.<br />
+                    Local: <a href=""https://maps.app.goo.gl/DNVAiw4m7ipYtE9h9"">Rua Camilo Castelo Branco, 2625-215 Póvoa de Santa Iria, Loja nº 27</a></p>
+                    {(eventLink != null ? $"<p><a href='{eventLink}'>Ver no Google Calendar</a></p>" : "")}
+                    <p>Obrigado e cumprimentos,<br />
+                    Luís Correia, Osteopata</p>"
+                    : $@"
+                    <h3>Nova Consulta Marcada</h3>
+                    <p>Olá {currentUser.Names.Split(' ')[0]},</p>
+                    <p>Foi marcada uma nova consulta com o paciente <strong>{otherUser.Names} {otherUser.LastName}</strong> para <strong>{formattedDate}</strong>.</p>
+                    {(eventLink != null ? $"<p><a href='{eventLink}'>Ver no Google Calendar</a></p>" : "")}
+                    <p>Por favor, verifica o teu calendário e prepara a sessão.</p>";
+
+                await _emailSender.SendEmailAsync(
+                    currentUser.Email!,
+                    role == "Utente" ? "Consulta Marcada com Sucesso" : "Nova Consulta Marcada",
+                    emailBody);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to send appointment email to {Email}.", currentUser.Email);
+            }
+        }
     }
     #endregion
 }
