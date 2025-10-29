@@ -10,7 +10,6 @@ using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using QRCoder;
-using QuestPDF.Fluent;
 using System.Security.Claims;
 using System.Text.RegularExpressions;
 
@@ -27,6 +26,7 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
         private readonly IGoogleHelper _googleHelper;
         private readonly IEmailSender _emailSender;
         private readonly IConverterHelper _converterHelper;
+        private readonly DocumentExportHelper _documentExportHelper;
         private readonly ILogger<AccountController> _logger;
 
         public AccountController(IUserHelper userHelper,
@@ -38,6 +38,7 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
             IGoogleHelper googleHelper,
             IEmailSender emailSender,
             IConverterHelper converterHelper,
+            DocumentExportHelper documentExportHelper,
             ILogger<AccountController> logger)
         {
             _userHelper = userHelper;
@@ -49,12 +50,13 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
             _googleHelper = googleHelper;
             _emailSender = emailSender;
             _converterHelper = converterHelper;
+            _documentExportHelper = documentExportHelper;
             _logger = logger;
         }
 
         #region Homepage
         public async Task<IActionResult> Index()
-        {            
+        {
             _logger.LogInformation("Homepage accessed by user {User}", User.Identity?.Name ?? "Anonymous");
 
             if (User.IsInRole("Administrador"))
@@ -732,7 +734,7 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
                 BirthDate = user.Birthdate,
                 NIF = user.Nif,
                 Role = role,
-                IsEditable = isOwnProfile && (isUtente || isAdmin) || isAdmin, 
+                IsEditable = isOwnProfile && (isUtente || isAdmin) || isAdmin,
                 ShowPatientFields = (isUtente && isOwnProfile) || isAdmin || (isColaborador && role == "Utente"),
                 ArePatientFieldsReadonly = (isColaborador && role == "Utente") || (!isUtente && !isAdmin),
             };
@@ -965,5 +967,41 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
             }
         }
         #endregion
+
+        #region Redirecting
+        public IActionResult NotAuthorized()
+        {
+            return View();
+        }
+        #endregion
+
+        public async Task<IActionResult> DownloadFicha(string id)
+        {
+            var user = await _userHelper.GetUserByIdAsync(id);
+
+            var patient = await _patientRepository.GetPatientByUserEmailAsync(user.Email);
+
+            if (patient == null)
+                return NotFound();
+
+            var data = new Dictionary<string, string>
+            {
+                { "name",  $"{user.Names} {user.LastName}" },
+                { "birthdate", user.Birthdate?.ToString("dd/MM/yyyy") ?? "" },
+                { "gender", patient.Gender ?? "" },
+                { "address", "N/A" }, // caso ainda não tenhas este campo
+                { "phone", user.PhoneNumber ?? "" },
+                { "email", user.Email ?? "" },
+                { "job", "N/A" },
+                { "department", "N/A" },
+                { "hiredate", "" },
+                { "medicalhistory", patient.MedicalHistory ?? "" }
+            };
+
+            var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/templates/FichaClienteTemplate.docx");
+            var fileBytes = _documentExportHelper.GenerateUserRecord(templatePath, data);
+
+            return File(fileBytes, "application/vnd.openxmlformats-officedocument.wordprocessingml.document", $"Ficha_{patient.FullName}.docx");
+        }
     }
 }

@@ -1,0 +1,51 @@
+﻿
+@{
+    ViewData["Title"] = "NotAuthorized";
+    Layout = "~/Views/Shared/_Layout2.cshtml";
+}
+
+@section MainMenu
+{
+    <partial name="_Menu"></partial>
+}
+
+<section class="page-header">
+    <div class="page-header__bg" style="background-image: url(~/assets/images/backgrounds/page-header-bg.jpg);">
+    </div>
+    <div class="container">
+        <div class="page-header__inner">
+            <h3>Erro 403</h3>
+            <div class="thm-breadcrumb__inner">
+                <ul class="thm-breadcrumb list-unstyled">
+                    <li><a asp-controller="Home" asp-action="Index">Home</a></li>
+                    <li><span class="icon-arrow-left"></span></li>
+                    <li>Erro 403</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+<!--Page Header End-->
+<!--Error Page Start-->
+<section class="error-page">
+    <div class="container">
+        <div class="row">
+            <div class="col-xl-12">
+                <div class="error-page__inner">
+                    <div class="error-page__title-box">
+                        <h2 class="error-page__title">403</h2>
+                    </div>
+                    <h3 class="error-page__tagline">Proibido</h3>
+                    <p class="error-page__text">A página que procuras é de acesso restrito.</p>
+                    <div class="error-page__btn-box">
+                        <a asp-controller="Home" asp-action="Index" class="thm-btn">
+                            Voltar para home<span class="icon-right-arrow"></span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<!--Error Page End-->
+

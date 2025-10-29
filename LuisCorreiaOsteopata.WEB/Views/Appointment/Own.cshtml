@@ -1,0 +1,97 @@
+﻿@model IEnumerable<LuisCorreiaOsteopata.WEB.Data.Entities.Appointment>
+
+@{
+    ViewData["Title"] = "Own";
+    Layout = "~/Views/Shared/_Layout2.cshtml";
+}
+
+<style>
+    .appointment-card {
+        transition: all 0.3s ease;
+        height: 100%;
+        border: 1px solid #e0e0e0;
+    }
+
+        .appointment-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 18px rgba(0, 0, 0, 0.08);
+        }
+
+        .appointment-card h5 {
+            font-size: 1rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .appointment-card p {
+            font-size: 0.9rem;
+        }
+
+    .appointment-status {
+        font-size: 0.8rem;
+        padding: 0.3rem 0.6rem;
+        background-color:gray;
+    }
+</style>
+
+@section MainMenu
+{
+    <partial name="_Menu"></partial>
+}
+
+<section class="page-header">
+    <div class="page-header__bg" style="background-image: url(~/assets/images/backgrounds/page-header-bg.jpg);">
+    </div>
+    <div class="container">
+        <div class="page-header__inner">
+            <h3>As Minhas Consultas</h3>
+            <div class="thm-breadcrumb__inner">
+                <ul class="thm-breadcrumb list-unstyled">
+                    <li><a asp-controller="Account" asp-action="Index">Home</a></li>
+                    <li><span class="icon-arrow-left"></span></li>
+                    <li>As Minhas Consultas</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="appointments-list py-5">
+    <div class="container">
+        @if (!Model.Any())
+        {
+            <div class="alert alert-info text-center">
+                Ainda não tem nenhuma consulta agendada.
+            </div>
+        }
+        else
+        {
+            <div class="row g-4">
+                @foreach (var appointment in Model.OrderByDescending(a => a.AppointmentDate))
+                {
+                    <div class="col-12 col-md-6 col-lg-4 col-xl-3">
+                        <div class="card appointment-card shadow-sm rounded-3 p-3 d-flex flex-column justify-content-between">
+                            <div>
+                                <h5>Data: <strong>@appointment.AppointmentDate.ToString("dd/MM/yyyy")</strong></h5>
+                                <p class="text-muted mb-2">
+                                    <strong>@appointment.StartTime.ToString("HH:mm") - @appointment.EndTime.ToString("HH:mm")</strong><br />
+                                    Profissional: <span class="text-dark">@appointment.Staff?.FullName</span>
+                                </p>
+                                <span class="badge appointment-status">
+                                    @appointment.AppointmentStatus
+                                </span>
+                            </div>
+
+                            <div class="text-end mt-3">
+                                <a asp-controller="Appointment" asp-action="Details" asp-route-id="@appointment.Id"
+                                   class="btn btn-outline-primary btn-sm">
+                                    Ver detalhes
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</section>
+

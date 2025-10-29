@@ -18,13 +18,14 @@ public class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
+        //Environment Variables
         builder.Configuration
            .SetBasePath(builder.Environment.ContentRootPath)
            .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
            .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true)
            .AddEnvironmentVariables();
 
-        //Logger
+        //Serilog Service
         Log.Logger = new LoggerConfiguration()
             .MinimumLevel.Information()
             .MinimumLevel.Override("Microsoft", Serilog.Events.LogEventLevel.Warning)
@@ -76,6 +77,7 @@ public class Program
 
         builder.Services.AddTransient<SeedDB>();
         builder.Services.AddTransient<IEmailSender, EmailSender>();
+        builder.Services.AddScoped<DocumentExportHelper>();
         builder.Services.AddScoped<IReminderHelper, ReminderHelper>();
         builder.Services.AddScoped<IUserHelper, UserHelper>();
         builder.Services.AddScoped<IConverterHelper, ConverterHelper>();
@@ -95,9 +97,14 @@ public class Program
         builder.Services.Configure<GoogleSettings>(builder.Configuration.GetSection("GoogleSettings"));
         builder.Services.Configure<StripeSettings>(builder.Configuration.GetSection("Stripe"));
 
+        builder.Services.ConfigureApplicationCookie(options =>
+        {
+            options.AccessDeniedPath = "/Account/NotAuthorized";
+        });
 
         Stripe.StripeConfiguration.ApiKey = builder.Configuration["Stripe:SecretKey"];
 
+        //Google Service
         builder.Services.AddAuthentication()
             .AddGoogle(options =>
             {
@@ -140,9 +147,13 @@ public class Program
             app.UseHsts();
         }
 
+        app.UseStatusCodePagesWithReExecute("/Error/{0}");
+
         app.UseHttpsRedirection();
         app.UseStaticFiles();
+
         app.UseRouting();
+
         app.UseAuthentication();
         app.UseAuthorization();
 
@@ -161,6 +172,7 @@ public class Program
             seeder.SeedAsync().Wait();
         }
 
+        //Hangfire Service
         app.UseHangfireDashboard("/hangfire", new DashboardOptions
         {
             Authorization = new[]

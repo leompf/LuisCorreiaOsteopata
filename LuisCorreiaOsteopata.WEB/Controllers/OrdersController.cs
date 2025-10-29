@@ -1,4 +1,5 @@
-﻿using LuisCorreiaOsteopata.WEB.Data;
+﻿using AspNetCoreGeneratedDocument;
+using LuisCorreiaOsteopata.WEB.Data;
 using LuisCorreiaOsteopata.WEB.Data.Entities;
 using LuisCorreiaOsteopata.WEB.Helpers;
 using LuisCorreiaOsteopata.WEB.Models;
@@ -218,5 +219,3 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
         #endregion
     }
 }
-
-//TODO: Criar Faturação

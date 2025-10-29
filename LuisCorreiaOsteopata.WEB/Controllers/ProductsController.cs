@@ -90,13 +90,13 @@ public class ProductsController : Controller
     {
         if (id == null)
         {
-            return NotFound();
+            return new NotFoundViewResult("ProductNotFound");
         }
 
         var product = await _productRepository.GetByIdAsync(id.Value);
         if (product == null)
         {
-            return NotFound();
+            return new NotFoundViewResult("ProductNotFound");
         }
 
         return View(product);
@@ -142,13 +142,13 @@ public class ProductsController : Controller
     {
         if (id == null)
         {
-            return NotFound();
+            return new NotFoundViewResult("ProductNotFound");
         }
 
         var product = await _productRepository.GetByIdAsync(id.Value);
         if (product == null)
         {
-            return NotFound();
+            return new NotFoundViewResult("ProductNotFound");
         }
 
         var model = _converterHelper.ToProductViewModel(product);
@@ -182,7 +182,7 @@ public class ProductsController : Controller
             {
                 if (!await _productRepository.ExistAsync(model.Id))
                 {
-                    return NotFound();
+                    return new NotFoundViewResult("ProductNotFound");
                 }
                 else
                 {
@@ -198,13 +198,13 @@ public class ProductsController : Controller
     {
         if (id == null)
         {
-            return NotFound();
+            return new NotFoundViewResult("ProductNotFound");
         }
 
         var product = await _productRepository.GetByIdAsync(id.Value);
         if (product == null)
         {
-            return NotFound();
+            return new NotFoundViewResult("ProductNotFound");
         }
 
         return View(product);
@@ -234,5 +234,10 @@ public class ProductsController : Controller
             return View("Error");
         }
 
+    }
+
+    public IActionResult ProductNotFound()
+    {
+        return View();
     }
 }

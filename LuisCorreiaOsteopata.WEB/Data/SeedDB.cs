@@ -87,7 +87,7 @@ public class SeedDB
             }
         }
 
-        var staffUser = await _userHelper.GetUserByEmailAsync("leozao997@gmail.com");
+        var staffUser = await _userHelper.GetUserByEmailAsync("leonardof97@hotmail.com");
 
         if (staffUser == null)
         {
@@ -95,10 +95,10 @@ public class SeedDB
             {
                 Names = "Luis Miguel",
                 LastName = "Correia",
-                Email = "leozao997@gmail.com",
-                UserName = "leozao997@gmail.com",
+                Email = "leonardof97@hotmail.com",
+                UserName = "leonardof97@hotmail.com",
                 EmailConfirmed = true,
-                Nif = "231029012",
+                Nif = "240784367",
                 PhoneNumber = "+351932458961"
             };
 
@@ -150,12 +150,24 @@ public class SeedDB
         {
             AddProduct("Pacote de 3 Consultas", 150m, adminUser, ProductType.Pacote,"~/images/products/consulta_1.jpg");
             AddProduct("Consulta Individual", 60m, adminUser, ProductType.Consulta,"~/images/products/consulta_2.jpg");
+            AddProduct("Teste", (decimal)(_random.NextDouble() * (100.00 - 10.00) + 10.00), adminUser, ProductType.Digital,"~/images/products/no_image.jpg");
+            AddProduct("Teste2", (decimal)(_random.NextDouble() * (100.00 - 10.00) + 10.00), adminUser, ProductType.Digital, "~/images/products/no_image.jpg");
+            AddProduct("Teste3", (decimal)(_random.NextDouble() * (100.00 - 10.00) + 10.00), adminUser, ProductType.Digital,"~/images/products/no_image.jpg");
+            AddProduct("Teste4", (decimal)(_random.NextDouble() * (100.00 - 10.00) + 10.00), adminUser, ProductType.Digital,"~/images/products/no_image.jpg");
+            AddProduct("Teste5", (decimal)(_random.NextDouble() * (100.00 - 10.00) + 10.00), adminUser, ProductType.Digital,"~/images/products/no_image.jpg");
+            AddProduct("Teste6", (decimal)(_random.NextDouble() * (100.00 - 10.00) + 10.00), adminUser, ProductType.Digital,"~/images/products/no_image.jpg");
+            AddProduct("Teste7", (decimal)(_random.NextDouble() * (100.00 - 10.00) + 10.00), adminUser, ProductType.Digital,"~/images/products/no_image.jpg");
+            AddProduct("Teste8", (decimal)(_random.NextDouble() * (100.00 - 10.00) + 10.00), adminUser, ProductType.Digital,"~/images/products/no_image.jpg");
+            AddProduct("Teste9", (decimal)(_random.NextDouble() * (100.00 - 10.00) + 10.00), adminUser, ProductType.Digital,"~/images/products/no_image.jpg");
+            AddProduct("Teste10", (decimal)(_random.NextDouble() * (100.00 - 10.00) + 10.00), adminUser, ProductType.Digital,"~/images/products/no_image.jpg");
+            AddProduct("Teste11", (decimal)(_random.NextDouble() * (100.00 - 10.00) + 10.00), adminUser, ProductType.Digital, "~/images/products/no_image.jpg");
+            AddProduct("Teste12", (decimal)(_random.NextDouble() * (100.00 - 10.00) + 10.00), adminUser, ProductType.Digital, "~/images/products/no_image.jpg");
             await _context.SaveChangesAsync();
         }
     }
 
     private void AddProduct(string name, decimal price, User user, ProductType productType, string imagePath)
-    {
+    {        
         _context.Products.Add(new Product
         {
             Name = name,

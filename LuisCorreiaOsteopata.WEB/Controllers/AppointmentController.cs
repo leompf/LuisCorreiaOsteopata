@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Threading.Tasks;
 
 namespace LuisCorreiaOsteopata.WEB.Controllers;
 
@@ -320,6 +321,14 @@ public class AppointmentController : Controller
             return PartialView("_AppointmentsTable", model.Appointments);
 
         return View(model);
+    }
+
+    public async Task<IActionResult> Own()
+    {
+        var user = await _userHelper.GetCurrentUserAsync();
+        var appoointments = await _appointmentRepository.GetAppointmentsByUserAsync(user);
+
+        return View(appoointments);
     }
 
     #region Helper Methods

@@ -7,6 +7,14 @@ public class HangFireAuthorizationHelper : IDashboardAuthorizationFilter
     public bool Authorize(DashboardContext context)
     {
         var httpContext = context.GetHttpContext();
-        return httpContext.User.Identity.IsAuthenticated && httpContext.User.IsInRole("Administrador");
+
+        if (httpContext.User.Identity?.IsAuthenticated == true &&
+            httpContext.User.IsInRole("Administrador"))
+        {
+            return true;
+        }
+
+        httpContext.Response.Redirect("/Account/NotAuthorized");
+        return false;
     }
 }

@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using AspNetCoreGeneratedDocument;
 using LuisCorreiaOsteopata.WEB.Models;
 using Microsoft.AspNetCore.Mvc;
 
@@ -36,5 +37,11 @@ public class HomeController : Controller
     public IActionResult Error()
     {
         return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+    }
+
+    [Route("Error/404")]
+    public IActionResult Error404()
+    {
+        return View();
     }
 }
