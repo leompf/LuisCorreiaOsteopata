@@ -34,7 +34,7 @@
             <div class="view-appointment__left">
                 <h3 class="view-appointment__title">Vê as tuas consultas</h3>
                 <div class="form-group row">    
-                    @if (ViewBag.RemainingCredits != null)
+                    @if (ViewBag.RemainingCredits != null && User.IsInRole("Utente"))
                     {
                         <label style="font-size: 1.2rem" class="mt-2">
                             <strong>Consultas disponíveis por marcar:</strong> @ViewBag.RemainingCredits

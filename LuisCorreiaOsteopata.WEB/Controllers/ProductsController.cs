@@ -5,6 +5,7 @@ using LuisCorreiaOsteopata.WEB.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace LuisCorreiaOsteopata.WEB.Controllers;
 
@@ -50,11 +51,38 @@ public class ProductsController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> ViewProducts()
+    public async Task<IActionResult> ViewProducts(string searchTerm,decimal? minPrice, decimal? maxPrice, int page = 1, int pageSize = 12)
     {
-        var products = await _productRepository.GetAvailableProducts();
+        var productsQuery = await _productRepository.GetAvailableProducts();
 
-        return View(products);
+        if (!string.IsNullOrWhiteSpace(searchTerm))
+            productsQuery = productsQuery.Where(p => p.Name.Contains(searchTerm)).ToList();
+
+        if (minPrice.HasValue)
+            productsQuery = productsQuery.Where(p => p.Price >= minPrice.Value).ToList();
+
+        if (maxPrice.HasValue)
+            productsQuery = productsQuery.Where(p => p.Price <= maxPrice.Value).ToList();
+
+        var totalProducts =  productsQuery.Count();
+        var products =   productsQuery
+                            .Skip((page - 1) * pageSize)
+                            .Take(pageSize)
+                            .ToList();
+
+        var model = new PagedProductsViewModel
+        {
+            Products = products,
+            PageNumber = page,
+            PageSize = pageSize,
+            TotalProducts = totalProducts,
+            MinPrice = minPrice,
+            MaxPrice = maxPrice,
+            SearchTerm = searchTerm
+        };
+
+
+        return View(model);
     }
 
     [HttpGet]

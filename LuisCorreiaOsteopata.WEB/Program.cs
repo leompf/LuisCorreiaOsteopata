@@ -171,11 +171,18 @@ public class Program
         using (var scope = app.Services.CreateScope())
         {
             var reminderService = scope.ServiceProvider.GetRequiredService<IReminderHelper>();
+            var appointmentRepo = scope.ServiceProvider.GetRequiredService<IAppointmentRepository>();
 
             RecurringJob.AddOrUpdate(
                 "appointment-reminders",
                 () => reminderService.SendAppointmentReminderAsync(),
                 Cron.Hourly
+            );
+
+            RecurringJob.AddOrUpdate(
+                "complete-past-appointments", 
+                () => appointmentRepo.MarkPastAppointmentsAsCompletedAsync(),
+                Cron.Hourly 
             );
         }
 

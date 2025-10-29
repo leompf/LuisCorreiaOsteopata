@@ -337,6 +337,26 @@ public class AppointmentRepository : GenericRepository<Appointment>, IAppointmen
         }).ToList();
     }
 
+    public async Task MarkPastAppointmentsAsCompletedAsync()
+    {
+        var now = DateTime.Now;
+
+        var appointments = await _context.Appointments
+        .Where(a => a.AppointmentStatus != "Realizada")
+        .ToListAsync(); 
+
+        foreach (var a in appointments)
+        {
+            var endDateTime = a.AppointmentDate.Date.Add(a.EndTime.ToTimeSpan());
+            if (endDateTime < now)
+            {
+                a.AppointmentStatus = "Realizada";
+            }
+        }
+
+        await _context.SaveChangesAsync();
+    }
+
     private async Task NotifyAppointmentCreatedAsync(Appointment appointment, User patientUser, User staffUser, string notes)
     {
         var startDateTime = appointment.AppointmentDate.Add(appointment.StartTime.ToTimeSpan());

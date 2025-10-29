@@ -1035,7 +1035,8 @@ Product
     margin-left: 8px;
 }
 
-.single-product-style2__info li a {
+.single-product-style2__info li a,
+.single-product-style2__info li button {
     position: relative;
     display: flex;
     align-items: center;

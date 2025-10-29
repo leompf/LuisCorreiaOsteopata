@@ -18,5 +18,6 @@ public interface IAppointmentRepository : IGenericRepository<Appointment>
 
     #region Helper Methods
     IEnumerable<SelectListItem> GetAvailableTimeSlotsCombo(DateTime date);
+    Task MarkPastAppointmentsAsCompletedAsync();
     #endregion
 }

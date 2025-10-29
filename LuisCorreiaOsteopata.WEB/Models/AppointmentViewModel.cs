@@ -27,6 +27,4 @@ public class AppointmentViewModel
     public string? PatientNotes { get; set; }
 
     public string? StaffNotes { get; set; }
-
-    public bool IsPaid { get; set; }
 }

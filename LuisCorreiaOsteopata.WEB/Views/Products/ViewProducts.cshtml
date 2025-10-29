@@ -1,4 +1,4 @@
-﻿@model IEnumerable<LuisCorreiaOsteopata.WEB.Data.Entities.Product>
+﻿@model LuisCorreiaOsteopata.WEB.Models.PagedProductsViewModel
 
 @{
     ViewData["Title"] = "ViewProducts";
@@ -11,6 +11,11 @@
     <partial name="_Menu"></partial>
 }
 
+@{
+    int start = (Model.PageNumber - 1) * Model.PageSize + 1;
+    int end = Math.Min(Model.PageNumber * Model.PageSize, Model.TotalProducts);
+}
+
 <!--Page Header Start-->
 <section class="page-header">
     <div class="page-header__bg" style="background-image: url(~/assets/images/backgrounds/page-header-bg.jpg);">
@@ -20,7 +25,7 @@
             <h3>Produtos</h3>
             <div class="thm-breadcrumb__inner">
                 <ul class="thm-breadcrumb list-unstyled">
-                    <li><a href="index.html">Home</a></li>
+                    <li><a asp-controller="Account" asp-action="Index">Home</a></li>
                     <li><span class="icon-arrow-left"></span></li>
                     <li>Produtos</li>
                 </ul>
@@ -41,9 +46,9 @@
                         <div class="col-xl-12">
                             <div class="product__showing-result">
                                 <div class="product__showing-text-box">
-                                    <p class="product__showing-text">Showing 1–12/14 of 14 results</p>
+                                    <p class="product__showing-text">A mostrar @start–@end de @Model.TotalProducts resultados</p>
                                 </div>
-                                <div class="product__showing-sort">
+                                @* <div class="product__showing-sort">
                                     <div class="select-box">
                                         <select class="wide">
                                             <option data-display="Sort by popular">Sort by popular</option>
@@ -52,7 +57,7 @@
                                             <option value="3">Sort by Ratings</option>
                                         </select>
                                     </div>
-                                </div>
+                                </div> *@
                             </div>
                         </div>
                     </div>
@@ -83,7 +88,7 @@
                                             <div class="row">
 
                                                 <!--Product All Single Start-->
-                                                @foreach (var product in Model)
+                                                @foreach (var product in Model.Products)
                                                 {
                                                     <div class="col-xl-4 col-lg-6 col-md-6">
                                                         <div class="single-product-style1">
@@ -95,7 +100,7 @@
                                                                 <ul class="single-product-style1__overlay">
                                                                     @if (product.LastPurchase.HasValue && (DateTime.Now - product.LastPurchase.Value).TotalDays < 30)
                                                                     {
-                                                                        <li><p>New</p></li>
+                                                                        <li><p>Novo</p></li>
                                                                     }
                                                                     else if (product.Price < 30)
                                                                     {
@@ -104,11 +109,11 @@
                                                                 </ul>
 
                                                                 <ul class="single-product-style1__info">
-                                                                    <li>
+                                                                    @* <li>
                                                                         <a href="#" title="Add to Wishlist">
                                                                             <i class="fa fa-regular fa-heart"></i>
                                                                         </a>
-                                                                    </li>
+                                                                    </li> *@
                                                                     <li>
                                                                         <form method="post" class="add-to-cart-form" asp-controller="Orders" asp-action="AddItemToCart" asp-route-id="@product.Id">
                                                                             <button type="submit" title="Add to Cart">
@@ -121,11 +126,11 @@
                                                                             <i class="fa fa-regular fa-eye"></i>
                                                                         </a>
                                                                     </li>
-                                                                    <li>
+                                                                    @* <li>
                                                                         <a href="#" title="Compare">
                                                                             <i class="fa fa-solid fa-repeat"></i>
                                                                         </a>
-                                                                    </li>
+                                                                    </li> *@
                                                                 </ul>
                                                             </div>
 
@@ -139,12 +144,12 @@
                                                                     <p>@product.Price.ToString("C2")</p>
                                                                 </div>
 
-                                                                <div class="single-product-style1__content-right">
+                                                                @* <div class="single-product-style1__content-right">
                                                                     <div class="single-product-style1__review">
                                                                         <i class="fa fa-star"></i>
                                                                         <p>@((new Random().NextDouble() * 1 + 4).ToString("0.0"))</p>
                                                                     </div>
-                                                                </div>
+                                                                </div> *@
                                                             </div>
                                                         </div>
                                                     </div>
@@ -158,7 +163,7 @@
                                     <div class="product__all-tab-content-box-item">
                                         <div class="product__all-tab-single">
                                             <div class="row">
-                                                @foreach (var product in Model)
+                                                @foreach (var product in Model.Products)
                                                 {
                                                     <div class="col-xl-6 col-lg-6">
                                                         <div class="single-product-style2">
@@ -168,7 +173,7 @@
                                                                         <img src="@product.ImageFullPath" alt="@product.Name" />
                                                                         <img src="@product.ImageFullPath" alt="@product.Name" />
 
-                                                                        <ul class="single-product-style1__overlay">
+                                                                        @* <ul class="single-product-style1__overlay">
                                                                             @if (product.IsAvailable)
                                                                             {
                                                                                 <li><p>New</p></li>
@@ -177,18 +182,18 @@
                                                                             {
                                                                                 <li><p>Sold Out</p></li>
                                                                             }
-                                                                        </ul>
+                                                                        </ul> *@
                                                                     </div>
                                                                 </div>
                                                                 <div class="col-xl-6 col-lg-6 col-md-6">
                                                                     <div class="single-product-style2__content">
-                                                                        <div class="single-product-style2__review">
+                                                                        @* <div class="single-product-style2__review">
                                                                             <i class="fa fa-star"></i>
                                                                             <i class="fa fa-star"></i>
                                                                             <i class="fa fa-star"></i>
                                                                             <i class="fa fa-star"></i>
                                                                             <i class="fa fa-star"></i>
-                                                                        </div>
+                                                                        </div> *@
                                                                         <div class="single-product-style2__text">
                                                                             <h4>
                                                                                 <a asp-controller="Products" asp-action="Details" asp-route-id="@product.Id">
@@ -198,22 +203,24 @@
                                                                             <p>@product.Price.ToString("C2")</p>
                                                                         </div>
                                                                         <ul class="single-product-style2__info">
-                                                                            <li>
+                                                                           @*  <li>
                                                                                 <a href="#" title="Add to Wishlist"><i class="fa fa-regular fa-heart"></i></a>
-                                                                            </li>
+                                                                            </li> *@
                                                                             <li>
-                                                                                <a asp-controller="Cart" asp-action="Add" asp-route-id="@product.Id" title="Add to cart">
-                                                                                    <i class="fa fa-solid fa-cart-plus"></i>
-                                                                                </a>
+                                                                                <form method="post" class="add-to-cart-form" asp-controller="Orders" asp-action="AddItemToCart" asp-route-id="@product.Id">
+                                                                                    <button type="submit" title="Add to Cart">
+                                                                                        <i class="fa fa-solid fa-cart-plus"></i>
+                                                                                    </button>
+                                                                                </form>
                                                                             </li>
                                                                             <li>
                                                                                 <a asp-controller="Products" asp-action="Details" asp-route-id="@product.Id" title="Quick View">
                                                                                     <i class="fa fa-regular fa-eye"></i>
                                                                                 </a>
                                                                             </li>
-                                                                            <li>
+                                                                            @* <li>
                                                                                 <a href="#" title="Compare"><i class="fa fa-solid fa-repeat"></i></a>
-                                                                            </li>
+                                                                            </li> *@
                                                                         </ul>
                                                                     </div>
                                                                 </div>
@@ -232,19 +239,30 @@
                         <!--End Tabs Content Box-->
 
                         <ul class="styled-pagination text-center clearfix list-unstyled">
-                            <li class="arrow prev active">
-                                <a href="#">
-                                    <span class="icon-left-arrow"></span>
-                                </a>
-                            </li>
-                            <li><a href="#">1</a></li>
-                            <li><a href="#">2</a></li>
-                            <li><a href="#">3</a></li>
-                            <li class="arrow next">
-                                <a href="#">
-                                    <span class="icon-right-arrow"></span>
-                                </a>
-                            </li>
+                            @if (Model.PageNumber > 1)
+                            {
+                                <li class="arrow prev">
+                                    <a asp-action="ViewProducts" asp-route-page="@(Model.PageNumber - 1)" asp-route-minPrice="@Model.MinPrice" asp-route-maxPrice="@Model.MaxPrice">
+                                        <span class="icon-left-arrow"></span>
+                                    </a>
+                                </li>
+                            }
+
+                            @for (int i = 1; i <= Model.TotalPages; i++)
+                            {
+                                <li class="@(i == Model.PageNumber ? "active" : "")">
+                                    <a asp-action="ViewProducts" asp-route-page="@i" asp-route-minPrice="@Model.MinPrice" asp-route-maxPrice="@Model.MaxPrice">@i</a>
+                                </li>
+                            }
+
+                            @if (Model.PageNumber < Model.TotalPages)
+                            {
+                                <li class="arrow next">
+                                    <a asp-action="ViewProducts" asp-route-page="@(Model.PageNumber + 1)" asp-route-minPrice="@Model.MinPrice" asp-route-maxPrice="@Model.MaxPrice">
+                                        <span class="icon-right-arrow"></span>
+                                    </a>
+                                </li>
+                            }
                         </ul>
                     </div>
 
@@ -256,25 +274,27 @@
                 <div class="product__sidebar">
                     <div class="shop-search product__sidebar-single">
                         <form action="#">
-                            <input type="text" placeholder="Search">
+                            <input type="text" name="searchTerm" placeholder="Pesquisar" value="@Model.SearchTerm">
                             <button type="submit"><i class="fa fa-search"></i></button>
                         </form>
                     </div>
                     <div class="product__price-ranger product__sidebar-single">
-                        <h3 class="product__sidebar-title">Price</h3>
-                        <div class="price-ranger">
-                            <div id="slider-range"></div>
-                            <div class="ranger-min-max-block">
-                                <input type="text" readonly class="min">
-                                <span>-</span>
-                                <input type="text" readonly class="max">
-                                <input type="submit" value="Filter">
+                        <h3 class="product__sidebar-title">Preço</h3>
+                        <form method="get" asp-action="ViewProducts">
+                            <div class="price-ranger">
+                                <div id="slider-range"></div>
+                                <div class="ranger-min-max-block">
+                                    <input type="text" id="minPrice" name="minPrice" readonly class="min">
+                                    <span>-</span>
+                                    <input type="text" id="maxPrice" name="maxPrice" readonly class="max">
+                                    <input type="submit" value="Filtrar">
+                                </div>
                             </div>
-                        </div>
+                        </form>
                     </div>
 
                     <!--Start Products Style1 Single Sidear -->
-                    <div class="shop-product-tags product__sidebar-single style">
+                    <d@* iv class="shop-product-tags product__sidebar-single style">
                         <h3 class="product__sidebar-title">Reviews</h3>
                         <div class="sidebar-rating-box sidebar-rating-box--style2">
                             <ul>
@@ -335,7 +355,7 @@
                                 </li>
                             </ul>
                         </div>
-                    </div>
+                    </div> *@
                     <!--End Products Style1 Single Sidear -->
                 </div>
             </div>
@@ -343,15 +363,13 @@
     </div>
 </section>
 <!--Product End-->
-
-
 @section Scripts {
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
     <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
     <script type="text/javascript">
-                    document.querySelectorAll('.add-to-cart-form').forEach(form => {
+             document.querySelectorAll('.add-to-cart-form').forEach(form => {
             form.addEventListener('submit', async e => {
                 e.preventDefault();
 
@@ -380,6 +398,24 @@
                     }).showToast();
                 }
             });
+        });
+            $(function () {
+            var min = 0;
+            var max = 500; // adjust according to your product prices
+
+            $("#slider-range").slider({
+                range: true,
+                min: min,
+                max: max,
+                values: [min, max],
+                slide: function (event, ui) {
+                    $(".min").val(ui.values[0]);
+                    $(".max").val(ui.values[1]);
+                }
+            });
+
+            $(".min").val($("#slider-range").slider("values", 0));
+            $(".max").val($("#slider-range").slider("values", 1));
         });
     </script>
 }

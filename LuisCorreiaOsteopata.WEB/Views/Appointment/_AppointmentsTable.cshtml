@@ -21,7 +21,6 @@
                 <td>@appointment.StaffName</td>
                 <td>@appointment.AppointmentStatus</td>
                 <td>@appointment.StaffNotes</td>
-                <td>@(appointment.IsPaid ? "Sim" : "Não")</td>
                 <td>
                     <a asp-action="Details" asp-route-id="@appointment.Id" class="btn-link">
                         Ver Detalhes
