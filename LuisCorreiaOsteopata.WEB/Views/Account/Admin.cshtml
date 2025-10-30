@@ -21,103 +21,60 @@
 </section>
 
 <div class="container my-4">
-    <!-- Summary Cards -->
+    <!-- Cartões de Resumo -->
     <div class="row g-3">
-        <div class="col-sm-6 col-md-2">
+        <div class="col-sm-6 col-md-3">
             <div class="card text-center shadow-sm p-3 h-100">
                 <div class="card-body">
-                    <h6 class="card-title text-muted">Total Appointments</h6>
-                    <h5 id="totalAppointments">Loading...</h5>
+                    <h6 class="card-title text-muted">Total de Consultas</h6>
+                    <h5 id="totalAppointments">A carregar...</h5>
                 </div>
             </div>
         </div>
-        <div class="col-sm-6 col-md-2">
+        <div class="col-sm-6 col-md-3">
             <div class="card text-center shadow-sm p-3 h-100">
                 <div class="card-body">
-                    <h6 class="card-title text-muted">Appointments / Month</h6>
-                    <h5 id="appointmentsMonth">Loading...</h5>
+                    <h6 class="card-title text-muted">Consultas Futuras</h6>
+                    <h5 id="upcomingAppointments">A carregar...</h5>
                 </div>
             </div>
         </div>
-        <div class="col-sm-6 col-md-2">
+        <div class="col-sm-6 col-md-3">
             <div class="card text-center shadow-sm p-3 h-100">
                 <div class="card-body">
-                    <h6 class="card-title text-muted">Appointments / Year</h6>
-                    <h5 id="appointmentsYear">Loading...</h5>
+                    <h6 class="card-title text-muted">Total de Pedidos</h6>
+                    <h5 id="totalOrders">A carregar...</h5>
                 </div>
             </div>
         </div>
-        <div class="col-sm-6 col-md-2">
+        <div class="col-sm-6 col-md-3">
             <div class="card text-center shadow-sm p-3 h-100">
                 <div class="card-body">
-                    <h6 class="card-title text-muted">Total Orders</h6>
-                    <h5 id="totalOrders">Loading...</h5>
-                </div>
-            </div>
-        </div>
-        <div class="col-sm-6 col-md-2">
-            <div class="card text-center shadow-sm p-3 h-100">
-                <div class="card-body">
-                    <h6 class="card-title text-muted">Orders / Month</h6>
-                    <h5 id="ordersMonth">Loading...</h5>
-                </div>
-            </div>
-        </div>
-        <div class="col-sm-6 col-md-2">
-            <div class="card text-center shadow-sm p-3 h-100">
-                <div class="card-body">
-                    <h6 class="card-title text-muted">Orders / Year</h6>
-                    <h5 id="ordersYear">Loading...</h5>
-                </div>
-            </div>
-        </div>
-        <div class="col-sm-6 col-md-2">
-            <div class="card text-center shadow-sm p-3 h-100">
-                <div class="card-body">
-                    <h6 class="card-title text-muted">Appointments / Week</h6>
-                    <h5 id="appointmentsWeek">Loading...</h5>
-                </div>
-            </div>
-        </div>
-        <div class="col-sm-6 col-md-2">
-            <div class="card text-center shadow-sm p-3 h-100">
-                <div class="card-body">
-                    <h6 class="card-title text-muted">Orders / Week</h6>
-                    <h5 id="ordersWeek">Loading...</h5>
-                </div>
-            </div>
-        </div>
-        <div class="col-sm-6 col-md-2">
-            <div class="card text-center shadow-sm p-3 h-100">
-                <div class="card-body">
-                    <h6 class="card-title text-muted">Total Revenue</h6>
-                    <h5 id="totalRevenue">Loading...</h5>
+                    <h6 class="card-title text-muted">Receita Total</h6>
+                    <h5 id="totalRevenue">A carregar...</h5>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Staff Filter -->
-    <div class="row mt-4">
-        <div class="col-md-3">
-            <select id="staffFilter" class="form-select">
-                <option value="">All Staff</option>
-            </select>
-        </div>
-    </div>
-
-    <!-- Charts -->
-    <div class="row mt-3 g-3">
-        <div class="col-12 col-md-6">
+    <!-- Gráficos -->
+    <div class="row mt-4 g-3">
+        <div class="col-12 col-md-4">
             <div class="card shadow-sm p-3">
-                <h6 class="card-title text-muted">Appointments Over Time</h6>
-                <canvas id="appointmentsChart" height="150"></canvas>
+                <h6 class="card-title text-muted">Consultas por Mês</h6>
+                <canvas id="appointmentsChart" height="400"></canvas>
             </div>
         </div>
-        <div class="col-12 col-md-6">
+        <div class="col-12 col-md-4">
             <div class="card shadow-sm p-3">
-                <h6 class="card-title text-muted">Orders Over Time</h6>
-                <canvas id="ordersChart" height="150"></canvas>
+                <h6 class="card-title text-muted">Pedidos por Mês</h6>
+                <canvas id="ordersChart" height="400"></canvas>
+            </div>
+        </div>
+        <div class="col-12 col-md-4">
+            <div class="card shadow-sm p-3">
+                <h6 class="card-title text-muted">Receita por Mês</h6>
+                <canvas id="revenueChart" height="400"></canvas>
             </div>
         </div>
     </div>
@@ -126,81 +83,137 @@
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        let appointmentsChart, ordersChart;
+        let appointmentsChart, ordersChart, revenueChart;
 
-        async function loadMetrics(staffId = '') {
-            const res = await fetch(`/api/account/metrics?staffId=${staffId}`);
+        async function loadMetrics() {
+            const res = await fetch(`/api/account/metrics`);
             const data = await res.json();
 
-            // --- Update summary cards ---
-            document.getElementById('totalAppointments').innerText = data.totalAppointments;
-            document.getElementById('appointmentsWeek').innerText = data.appointmentsPerWeek;
-            document.getElementById('appointmentsMonth').innerText = data.appointmentsPerMonth;
-            document.getElementById('appointmentsYear').innerText = data.appointmentsPerYear;
+            // --- Cartões resumo ---
+            document.getElementById('totalAppointments').innerText = data.summary.totalAppointments;
+            document.getElementById('upcomingAppointments').innerText = data.summary.upcomingAppointments;
+            document.getElementById('totalOrders').innerText = data.summary.totalOrders;
+            document.getElementById('totalRevenue').innerText =
+                new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' })
+                    .format(data.summary.totalRevenue);
 
-            document.getElementById('totalOrders').innerText = data.totalOrders;
-            document.getElementById('ordersWeek').innerText = data.ordersPerWeek;
-            document.getElementById('ordersMonth').innerText = data.ordersPerMonth;
-            document.getElementById('ordersYear').innerText = data.ordersPerYear;
+            // --- Dados dos gráficos ---
+            const mesesA = data.charts.appointmentsByMonth.map(x => x.month);
+            const valoresA = data.charts.appointmentsByMonth.map(x => x.count);
 
-            document.getElementById('totalRevenue').innerText = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(data.totalRevenue);
+            const mesesO = data.charts.ordersByMonth.map(x => x.month);
+            const valoresO = data.charts.ordersByMonth.map(x => x.count);
 
-            // --- Populate staff filter ---
-                    const staffSelect = document.getElementById('staffFilter');
-        staffSelect.innerHTML = '<option value="">All Staff</option>';
+            const mesesR = data.charts.revenueByMonth.map(x => x.month);
+            const valoresR = data.charts.revenueByMonth.map(x => x.revenue);
 
-        // Use lowercase property exactly as returned by API
-        if (data.staffList && Array.isArray(data.staffList)) {
-            data.staffList.forEach(s => {
-                const option = document.createElement('option');
-                option.value = s.id;        // match API property
-                option.text = s.fullName;   // match API property
-                staffSelect.appendChild(option);
-            });
-        }
+                    // --- Gráfico de Marcações ---
+        const ctxA = document.getElementById('appointmentsChart').getContext('2d');
+        if (appointmentsChart) appointmentsChart.destroy();
 
-            // --- Appointments chart ---
-            const ctxA = document.getElementById('appointmentsChart').getContext('2d');
-            if (appointmentsChart) appointmentsChart.destroy();
-            appointmentsChart = new Chart(ctxA, {
-                type: 'line',
-                data: {
-                    labels: ['Week', 'Month', 'Year'],
-                    datasets: [{
-                        label: 'Appointments',
-                        data: [data.AppointmentsPerWeek, data.AppointmentsPerMonth, data.AppointmentsPerYear],
-                        borderColor: 'rgba(75, 192, 192, 1)',
-                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                        fill: true
-                    }]
+        appointmentsChart = new Chart(ctxA, {
+            type: 'bar',
+            data: {
+                labels: mesesA,
+                datasets: [{
+                    label: 'Consultas',
+                    data: valoresA,
+                    backgroundColor: 'rgba(75, 192, 192, 0.5)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1, // integer ticks
+                            callback: value => Number.isInteger(value) ? value : null
+                        }
+                    }
                 },
-                options: { responsive: true }
-            });
-
-            // --- Orders chart ---
-            const ctxO = document.getElementById('ordersChart').getContext('2d');
-            if (ordersChart) ordersChart.destroy();
-            ordersChart = new Chart(ctxO, {
-                type: 'line',
-                data: {
-                    labels: ['Week', 'Month', 'Year'],
-                    datasets: [{
-                        label: 'Orders',
-                        data: [data.OrdersPerWeek, data.OrdersPerMonth, data.OrdersPerYear],
-                        borderColor: 'rgba(255, 99, 132, 1)',
-                        backgroundColor: 'rgba(255, 99, 132, 0.2)',
-                        fill: true
-                    }]
-                },
-                options: { responsive: true }
-            });
-        }
-
-        document.getElementById('staffFilter').addEventListener('change', e => {
-            loadMetrics(e.target.value);
+                plugins: {
+                    legend: { display: true, position: 'top' }
+                }
+            }
         });
 
-        // Initial load
-        loadMetrics();
+        // --- Gráfico de Encomendas ---
+        const ctxO = document.getElementById('ordersChart').getContext('2d');
+        if (ordersChart) ordersChart.destroy();
+
+        ordersChart = new Chart(ctxO, {
+            type: 'bar',
+            data: {
+                labels: mesesO,
+                datasets: [{
+                    label: 'Pedidos',
+                    data: valoresO,
+                    backgroundColor: 'rgba(255, 99, 132, 0.5)',
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1,
+                            callback: value => Number.isInteger(value) ? value : null
+                        }
+                    }
+                },
+                plugins: {
+                    legend: { display: true, position: 'top' }
+                }
+            }
+        });
+
+            // --- Gráfico de Receita ---
+            const ctxR = document.getElementById('revenueChart').getContext('2d');
+            if (revenueChart) revenueChart.destroy();
+
+            revenueChart = new Chart(ctxR, {
+                type: 'bar',
+                data: {
+                    labels: mesesR,
+                    datasets: [{
+                        label: 'Receita (€)',
+                        data: valoresR,
+                        backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: value => new Intl.NumberFormat('pt-PT', {
+                                    style: 'currency',
+                                    currency: 'EUR',
+                                    minimumFractionDigits: 0
+                                }).format(value)
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: true, position: 'top' }
+                    }
+                }
+            });
+        }
+
+        // --- Carregamento inicial ---
+        document.addEventListener('DOMContentLoaded', loadMetrics);
     </script>
 }

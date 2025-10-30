@@ -7,8 +7,6 @@
             <th><a href="#" class="sortable" data-sort="Patient"><span>Paciente</span> <i class="sort-icon"></i></a></th>
             <th><a href="#" class="sortable" data-sort="Staff"><span>Colaborador</span> <i class="sort-icon"></i></a></th>
             <th><a href="#" class="sortable" data-sort="Status"><span>Estado</span> <i class="sort-icon"></i></a></th>
-            <th>Notas</th>
-            <th>Pago</th>
             <th>Ver</th>
         </tr>
     </thead>
@@ -20,7 +18,6 @@
                 <td>@appointment.PatientName</td>
                 <td>@appointment.StaffName</td>
                 <td>@appointment.AppointmentStatus</td>
-                <td>@appointment.StaffNotes</td>
                 <td>
                     <a asp-action="Details" asp-route-id="@appointment.Id" class="btn-link">
                         Ver Detalhes

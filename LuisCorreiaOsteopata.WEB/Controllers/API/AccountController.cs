@@ -1,6 +1,7 @@
 ﻿using LuisCorreiaOsteopata.WEB.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Text.RegularExpressions;
 
 namespace LuisCorreiaOsteopata.WEB.Controllers.API;
 
@@ -18,7 +19,10 @@ public class AccountController : ControllerBase
     [HttpGet("metrics")]
     public async Task<IActionResult> GetMetrics(string staffId = null)
     {
-        // Base queries
+        var now = DateTime.Now;
+        var year = now.Year;
+        var culture = new System.Globalization.CultureInfo("pt-PT");
+
         var appointmentsQuery = _context.Appointments.AsQueryable();
         if (!string.IsNullOrEmpty(staffId))
             appointmentsQuery = appointmentsQuery.Where(a => a.Staff.User.Id == staffId);
@@ -27,53 +31,96 @@ public class AccountController : ControllerBase
         if (!string.IsNullOrEmpty(staffId))
             ordersQuery = ordersQuery.Where(o => o.User.Id == staffId);
 
-        var now = DateTime.Now;
+        // Base month list (1–12)
+        var months = Enumerable.Range(1, 12)
+            .Select(m => new
+            {
+                MonthNumber = m,
+                Month = culture.DateTimeFormat.GetAbbreviatedMonthName(m)
+            })
+            .ToList();
 
-        // --- Appointments Metrics ---
+        // --- Appointments by Month ---
+        var appointmentsByMonthRaw = await appointmentsQuery
+            .Where(a => a.AppointmentDate.Year == year)
+            .GroupBy(a => a.AppointmentDate.Month)
+            .Select(g => new { MonthNumber = g.Key, Count = g.Count() })
+            .ToListAsync();
+
+        var appointmentsByMonth = months
+            .GroupJoin(appointmentsByMonthRaw,
+                m => m.MonthNumber,
+                a => a.MonthNumber,
+                (m, aGroup) => new
+                {
+                    m.MonthNumber,
+                    m.Month,
+                    Count = aGroup.FirstOrDefault()?.Count ?? 0
+                })
+            .OrderBy(x => x.MonthNumber)
+            .ToList();
+
+        // --- Orders by Month ---
+        var ordersByMonthRaw = await ordersQuery
+            .Where(o => o.OrderDate.Year == year)
+            .GroupBy(o => o.OrderDate.Month)
+            .Select(g => new { MonthNumber = g.Key, Count = g.Count() })
+            .ToListAsync();
+
+        var ordersByMonth = months
+            .GroupJoin(ordersByMonthRaw,
+                m => m.MonthNumber,
+                o => o.MonthNumber,
+                (m, oGroup) => new
+                {
+                    m.MonthNumber,
+                    m.Month,
+                    Count = oGroup.FirstOrDefault()?.Count ?? 0
+                })
+            .OrderBy(x => x.MonthNumber)
+            .ToList();
+
+        // --- Revenue by Month ---
+        var revenueByMonthRaw = await ordersQuery
+            .Where(o => o.OrderDate.Year == year && o.IsPaid)
+            .GroupBy(o => o.OrderDate.Month)
+            .Select(g => new { MonthNumber = g.Key, Revenue = g.Sum(x => x.OrderTotal) })
+            .ToListAsync();
+
+        var revenueByMonth = months
+            .GroupJoin(revenueByMonthRaw,
+                m => m.MonthNumber,
+                r => r.MonthNumber,
+                (m, rGroup) => new
+                {
+                    m.MonthNumber,
+                    m.Month,
+                    Revenue = rGroup.FirstOrDefault()?.Revenue ?? 0
+                })
+            .OrderBy(x => x.MonthNumber)
+            .ToList();
+
+        // --- Summary metrics ---
         var totalAppointments = await appointmentsQuery.CountAsync();
         var upcomingAppointments = await appointmentsQuery.CountAsync(a => a.AppointmentDate >= now);
-
-        var appointmentsPerWeek = await appointmentsQuery.CountAsync(a => EF.Functions.DateDiffWeek(a.AppointmentDate, now) == 0);
-        var appointmentsPerMonth = await appointmentsQuery.CountAsync(a => a.AppointmentDate.Month == now.Month && a.AppointmentDate.Year == now.Year);
-        var appointmentsPerYear = await appointmentsQuery.CountAsync(a => a.AppointmentDate.Year == now.Year);
-
-        var appointmentsPerStaff = await _context.Appointments
-            .GroupBy(a => a.StaffId)
-            .Select(g => new { StaffId = g.Key, Count = g.Count() })
-            .ToListAsync();
-
-        // --- Orders Metrics ---
         var totalOrders = await ordersQuery.CountAsync();
-        var ordersPerWeek = await ordersQuery.CountAsync(o => EF.Functions.DateDiffWeek(o.OrderDate, now) == 0);
-        var ordersPerMonth = await ordersQuery.CountAsync(o => o.OrderDate.Month == now.Month && o.OrderDate.Year == now.Year);
-        var ordersPerYear = await ordersQuery.CountAsync(o => o.OrderDate.Year == now.Year);
+        var totalRevenue = await ordersQuery.Where(o => o.IsPaid).SumAsync(o => (decimal?)o.OrderTotal) ?? 0;
 
-        var totalRevenue = await ordersQuery
-            .Where(o => o.IsPaid)
-            .SumAsync(o => (decimal?)o.OrderTotal) ?? 0;
-
-        // --- Staff List ---
-        var staffList = await _context.Staff
-            .Select(s => new { s.Id, s.FullName })
-            .ToListAsync();
-
-        // --- Build response ---
         var response = new
         {
-            TotalAppointments = totalAppointments,
-            UpcomingAppointments = upcomingAppointments,
-            AppointmentsPerWeek = appointmentsPerWeek,
-            AppointmentsPerMonth = appointmentsPerMonth,
-            AppointmentsPerYear = appointmentsPerYear,
-            AppointmentsPerStaff = appointmentsPerStaff,
-
-            TotalOrders = totalOrders,
-            OrdersPerWeek = ordersPerWeek,
-            OrdersPerMonth = ordersPerMonth,
-            OrdersPerYear = ordersPerYear,
-            TotalRevenue = totalRevenue,
-
-            StaffList = staffList
+            Summary = new
+            {
+                TotalAppointments = totalAppointments,
+                UpcomingAppointments = upcomingAppointments,
+                TotalOrders = totalOrders,
+                TotalRevenue = totalRevenue
+            },
+            Charts = new
+            {
+                AppointmentsByMonth = appointmentsByMonth,
+                OrdersByMonth = ordersByMonth,
+                RevenueByMonth = revenueByMonth
+            }
         };
 
         return Ok(response);

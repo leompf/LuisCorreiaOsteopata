@@ -72,7 +72,7 @@
                             </div>
                         </div>
                         <div class="row">
-                            @if (User.IsInRole("Colaborador"))
+                            @if (User.IsInRole("Colaborador") || User.IsInRole("Administrador"))
                             {
                                 <div class="col-xl-auto col-md-6">
                                     <div class="appoinment-page__input-box text-center">
@@ -172,29 +172,24 @@
             const $timeSlots = $('#timeSlots');
             const $btnConfirm = $('#btnConfirm');
 
-            // Get user credit info from Razor model
-            const hasAvailableCredits = @Model.HasAvailableCredits.ToString().ToLower(); // true or false
+            const hasAvailableCredits = @Model.HasAvailableCredits.ToString().ToLower(); 
 
-            // Scroll to appointment section on load
             const appointmentSection = document.getElementById("appointment-section");
             if (appointmentSection) {
                 appointmentSection.scrollIntoView({ behavior: "smooth" });
             }
 
-            // Initialize Quill editor
             const toolbarOptions = [['bold', 'italic', 'underline'], ['link'], ['clean']];
             const quill = new Quill('#quill-editor', {
                 theme: 'snow',
-                placeholder: 'Razão da consulta...',
+                placeholder: 'Motivo da consulta(opcional)',
                 modules: { toolbar: toolbarOptions }
             });
 
-            // On form submit, copy Quill content to hidden input
             $('form').on('submit', function () {
                 $('#Notes').val(quill.root.innerHTML);
             });
 
-            // Function to load available time slots
             function loadTimeSlots(date) {
                 if (!date) return;
 
@@ -216,28 +211,23 @@
                             });
                             $timeSlots.val(data[0].value);
 
-                            // Enable the button only if user has credits
                             $btnConfirm.prop('disabled', !hasAvailableCredits);
                         }
 
                         $timeSlots.niceSelect('update');
                     })
                     .fail(function () {
-                        // Disable button if API call fails
                         $btnConfirm.prop('disabled', true);
                     });
             }
 
-            // Load slots when page loads for initial date
             loadTimeSlots($appointmentDate.val());
 
-            // Reload slots whenever the date changes
             $appointmentDate.on('change', function () {
                 const selectedDate = $(this).val();
                 loadTimeSlots(selectedDate);
             });
 
-            // Confirm dialog
             const confirmDialogEl = document.getElementById('confirmDialog');
             const confirmDialog = new bootstrap.Modal(confirmDialogEl);
 

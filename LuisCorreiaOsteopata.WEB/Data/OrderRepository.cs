@@ -331,7 +331,12 @@ public class OrderRepository : GenericRepository<Order>, IOrderRepository
         if (!string.IsNullOrEmpty(userId))
         {
             orders = orders.Where(o =>
-            (o.User != null && o.User.Id == userId));
+                o.User != null &&
+                EF.Functions.Like(
+                    (o.User.Names + " " + o.User.LastName),
+                    $"%{userId}%"
+                )
+            );
         }
 
         if (!string.IsNullOrEmpty(orderNumber))

@@ -714,6 +714,11 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
                 if (user == null)
                     return NotFound();
 
+                var targetUserRole = await _userHelper.GetUserRoleAsync(user);
+
+                if (User.IsInRole("Colaborador") && targetUserRole == "Administrador")
+                    return Forbid();
+
                 if (user.Id != currentUser.Id && !User.IsInRole("Administrador") && !User.IsInRole("Colaborador"))
                     return Forbid();
             }
@@ -987,15 +992,13 @@ namespace LuisCorreiaOsteopata.WEB.Controllers
             var data = new Dictionary<string, string>
             {
                 { "name",  $"{user.Names} {user.LastName}" },
-                { "birthdate", user.Birthdate?.ToString("dd/MM/yyyy") ?? "" },
-                { "gender", patient.Gender ?? "" },
-                { "address", "N/A" }, // caso ainda não tenhas este campo
+                { "birthdate", user.Birthdate?.ToString("dd/MM/yyyy") ?? "(Sem informação)" },
+                { "gender", patient.Gender ?? "(Sem informação)" },
+                { "address", "N/A" },
                 { "phone", user.PhoneNumber ?? "" },
                 { "email", user.Email ?? "" },
                 { "job", "N/A" },
-                { "department", "N/A" },
-                { "hiredate", "" },
-                { "medicalhistory", patient.MedicalHistory ?? "" }
+                { "medicalhistory", patient.MedicalHistory ?? "(Sem informação)" }
             };
 
             var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/templates/FichaClienteTemplate.docx");

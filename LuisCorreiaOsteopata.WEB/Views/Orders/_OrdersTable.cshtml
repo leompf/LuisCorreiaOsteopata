@@ -10,6 +10,7 @@
             <th><a href="#" class="sortable" data-sort="User"><span>Utilizador</span> <i class="sort-icon"></i></a></th>
             <th><a href="#" class="sortable" data-sort="OrderTotal"><span>Montante</span> <i class="sort-icon"></i></a></th>
             <th><a href="#" class="sortable" data-sort="IsPaid"><span>Pago?</span> <i class="sort-icon"></i></a></th>
+            <th>Ver</th>
         </tr>
     </thead>
     <tbody>
@@ -24,9 +25,7 @@
                 <td>@string.Format("{0:C2}", order.OrderTotal)</td>
                 <td>@(order.IsPaid ? "Sim" : "Não")</td>
                 <td>
-                    <a asp-action="Edit" asp-route-id="@order.Id" class="btn btn-warning">Edit</a>
-                    <a asp-action="Details" asp-route-id="@order.Id" class="btn btn-info">Details</a>
-                    <a asp-action="Delete" asp-route-id="@order.Id" class="btn btn-danger">Delete</a>
+                    <a asp-action="Details" asp-route-id="@order.Id" class="btn btn-link">Ver Detalhes</a>
                 </td>
             </tr>
         }

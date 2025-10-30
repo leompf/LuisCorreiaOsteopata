@@ -2,7 +2,7 @@
 
 
 @{
-    ViewData["Title"] = "Details";
+    ViewData["Title"] = "Detalhes Pedido";
     Layout = "~/Views/Shared/_Layout2.cshtml";
 }
 
@@ -98,18 +98,7 @@
                     <p>T: @Model.BillingDetail.Phone</p>
                 </div>
             </div>
-        </div>
-
-        <div class="col-md-6">
-            <div class="card border-1 shadow-sm">
-                <div class="card-body">
-                    <h5 class="fw-semibold mb-3">Detalhes de Pagamento</h5>
-                    <p><strong>Status:</strong> @(Model.IsPaid ? "Paid" : "Pending")</p>
-                    <p><strong>Payment Method:</strong> @("Stripe")</p>
-                    <p><strong>Stripe Session ID:</strong> @Model.StripeSessionId</p>
-                </div>
-            </div>
-        </div>
+        </div>      
     </div>
 </div>
 
