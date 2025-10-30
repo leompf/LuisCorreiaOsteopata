@@ -157,6 +157,7 @@ public class AppointmentRepository : GenericRepository<Appointment>, IAppointmen
 
             if (role == "Utente")
             {
+                // Utente must have a patient entity linked to their account
                 patient = await _context.Patients
                     .Include(p => p.User)
                     .FirstOrDefaultAsync(p => p.User.Id == currentUser.Id);
@@ -167,10 +168,11 @@ public class AppointmentRepository : GenericRepository<Appointment>, IAppointmen
                     return (false, "Paciente inválido.");
                 }
 
-                patientId = patient.Id; 
+                patientId = patient.Id;
             }
-            else 
+            else
             {
+                // Colaborador or Administrador can pick any patient
                 patient = await _context.Patients
                     .Include(p => p.User)
                     .FirstOrDefaultAsync(p => p.Id == patientId);
@@ -182,25 +184,31 @@ public class AppointmentRepository : GenericRepository<Appointment>, IAppointmen
                 }
             }
 
-            var orderDetail = await _context.Orders
-                .Where(o => o.User.Id == patient.User.Id && o.IsPaid)
-                .SelectMany(o => o.Items)
-                .Where(i => i.RemainingUses > 0)
-                .OrderBy(i => i.Id)
-                .FirstOrDefaultAsync();
-
-            if (orderDetail == null)
+            // Only check for remaining uses if the role is Utente
+            if (role == "Utente")
             {
-                _logger.LogInformation("Patient {PatientId} ({Email}) has no remaining appointment uses.", patientId, patient.User.Email);
-                return (false, "Não tem consultas disponíveis. Por favor, adquira novas consultas.");
+                var orderDetail = await _context.Orders
+                    .Where(o => o.User.Id == patient.User.Id && o.IsPaid)
+                    .SelectMany(o => o.Items)
+                    .Where(i => i.RemainingUses > 0)
+                    .OrderBy(i => i.Id)
+                    .FirstOrDefaultAsync();
+
+                if (orderDetail == null)
+                {
+                    _logger.LogInformation("Patient {PatientId} ({Email}) has no remaining appointment uses.", patientId, patient.User.Email);
+                    return (false, "Não tem consultas disponíveis. Por favor, adquira novas consultas.");
+                }
+
+                orderDetail.RemainingUses--;
+                appointment.OrderDetailId = orderDetail.Id;
+                _context.Update(orderDetail);
             }
 
-            orderDetail.RemainingUses--;
-            appointment.OrderDetailId = orderDetail.Id;
+            // For Colaborador or Administrador, skip the order check entirely
             appointment.PatientId = patientId;
             appointment.AppointmentStatus = "Marcada";
 
-            _context.Update(orderDetail);
             _context.Appointments.Add(appointment);
             await _context.SaveChangesAsync();
 
